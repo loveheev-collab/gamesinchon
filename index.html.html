@@ -183,6 +183,49 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .dbc{width:21px;height:21px;border-radius:50%;border:none;background:transparent;color:var(--text3);cursor:pointer;font-size:13px;line-height:1;display:flex;align-items:center;justify-content:center}
 .dbc:hover{background:#FEE2E2;color:var(--red)}
 @media(max-width:600px){.main{padding:14px}.kval{font-size:16px}.inp{width:108px}}
+/* 원장공지사항 */
+.notice-bar{background:#1D4ED8;border-radius:10px;padding:12px 18px;margin-bottom:16px;display:flex;align-items:flex-start;gap:12px;box-shadow:0 2px 8px rgba(29,78,216,.25)}
+.notice-icon{font-size:18px;flex-shrink:0;margin-top:1px}
+.notice-body{flex:1;min-width:0}
+.notice-title{font-size:12px;font-weight:900;color:#93C5FD;letter-spacing:.5px;margin-bottom:4px}
+.notice-content{font-size:13px;color:#fff;font-weight:500;line-height:1.6;word-break:break-all;white-space:pre-wrap}
+.notice-edit-btn{padding:5px 11px;border-radius:6px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0;white-space:nowrap}
+.notice-edit-btn:hover{background:rgba(255,255,255,.25)}
+.notice-input{width:100%;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.3);border-radius:6px;color:#fff;font-size:13px;font-family:'Noto Sans KR',sans-serif;padding:7px 10px;resize:vertical;min-height:52px;line-height:1.6}
+.notice-input::placeholder{color:rgba(255,255,255,.5)}
+.notice-input:focus{outline:none;background:rgba(255,255,255,.15)}
+/* 미납 리스트 탭 */
+.unpaid-wrap{margin-top:16px}
+.unpaid-team-block{margin-bottom:14px;border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.unpaid-team-hdr{padding:8px 13px;color:#fff;font-weight:900;font-size:13px;display:flex;align-items:center;justify-content:space-between}
+.unpaid-tbl{width:100%;border-collapse:collapse;background:var(--bg2)}
+.unpaid-tbl th{padding:7px 9px;font-size:11px;font-weight:700;color:var(--text3);text-align:left;background:var(--bg);border-bottom:1px solid var(--border)}
+.unpaid-tbl td{padding:7px 9px;border-bottom:1px solid var(--border);font-size:12px;vertical-align:middle}
+.unpaid-tbl tr:last-child td{border-bottom:none}
+.unpaid-tbl .member-row{background:var(--bg)}
+.unpaid-tbl .member-row td{font-weight:700;font-size:11px;color:var(--text3);padding:4px 9px}
+/* 추가 리스트 */
+.addlist-wrap{margin-top:18px}
+.addlist-tbl{width:100%;border-collapse:collapse;background:var(--bg2);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.addlist-tbl th{padding:7px 9px;font-size:11px;font-weight:700;color:var(--text3);text-align:left;background:var(--bg);border-bottom:1px solid var(--border);white-space:nowrap}
+.addlist-tbl td{padding:6px 8px;border-bottom:1px solid var(--border);font-size:12px;vertical-align:middle}
+.addlist-tbl tr:last-child td{border-bottom:none}
+.addlist-tbl tr.status-완납{background:#FFFDE7}
+.addlist-tbl tr.status-미납{background:#F3F4F6}
+.addlist-tbl tr.status-진행중{background:var(--bg2)}
+.al-inp{width:100%;padding:3px 5px;border:1px solid transparent;border-radius:4px;font-size:12px;font-family:'Noto Sans KR',sans-serif;background:transparent;color:var(--text)}
+.al-inp:hover{border-color:var(--border);background:var(--bg)}
+.al-inp:focus{outline:none;border-color:var(--accent);background:#fff}
+.al-sel{width:100%;padding:3px 3px;border:1px solid transparent;border-radius:4px;font-size:12px;font-family:'Noto Sans KR',sans-serif;background:transparent;cursor:pointer}
+.al-sel:hover{border-color:var(--border);background:var(--bg)}
+.al-sel:focus{outline:none;border-color:var(--accent);background:#fff}
+.al-num{width:100%;padding:3px 5px;border:1px solid transparent;border-radius:4px;font-size:12px;font-family:'Roboto Mono',monospace;background:transparent;text-align:right;color:var(--text)}
+.al-num:hover{border-color:var(--border);background:var(--bg)}
+.al-num:focus{outline:none;border-color:var(--accent);background:#fff}
+.status-badge{display:inline-block;padding:2px 7px;border-radius:10px;font-size:10px;font-weight:700}
+.sb-완납{background:#FEF08A;color:#854D0E}
+.sb-미납{background:#E5E7EB;color:#374151}
+.sb-진행중{background:var(--accent-light);color:var(--accent)}
 </style>
 </head>
 <body>
@@ -207,6 +250,8 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
     <div class="sb-sub" id="nav-biz-sub" style="display:none">
       <div class="sb-sub-item" id="nav-biz-sum" onclick="W._swBiz('요약')">📊 영업 요약</div>
       <div class="sb-sub-item" id="nav-biz-con" onclick="W._swBiz('상담내역')">📋 상담 내역</div>
+      <div class="sb-sub-item" id="nav-biz-unp" onclick="W._swBiz('미납리스트')">💰 미납 리스트</div>
+      <div class="sb-sub-item" id="nav-biz-add" onclick="W._swBiz('추가리스트')">📋 추가 리스트</div>
     </div>
   </div>
   <hr class="sb-divider">
@@ -268,10 +313,12 @@ const rReview  = ref(db,'review2025');
 const rDaily   = ref(db,'daily2025');
 const rBiz     = ref(db,'biz2025');
 const rConsult = ref(db,'consult2025');
+const rNotice  = ref(db,'notice2025');
+const rAddList = ref(db,'addlist2025');
 
 // ── 설정 ─────────────────────────────────────────────
 const STS = ['상담','추가'];
-const RES = ['완납','미납','추가','미등록회수','취소'];
+const RES = ['완납','미납','추가','미등록회수','취소','COD'];
 let WEEKS = [{label:'1주차',period:'6/1~6/8',total:110000000},{label:'2주차',period:'6/9~6/14',total:111000000},{label:'3주차',period:'6/15~6/20',total:60000000},{label:'4주차',period:'6/21~6/30',total:150000000}];
 let TEAMS = [{name:'1팀',members:4,color:'#2563EB'},{name:'2팀',members:3,color:'#16A34A'},{name:'3팀',members:3,color:'#7C3AED'},{name:'4팀',members:3,color:'#EA580C'}];
 let TM_CFG = [{name:'1팀',color:'#2563EB',members:['정충만','박효선','강채원','송평강']},{name:'2팀',color:'#16A34A',members:['이재운','김태정','한대희']},{name:'3팀',color:'#7C3AED',members:['백영광','이상천','안현우']},{name:'4팀',color:'#EA580C',members:['서승표','송준수','한가흔']}];
@@ -307,6 +354,8 @@ let ARCHIVE = {};
 let arcSubTab = '결산';
 let DATA = {}, DAILY = {prevYear:190730000,thisYear:170276400,consult:0,contract:0,sales:0};
 let REVIEW = {}, BIZ = {}, CONSULT = {};
+let NOTICE = {text:'', editing:false};
+let ADDLIST = {};
 let cCol = {};
 let tcBuilt = false, rvBuilt = false;
 
@@ -382,6 +431,19 @@ onValue(rConsult, snap => {
     else showBiz();
   }
 });
+onValue(rNotice, snap => {
+  const v = snap.val();
+  NOTICE.text = (v && v.text) ? v.text : '';
+  // 대시보드가 보이는 경우 공지 섹션만 업데이트
+  const nb = document.getElementById('notice-content-display');
+  if (nb) nb.textContent = NOTICE.text || '(공지사항이 없습니다)';
+  const ni = document.getElementById('notice-input');
+  if (ni && document.activeElement !== ni) ni.value = NOTICE.text || '';
+});
+onValue(rAddList, snap => {
+  ADDLIST = snap.val() || {};
+  if (cw === 99 && bst === '추가리스트') showBiz();
+});
 
 // ── 유틸 ─────────────────────────────────────────────
 const F = n => Math.round(n||0).toLocaleString('ko-KR');
@@ -445,6 +507,7 @@ function renderAllDashboard() {
 
   // 오늘 현황 HTML
   let h = `
+    ${renderNoticeBar()}
     <div class="stitle">📊 오늘의 매출 현황</div>
     <div class="dw">
       <div class="dg">
@@ -522,6 +585,7 @@ function renderMain() {
   document.getElementById('bc').style.display = 'none';
   if (cw === -1) { renderAllDashboard(); return; }
   document.getElementById('mc').innerHTML = `
+    ${renderNoticeBar()}
     <div class="stitle">📊 오늘의 매출 현황</div>
     <div class="dw">
       <div class="dg">
@@ -547,18 +611,11 @@ function renderMain() {
     <div class="tg" id="tgrid"></div>
     <div class="stitle">주간 요약</div>
     <div class="sw"><table class="tbl" id="stbl"></table></div>
-    <div class="mw">
-      <div class="mh">
-        <div class="stitle" style="margin-bottom:0">카카오톡 공지 메시지</div>
-        <button class="cbtn" id="cpbtn" onclick="W._cp()">📋 복사</button>
-      </div>
-      <div class="mbox" id="mbox"></div>
-    </div>
     <div class="stitle">주간 리뷰 메모</div>
     <div class="rg" id="rvgrid"></div>
     <div class="rtn">🟢 실시간 공유 중 — 누구든 입력하면 모든 접속자 화면에 즉시 반영됩니다</div>`;
   updDailyInp(); updDailyCalc();
-  tcBuilt = false; buildTC(); renderKPI(); renderSum(); renderMsg();
+  tcBuilt = false; buildTC(); renderKPI(); renderSum();
   rvBuilt = false; buildRv();
 }
 
@@ -703,34 +760,187 @@ function buildRv() {
         <textarea id="rv-${t.name}-good" placeholder="이번 주 잘한 점..." oninput="W._rv('${t.name}','good',this.value)">${REVIEW[t.name].good}</textarea></div>
       <div class="rf"><label>⚠ 개선할 점</label>
         <textarea id="rv-${t.name}-improve" placeholder="개선이 필요한 점..." oninput="W._rv('${t.name}','improve',this.value)">${REVIEW[t.name].improve}</textarea></div>
-      <div class="sttl">🎯 다음 주 전략 (직원별)</div>
-      ${[1,2,3,4,5].map(n=>`
-      <div class="stblk">
-        <div class="stmr">
-          <input class="snmi" id="rv-${t.name}-name${n}" placeholder="이름" value="${REVIEW[t.name]['name'+n]||''}" oninput="W._rv('${t.name}','name${n}',this.value)">
-          <span class="sslsh">/</span>
-          <input class="srki" id="rv-${t.name}-rank${n}" placeholder="직급" value="${REVIEW[t.name]['rank'+n]||''}" oninput="W._rv('${t.name}','rank${n}',this.value)">
-        </div>
-        <textarea class="sta" id="rv-${t.name}-strat${n}" placeholder="전략을 입력하세요..." oninput="W._rv('${t.name}','strat${n}',this.value)">${REVIEW[t.name]['strat'+n]||''}</textarea>
-      </div>`).join('')}
     </div>`).join('');
 }
 
 function updRvInp() {
   TEAMS.forEach(t => {
-    ['good','improve','strat1','strat2','strat3','strat4','strat5',
-     'name1','name2','name3','name4','name5','rank1','rank2','rank3','rank4','rank5'].forEach(f => {
+    ['good','improve'].forEach(f => {
       const el = document.getElementById(`rv-${t.name}-${f}`);
       if (el && document.activeElement !== el) el.value = REVIEW[t.name][f]||'';
     });
   });
 }
 
+// ── 원장공지사항 ─────────────────────────────────────
+function renderNoticeBar() {
+  const txt = NOTICE.text || '';
+  return `<div class="notice-bar" id="notice-bar">
+    <div class="notice-icon">📢</div>
+    <div class="notice-body">
+      <div class="notice-title">원장 공지사항</div>
+      <div class="notice-content" id="notice-content-display" style="${NOTICE.editing?'display:none':''}">${txt||'(공지사항이 없습니다)'}</div>
+      <textarea class="notice-input" id="notice-input" placeholder="공지사항을 입력하세요..." style="${NOTICE.editing?'':'display:none'}"
+        oninput="W._noticeInput(this.value)">${txt}</textarea>
+    </div>
+    <button class="notice-edit-btn" id="notice-edit-btn" onclick="W._noticeEdit()">${NOTICE.editing?'✅ 저장':'✏ 수정'}</button>
+  </div>`;
+}
+
+// ── 미납 리스트 ───────────────────────────────────────
+function renderUnpaidList() {
+  // 상담내역에서 result==='미등록'인 항목 수집
+  const unpaidByTeam = {};
+  TM_CFG.forEach(t => { unpaidByTeam[t.name] = {}; t.members.forEach(m => { unpaidByTeam[t.name][m] = []; }); });
+
+  Object.entries(CONSULT).forEach(([date, rows]) => {
+    Object.entries(rows||{}).forEach(([rid, r]) => {
+      if (r.result === '미납') {
+        const t = getTeam(r.mentor);
+        if (t && unpaidByTeam[t.name] && r.mentor) {
+          if (!unpaidByTeam[t.name][r.mentor]) unpaidByTeam[t.name][r.mentor] = [];
+          unpaidByTeam[t.name][r.mentor].push({date, rid, r});
+        }
+      }
+    });
+  });
+
+  let h = `<div class="addlist-wrap">
+    <div class="stitle" style="margin-bottom:10px">💰 미납 리스트 <span style="font-size:11px;font-weight:400;color:var(--text3)">(상담내역 결과 '미납' 자동집계)</span></div>`;
+
+  const fmtDate = d => {
+    const dt = new Date(d);
+    const mm = String(dt.getMonth()+1).padStart(2,'0');
+    const dd = String(dt.getDate()).padStart(2,'0');
+    return `${mm}-${dd}`;
+  };
+
+  let hasAny = false;
+  TM_CFG.forEach(t => {
+    const teamItems = t.members.flatMap(m => unpaidByTeam[t.name][m]||[]);
+    if (!teamItems.length) return;
+    hasAny = true;
+    h += `<div class="unpaid-team-block"><div class="unpaid-team-hdr" style="background:${t.color}">
+      <span>${t.name}</span>
+      <span style="font-size:11px;font-weight:400;opacity:.85">${teamItems.length}건 · 예정 ${F(teamItems.reduce((s,{r})=>s+N(r.expected),0))}원</span>
+    </div>
+    <table class="unpaid-tbl">
+      <thead><tr>
+        <th style="width:70px">직원</th><th style="width:80px">학생</th>
+        <th style="width:80px">과목</th><th style="width:80px">날짜</th>
+        <th style="width:90px">예정금액</th><th>비고</th>
+      </tr></thead><tbody>`;
+    t.members.forEach(m => {
+      const items = unpaidByTeam[t.name][m]||[];
+      if (!items.length) return;
+      h += `<tr class="member-row"><td colspan="6">${m} (${items.length}건)</td></tr>`;
+      items.forEach(({date,rid,r}) => {
+        h += `<tr>
+          <td style="color:${t.color};font-weight:600">${m}</td>
+          <td>${r.student||'-'}</td>
+          <td>${r.subject||'-'}</td>
+          <td style="font-family:'Roboto Mono',monospace;font-size:11px">${fmtDate(date)}</td>
+          <td style="text-align:right;font-family:'Roboto Mono',monospace;color:var(--gold);font-weight:700">${r.expected?F(N(r.expected)):'-'}</td>
+          <td style="color:var(--text2)">${r.note||''}</td>
+        </tr>`;
+      });
+    });
+    h += `</tbody></table></div>`;
+  });
+
+  if (!hasAny) h += `<div style="text-align:center;padding:32px;color:var(--text3);font-size:13px">미납 항목이 없습니다 ✅</div>`;
+  h += `</div>`;
+  return h;
+}
+
+// ── 추가 리스트 ───────────────────────────────────────
+function renderAddListTab() {
+  const allRows = Object.entries(ADDLIST).sort(([a],[b])=>a.localeCompare(b));
+
+  const renderRow = (id, row) => {
+    const st = row.status || '진행중';
+    return `<tr class="status-${st}">
+      <td>
+        <select class="al-sel" onchange="W._alUpdate('${id}','mentor',this.value)">
+          <option value="">선택</option>
+          ${TM_CFG.map(t=>`<optgroup label="${t.name}">${t.members.map(m=>`<option value="${m}"${row.mentor===m?' selected':''}>${m}</option>`).join('')}</optgroup>`).join('')}
+        </select>
+      </td>
+      <td><input class="al-inp" value="${row.student||''}" placeholder="이름" oninput="W._alUpdate('${id}','student',this.value)"></td>
+      <td><input class="al-num" style="width:36px" value="${row.age||''}" placeholder="0" oninput="W._alUpdate('${id}','age',this.value)"></td>
+      <td><input class="al-inp" value="${row.subject||''}" placeholder="과목명" oninput="W._alUpdate('${id}','subject',this.value)"></td>
+      <td><input class="al-num" style="width:44px" value="${row.remaining||''}" placeholder="0" oninput="W._alUpdate('${id}','remaining',this.value)"></td>
+      <td><input class="al-inp" type="date" value="${row.interviewDate||''}" onchange="W._alUpdate('${id}','interviewDate',this.value)" style="width:100%"></td>
+      <td><input class="al-inp" type="date" value="${row.availableDate||''}" onchange="W._alUpdate('${id}','availableDate',this.value)" style="width:100%"></td>
+      <td><input class="al-num" value="${row.expectedAmount?F(N(row.expectedAmount)):''}" placeholder="0" oninput="W._alUpdate('${id}','expectedAmount',this.value)" onblur="this.value=this.value?F(N(this.value)):''"></td>
+      <td>
+        <select class="al-sel" onchange="W._alUpdate('${id}','status',this.value)">
+          <option value="진행중"${st==='진행중'?' selected':''}>진행중</option>
+          <option value="완납"${st==='완납'?' selected':''}>완납</option>
+          <option value="미납"${st==='미납'?' selected':''}>미납</option>
+        </select>
+      </td>
+      <td><input class="al-inp" value="${row.note||''}" placeholder="비고" oninput="W._alUpdate('${id}','note',this.value)"></td>
+      <td><button class="dbc" onclick="W._alDel('${id}')">×</button></td>
+    </tr>`;
+  };
+
+  const thead = `<thead><tr>
+    <th style="width:68px">멘토</th>
+    <th style="width:72px">수강생</th>
+    <th style="width:40px">나이</th>
+    <th style="width:88px">과목명</th>
+    <th style="width:48px">남은과목</th>
+    <th style="width:100px">면담예정일</th>
+    <th style="width:100px">추가가능일</th>
+    <th style="width:100px">추가등록예상액</th>
+    <th style="width:68px">상태</th>
+    <th>비고</th>
+    <th style="width:22px"></th>
+  </tr></thead>`;
+
+  let h = `<div class="addlist-wrap">
+    <div class="stitle" style="margin-bottom:10px">📋 추가 리스트</div>`;
+
+  TM_CFG.forEach(t => {
+    const teamRows = allRows.filter(([,row]) => row.team === t.name);
+    h += `<div class="unpaid-team-block" style="margin-bottom:14px">
+      <div class="unpaid-team-hdr" style="background:${t.color}">
+        <span>${t.name}</span>
+        <span style="font-size:11px;font-weight:400;opacity:.85">${teamRows.length}건</span>
+      </div>
+      <div style="overflow-x:auto">
+      <table class="addlist-tbl">
+        ${thead}<tbody>`;
+    if (teamRows.length) {
+      teamRows.forEach(([id, row]) => { h += renderRow(id, row); });
+    } else {
+      h += `<tr><td colspan="11" style="text-align:center;padding:16px;color:var(--text3);font-size:12px">항목 없음</td></tr>`;
+    }
+    h += `</tbody></table></div>
+      <button onclick="W._alAddTeam('${t.name}')" style="width:100%;padding:6px;font-size:12px;font-weight:700;background:var(--bg);border:1px dashed var(--border);border-top:none;cursor:pointer;color:var(--text2);border-radius:0 0 8px 8px" onmouseover="this.style.background='var(--accent-light)';this.style.color='var(--accent)'" onmouseout="this.style.background='var(--bg)';this.style.color='var(--text2)'">+ ${t.name} 행 추가</button>
+    </div>`;
+  });
+
+  // 미배정(팀 없음) 항목
+  const unassigned = allRows.filter(([,row]) => !row.team || !TM_CFG.find(t=>t.name===row.team));
+  if (unassigned.length) {
+    h += `<div class="unpaid-team-block" style="margin-bottom:14px">
+      <div class="unpaid-team-hdr" style="background:var(--text3)"><span>미배정</span><span style="font-size:11px;opacity:.85">${unassigned.length}건</span></div>
+      <div style="overflow-x:auto"><table class="addlist-tbl">${thead}<tbody>`;
+    unassigned.forEach(([id, row]) => { h += renderRow(id, row); });
+    h += `</tbody></table></div></div>`;
+  }
+
+  h += `</div>`;
+  return h;
+}
+
 // ── 상담 집계 ─────────────────────────────────────────
 function calcMS() {
   const ms = {};
   TM_CFG.forEach(t => t.members.forEach(m => {
-    ms[m] = {상담:0, 등록:0, 미등록:0, 취소:0, 완납:0, 미납:0};
+    ms[m] = {상담:0, 등록:0, 미등록:0, 취소:0, 완납:0, 미납:0, COD:0};
   }));
   Object.values(CONSULT).forEach(day => {
     Object.values(day||{}).forEach(r => {
@@ -740,6 +950,7 @@ function calcMS() {
       if (r.result === '미납') { ms[m].미납 += N(r.expected); ms[m].미등록++; }
       if (r.result === '미등록회수') { ms[m].완납 += N(r.paid); ms[m].등록++; }
       if (r.result === '취소') ms[m].취소++;
+      if (r.result === 'COD') { ms[m].완납 += N(r.paid); ms[m].등록++; ms[m].COD++; }
       // 추가 → 아무것도 반영 안함
     });
   });
@@ -753,11 +964,23 @@ function showBiz() {
   const nav = `<div class="bsn">
     <button class="bst${bst==='요약'?' on':''}" onclick="W._bst('요약')">📊 영업 요약</button>
     <button class="bst${bst==='상담내역'?' on':''}" onclick="W._bst('상담내역')">📋 상담 내역</button>
+    <button class="bst${bst==='미납리스트'?' on':''}" onclick="W._bst('미납리스트')" style="${bst==='미납리스트'?'color:#D97706;border-bottom-color:#D97706':''}">💰 미납 리스트</button>
+    <button class="bst${bst==='추가리스트'?' on':''}" onclick="W._bst('추가리스트')" style="${bst==='추가리스트'?'color:#7C3AED;border-bottom-color:#7C3AED':''}">📋 추가 리스트</button>
   </div>`;
 
   if (bst === '상담내역') {
     const prevKw = document.getElementById('consult-search')?.value || '';
     document.getElementById('bc').innerHTML = nav + renderConsult(prevKw);
+    return;
+  }
+
+  if (bst === '미납리스트') {
+    document.getElementById('bc').innerHTML = nav + renderUnpaidList();
+    return;
+  }
+
+  if (bst === '추가리스트') {
+    document.getElementById('bc').innerHTML = nav + renderAddListTab();
     return;
   }
 
@@ -1021,7 +1244,7 @@ function renderConsult(searchKw='') {
       sorted.forEach(([rid,r])=>{
         const t=getTeam(r.mentor);
         if(t&&t.name!==lt){lt=t.name;h+=`<tr><td colspan="10" style="padding:0"><div class="tsect" style="border-left-color:${t.color};color:${t.color}">${t.name}</div></td></tr>`;}
-        const rowBg = r.result==='완납' ? 'background:#FFFDE7' : r.result==='미납' ? 'background:#FEF2F2' : r.result==='취소' ? 'background:#E5E7EB;color:#6B7280' : '';
+        const rowBg = r.result==='완납' ? 'background:#FFFDE7' : r.result==='미납' ? 'background:#FEF2F2' : r.result==='취소' ? 'background:#E5E7EB;color:#6B7280' : r.result==='COD' ? 'background:#EFF4FF' : '';
         h+=`<tr style="${rowBg}">
           <td><select class="cs" onchange="W._cu('${date}','${rid}','mentor',this.value)">
             <option value="">선택</option>
@@ -1091,12 +1314,13 @@ const W = {
     // 활성화
     ['nav-dash','nav-w0','nav-w1','nav-w2','nav-w3','nav-biz'].forEach(id=>document.getElementById(id)?.classList.remove('on'));
     document.getElementById('nav-biz')?.classList.add('on');
-    document.getElementById('nav-biz-sum')?.classList.remove('on');
-    document.getElementById('nav-biz-con')?.classList.remove('on');
+    ['nav-biz-sum','nav-biz-con','nav-biz-unp','nav-biz-add'].forEach(id=>document.getElementById(id)?.classList.remove('on'));
     if(tab==='요약') document.getElementById('nav-biz-sum')?.classList.add('on');
-    else document.getElementById('nav-biz-con')?.classList.add('on');
+    else if(tab==='상담내역') document.getElementById('nav-biz-con')?.classList.add('on');
+    else if(tab==='미납리스트') document.getElementById('nav-biz-unp')?.classList.add('on');
+    else if(tab==='추가리스트') document.getElementById('nav-biz-add')?.classList.add('on');
     const pt=document.getElementById('page-title');
-    if(pt) pt.textContent = tab==='요약'?'영업 요약':'상담 내역';
+    if(pt) pt.textContent = tab==='요약'?'영업 요약':tab==='상담내역'?'상담 내역':tab==='미납리스트'?'미납 리스트':'추가 리스트';
     showBiz();
   },
   _sw(wi) {
@@ -1130,12 +1354,13 @@ const W = {
   _rv(team,field,val) { REVIEW[team][field]=val; set(rReview,REVIEW); },
   _bst(tab) {
     bst=tab;
-    document.getElementById('nav-biz-sum')?.classList.remove('on');
-    document.getElementById('nav-biz-con')?.classList.remove('on');
+    ['nav-biz-sum','nav-biz-con','nav-biz-unp','nav-biz-add'].forEach(id=>document.getElementById(id)?.classList.remove('on'));
     if(tab==='요약') document.getElementById('nav-biz-sum')?.classList.add('on');
-    else document.getElementById('nav-biz-con')?.classList.add('on');
+    else if(tab==='상담내역') document.getElementById('nav-biz-con')?.classList.add('on');
+    else if(tab==='미납리스트') document.getElementById('nav-biz-unp')?.classList.add('on');
+    else if(tab==='추가리스트') document.getElementById('nav-biz-add')?.classList.add('on');
     const pt=document.getElementById('page-title');
-    if(pt) pt.textContent = tab==='요약'?'영업 요약':'상담 내역';
+    if(pt) pt.textContent = tab==='요약'?'영업 요약':tab==='상담내역'?'상담 내역':tab==='미납리스트'?'미납 리스트':'추가 리스트';
     showBiz();
   },
   _bm(team,member,field,val) {
@@ -1204,6 +1429,54 @@ const W = {
   _csearchDebounce(val) {
     clearTimeout(window._csTimer);
     window._csTimer = setTimeout(() => W._csearch(val), 300);
+  },
+  _noticeEdit() {
+    NOTICE.editing = !NOTICE.editing;
+    const disp = document.getElementById('notice-content-display');
+    const inp = document.getElementById('notice-input');
+    const btn = document.getElementById('notice-edit-btn');
+    if (NOTICE.editing) {
+      if(disp) disp.style.display='none';
+      if(inp) { inp.style.display=''; inp.focus(); }
+      if(btn) btn.textContent='✅ 저장';
+    } else {
+      const txt = document.getElementById('notice-input')?.value || '';
+      NOTICE.text = txt;
+      set(rNotice, {text: txt});
+      if(disp) { disp.textContent = txt||'(공지사항이 없습니다)'; disp.style.display=''; }
+      if(inp) inp.style.display='none';
+      if(btn) btn.textContent='✏ 수정';
+    }
+  },
+  _noticeInput(val) { NOTICE.text = val; },
+  _alAdd() {
+    const id = Math.random().toString(36).slice(2,10);
+    ADDLIST[id] = {team:'',mentor:'',student:'',age:'',subject:'',remaining:'',interviewDate:'',availableDate:'',expectedAmount:'',status:'진행중',note:''};
+    set(rAddList, ADDLIST);
+    if(cw===99 && bst==='추가리스트') showBiz();
+  },
+  _alAddTeam(teamName) {
+    const id = Math.random().toString(36).slice(2,10);
+    ADDLIST[id] = {team:teamName,mentor:'',student:'',age:'',subject:'',remaining:'',interviewDate:'',availableDate:'',expectedAmount:'',status:'진행중',note:''};
+    set(rAddList, ADDLIST);
+    if(cw===99 && bst==='추가리스트') showBiz();
+  },
+  _alDel(id) {
+    if(!confirm('삭제할까요?')) return;
+    delete ADDLIST[id];
+    set(rAddList, ADDLIST);
+    if(cw===99 && bst==='추가리스트') showBiz();
+  },
+  _alUpdate(id, field, val) {
+    if(!ADDLIST[id]) return;
+    ADDLIST[id][field] = val;
+    // 멘토 선택 시 팀 자동 세팅
+    if(field==='mentor' && val) {
+      const t = getTeam(val);
+      if(t) ADDLIST[id].team = t.name;
+    }
+    set(rAddList, ADDLIST);
+    if(field==='status' && cw===99 && bst==='추가리스트') showBiz();
   },
   _cp() {
     navigator.clipboard.writeText(document.getElementById('mbox').textContent).then(()=>{
