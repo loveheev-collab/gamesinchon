@@ -860,7 +860,7 @@ function showBiz() {
       <td class="nr" style="color:var(--text);font-weight:700" id="${"biz-goal-"+t.name}">${F(tGoal)}</td>
       <td class="nr" style="color:var(--green);font-weight:700" id="${"biz-tm-"+t.name}">${F(tTM)}</td>
       <td class="nr" style="color:var(--red)" id="${"biz-ref-"+t.name}">${F(tRef)}</td>
-      <td class="nr" style="color:var(--accent);font-weight:700" id="${"biz-net-"+t.name+"-team"}">${F(tTM-tRef)}</td>
+      <td class="nr" style="color:var(--accent);font-weight:900;font-size:14px;background:#EFF4FF;border-radius:4px" id="${"biz-net-"+t.name+"-team"}">${F(tTM-tRef)}</td>
       <td class="nr" style="color:var(--purple);font-weight:700">${tGoal>0?((tTM-tRef)/tGoal*100).toFixed(1)+'%':'0.0%'}</td>
     </tr></tbody></table></div>`;
   });
