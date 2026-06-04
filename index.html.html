@@ -535,9 +535,9 @@ function renderAllDashboard() {
   h += `<div class="stitle">📈 결산 누계 현황</div>
     <div class="kg">
       <div class="kc go"><div class="klbl">월 목표</div><div class="kval">${F(TG)}</div><div class="ksub">원</div></div>
-      <div class="kc g"><div class="klbl">누계 실적</div><div class="kval">${F(totalSales)}</div><div class="ksub">원</div></div>
-      <div class="kc a"><div class="klbl">달성률</div><div class="kval">${TG>0?(totalSales/TG*100).toFixed(1)+'%':'0.0%'}</div><div class="ksub">누계 기준</div></div>
-      <div class="kc ${diff>=0?'g':'r'}"><div class="klbl">전년대비</div><div class="kval" style="color:${diff>=0?'var(--green)':'var(--red)'}">${diff>=0?'+':''}${F(diff)}</div><div class="ksub">원</div></div>
+      <div class="kc g"><div class="klbl">누계 실적</div><div class="kval" id="dash-kpi-sales">${F(DAILY.thisYear||0)}</div><div class="ksub">원</div></div>
+      <div class="kc a"><div class="klbl">달성률</div><div class="kval" id="dash-kpi-rate">${TG>0?((DAILY.thisYear||0)/TG*100).toFixed(1)+'%':'0.0%'}</div><div class="ksub">누계 기준</div></div>
+      <div class="kc" id="dash-kpi-diff-card"><div class="klbl">전년대비</div><div class="kval" id="dash-kpi-diff" style="color:${diff>=0?'var(--green)':'var(--red)'}">${diff>=0?'+':''}${F(diff)}</div><div class="ksub">원</div></div>
     </div>`;
 
   // 주차별 결산 (1~4주차 전체)
@@ -633,6 +633,15 @@ function updDailyCalc() {
   if (dv) { dv.textContent=(diff>=0?'+':'')+F(diff)+'원'; dv.style.color=diff>=0?'#15803D':'#DC2626'; }
   if (dc) dc.style.cssText=`background:${diff>=0?'#F0FDF4':'#FEF2F2'};border:1px solid ${diff>=0?'#BBF7D0':'#FECACA'};border-radius:8px`;
   if (cv) cv.textContent = DAILY.consult>0 ? (DAILY.contract/DAILY.consult*100).toFixed(1)+'%' : '0.0%';
+  // 결산 누계 현황 KPI 실시간 갱신
+  const ks = document.getElementById('dash-kpi-sales');
+  const kr = document.getElementById('dash-kpi-rate');
+  const kd = document.getElementById('dash-kpi-diff');
+  const kc = document.getElementById('dash-kpi-diff-card');
+  if (ks) ks.textContent = F(DAILY.thisYear||0);
+  if (kr) kr.textContent = TG>0 ? ((DAILY.thisYear||0)/TG*100).toFixed(1)+'%' : '0.0%';
+  if (kd) { kd.textContent=(diff>=0?'+':'')+F(diff); kd.style.color=diff>=0?'var(--green)':'var(--red)'; }
+  if (kc) kc.className = 'kc '+(diff>=0?'g':'r');
 }
 
 function renderKPI() {
@@ -866,13 +875,13 @@ function renderAddListTab() {
           ${TM_CFG.map(t=>`<optgroup label="${t.name}">${t.members.map(m=>`<option value="${m}"${row.mentor===m?' selected':''}>${m}</option>`).join('')}</optgroup>`).join('')}
         </select>
       </td>
-      <td><input class="al-inp" value="${row.student||''}" placeholder="이름" oninput="W._alUpdate('${id}','student',this.value)"></td>
-      <td><input class="al-num" style="width:36px" value="${row.age||''}" placeholder="0" oninput="W._alUpdate('${id}','age',this.value)"></td>
-      <td><input class="al-inp" value="${row.subject||''}" placeholder="과목명" oninput="W._alUpdate('${id}','subject',this.value)"></td>
-      <td><input class="al-num" style="width:44px" value="${row.remaining||''}" placeholder="0" oninput="W._alUpdate('${id}','remaining',this.value)"></td>
+      <td><input class="al-inp" value="${row.student||''}" placeholder="이름" oninput="ADDLIST['${id}']&&(ADDLIST['${id}'].student=this.value)" onblur="W._alUpdate('${id}','student',this.value)"></td>
+      <td><input class="al-num" style="width:36px" value="${row.age||''}" placeholder="0" oninput="ADDLIST['${id}']&&(ADDLIST['${id}'].age=this.value)" onblur="W._alUpdate('${id}','age',this.value)"></td>
+      <td><input class="al-inp" value="${row.subject||''}" placeholder="과목명" oninput="ADDLIST['${id}']&&(ADDLIST['${id}'].subject=this.value)" onblur="W._alUpdate('${id}','subject',this.value)"></td>
+      <td><input class="al-num" style="width:44px" value="${row.remaining||''}" placeholder="0" oninput="ADDLIST['${id}']&&(ADDLIST['${id}'].remaining=this.value)" onblur="W._alUpdate('${id}','remaining',this.value)"></td>
       <td><input class="al-inp" type="date" value="${row.interviewDate||''}" onchange="W._alUpdate('${id}','interviewDate',this.value)" style="width:100%"></td>
       <td><input class="al-inp" type="date" value="${row.availableDate||''}" onchange="W._alUpdate('${id}','availableDate',this.value)" style="width:100%"></td>
-      <td><input class="al-num" value="${row.expectedAmount?F(N(row.expectedAmount)):''}" placeholder="0" oninput="W._alUpdate('${id}','expectedAmount',this.value)" onblur="this.value=this.value?F(N(this.value)):''"></td>
+      <td><input class="al-num" value="${row.expectedAmount?F(N(row.expectedAmount)):''}" placeholder="0" oninput="ADDLIST['${id}'] && (ADDLIST['${id}'].expectedAmount=this.value)" onblur="W._alUpdate('${id}','expectedAmount',this.value);this.value=this.value?F(N(this.value)):''"></td>
       <td>
         <select class="al-sel" onchange="W._alUpdate('${id}','status',this.value)">
           <option value="진행중"${st==='진행중'?' selected':''}>진행중</option>
@@ -880,7 +889,7 @@ function renderAddListTab() {
           <option value="미납"${st==='미납'?' selected':''}>미납</option>
         </select>
       </td>
-      <td><input class="al-inp" value="${row.note||''}" placeholder="비고" oninput="W._alUpdate('${id}','note',this.value)"></td>
+      <td><input class="al-inp" value="${row.note||''}" placeholder="비고" oninput="ADDLIST['${id}']&&(ADDLIST['${id}'].note=this.value)" onblur="W._alUpdate('${id}','note',this.value)"></td>
       <td><button class="dbc" onclick="W._alDel('${id}')">×</button></td>
     </tr>`;
   };
