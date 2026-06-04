@@ -845,7 +845,7 @@ function showBiz() {
         <td><input class="binp" type="text" inputmode="numeric" value="${bd.refund?F(bd.refund):''}" placeholder="0"
           oninput="W._bm('${t.name}','${m}','refund',this.value);formatBizInp(this)"
           style="border-color:${t.color}44;color:var(--red);width:100%"></td>
-        <td class="nr" style="color:var(--accent);font-weight:700" id="${"biz-net-"+t.name+"-"+m}">${F(net)}</td>
+        <td class="nr" style="color:var(--accent);font-weight:900;font-size:14px;background:#EFF4FF;border-radius:4px" id="${"biz-net-"+t.name+"-"+m}">${F(net)}</td>
         <td class="nr" style="color:var(--purple);font-weight:700">${(bd.goal||0)>0?((net/(bd.goal))*100).toFixed(1)+'%':'0.0%'}</td>
       </tr>`;
     });
