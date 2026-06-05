@@ -1166,7 +1166,7 @@ function renderConsult(searchKw='') {
         <th style="width:80px">과목</th>
         <th style="width:63px">상태</th><th style="width:73px">결과</th>
         <th style="width:86px">완납(원)</th><th style="width:86px">예정(원)</th>
-        <th style="width:50px">시간</th><th>비고</th><th style="width:22px"></th>
+        <th>비고</th><th style="width:22px"></th>
       </tr></thead><tbody>`;
     let lt=null;
     sorted.forEach(({date,rid,r})=>{
@@ -1188,7 +1188,6 @@ function renderConsult(searchKw='') {
         </select></td>
         <td><input class="cn" value="${r.paid?F(N(r.paid)):''}" placeholder="0" oninput="W._cu('${date}','${rid}','paid',this.value)"></td>
         <td><input class="cn" value="${r.expected?F(N(r.expected)):''}" placeholder="0" oninput="W._cu('${date}','${rid}','expected',this.value)"></td>
-        <td><input class="ci" style="width:46px" value="${r.time||''}" placeholder="00:00" oninput="W._cu('${date}','${rid}','time',this.value)"></td>
         <td><input class="ci" value="${r.note||''}" placeholder="비고" oninput="W._cu('${date}','${rid}','note',this.value)"></td>
         <td><button class="dbc" onclick="W._cd('${date}','${rid}')">×</button></td>
       </tr>`;
@@ -1246,7 +1245,6 @@ function renderConsult(searchKw='') {
         <th style="width:80px">과목</th>
         <th style="width:63px">상태</th><th style="width:73px">결과</th>
         <th style="width:86px">완납(원)</th><th style="width:86px">예정(원)</th>
-        <th style="width:50px">시간</th>
         <th>비고</th><th style="width:22px"></th>
       </tr></thead><tbody>`;
       let lt=null;
@@ -1270,7 +1268,6 @@ function renderConsult(searchKw='') {
           </select></td>
           <td><input class="cn" value="${r.paid?F(N(r.paid)):''}" placeholder="0" oninput="W._cu('${date}','${rid}','paid',this.value)"></td>
           <td><input class="cn" value="${r.expected?F(N(r.expected)):''}" placeholder="0" oninput="W._cu('${date}','${rid}','expected',this.value)"></td>
-          <td><input class="ci" style="width:46px" value="${r.time||''}" placeholder="00:00" oninput="W._cu('${date}','${rid}','time',this.value)"></td>
           <td><input class="ci" value="${r.note||''}" placeholder="비고" oninput="W._cu('${date}','${rid}','note',this.value)"></td>
           <td><button class="dbc" onclick="W._cd('${date}','${rid}')">×</button></td>
         </tr>`;
@@ -1407,14 +1404,14 @@ const W = {
   _ca(date) {
     if(!CONSULT[date]) CONSULT[date]={};
     const id=Math.random().toString(36).slice(2,10);
-    CONSULT[date][id]={mentor:'',student:'',subject:'',status:'상담',result:'',paid:'',expected:'',time:'',note:''};
+    CONSULT[date][id]={mentor:'',student:'',subject:'',status:'상담',result:'',paid:'',expected:'',note:''};
     set(rConsult,CONSULT); showBiz();
   },
   _cad() {
     const date=document.getElementById('cdi')?.value; if(!date) return;
     if(!CONSULT[date]) CONSULT[date]={};
     const id=Math.random().toString(36).slice(2,10);
-    CONSULT[date][id]={mentor:'',student:'',subject:'',status:'상담',result:'',paid:'',expected:'',time:'',note:''};
+    CONSULT[date][id]={mentor:'',student:'',subject:'',status:'상담',result:'',paid:'',expected:'',note:''};
     cCol[date]=false; set(rConsult,CONSULT); showBiz();
   },
   _cd(date,rid) {
