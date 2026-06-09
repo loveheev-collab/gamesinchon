@@ -1336,28 +1336,35 @@ function calcMS() {
 function makeBizMonthNav() {
   const bizStart = new Date(BIZ_PERIOD.s+'T00:00:00');
   const bizEnd   = new Date(BIZ_PERIOD.e+'T00:00:00');
-  const bizMonths = [];
-  let cur = new Date(bizStart.getFullYear(), bizStart.getMonth(), 1);
-  while(cur <= bizEnd) {
-    bizMonths.push(`${cur.getFullYear()}-${String(cur.getMonth()+1).padStart(2,'0')}`);
-    cur.setMonth(cur.getMonth()+1);
-  }
+  // 영업월 이름 = 시작일의 월 기준
+  const curMonthKey = `${bizStart.getFullYear()}-${String(bizStart.getMonth()+1).padStart(2,'0')}`;
+  const curMonthLbl = `${bizStart.getFullYear()}년 ${bizStart.getMonth()+1}월`;
+
+  // 아카이브에서 과거 영업월 목록 로드 (ARCHIVE에 biz 데이터 있으면)
+  const archiveKeys = Object.keys(ARCHIVE.biz || {}).sort();
+  // 현재 영업월 키가 아카이브에 없으면 추가
+  const allMonths = [...new Set([...archiveKeys, curMonthKey])].sort();
+
   const selMonth = window._bizSelMonth || 'current';
-  const selIdx = selMonth === 'current' ? bizMonths.length-1 : Math.max(0, bizMonths.indexOf(selMonth) >= 0 ? bizMonths.indexOf(selMonth) : bizMonths.length-1);
-  const dispMonth = bizMonths[selIdx] || bizMonths[bizMonths.length-1];
-  const dispLbl = dispMonth.slice(0,4) + '년 ' + Number(dispMonth.slice(5)) + '월';
-  const isCurrent = selIdx === bizMonths.length-1;
+  const selIdx = selMonth === 'current'
+    ? allMonths.length - 1
+    : allMonths.indexOf(selMonth) >= 0 ? allMonths.indexOf(selMonth) : allMonths.length - 1;
+  const dispKey = allMonths[selIdx] || curMonthKey;
+  const isCurrent = dispKey === curMonthKey;
+  const dispYear = parseInt(dispKey.slice(0,4));
+  const dispMon  = parseInt(dispKey.slice(5,7));
+  const dispLbl  = `${dispYear}년 ${dispMon}월`;
   const canPrev = selIdx > 0;
-  const canNext = selIdx < bizMonths.length-1;
-  const mj = JSON.stringify(bizMonths).replace(/"/g,"'");
+  const canNext = selIdx < allMonths.length - 1;
+  const mj = JSON.stringify(allMonths).replace(/"/g,"'");
+
   return `<div style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;margin-bottom:14px;flex-wrap:wrap">
     <button onclick="W._bizMonth(${selIdx-1},'${mj}')" style="width:28px;height:28px;border-radius:6px;border:1px solid var(--border);background:var(--bg);cursor:pointer;font-size:14px;${canPrev?'':'opacity:.3;cursor:not-allowed'}" ${canPrev?'':'disabled'}>◀</button>
-    <span style="font-size:15px;font-weight:900;min-width:100px;text-align:center">${dispLbl} 영업</span>
+    <span style="font-size:15px;font-weight:900;min-width:110px;text-align:center">${dispLbl} 영업</span>
     ${isCurrent?'<span style="padding:2px 8px;background:#DBEAFE;color:#2563EB;border-radius:20px;font-size:11px;font-weight:700">현재</span>':''}
     <button onclick="W._bizMonth(${selIdx+1},'${mj}')" style="width:28px;height:28px;border-radius:6px;border:1px solid var(--border);background:var(--bg);cursor:pointer;font-size:14px;${canNext?'':'opacity:.3;cursor:not-allowed'}" ${canNext?'':'disabled'}>▶</button>
     <div style="width:1px;height:24px;background:var(--border);margin:0 4px"></div>
     <button onclick="W._bizMonthCur()" style="padding:5px 12px;border-radius:6px;border:1px solid ${isCurrent?'var(--accent)':'var(--border)'};background:${isCurrent?'var(--accent)':'var(--bg)'};color:${isCurrent?'#fff':'var(--text2)'};font-size:12px;font-weight:700;cursor:pointer">현재 영업월</button>
-    <button onclick="W._bizMonthAll()" style="padding:5px 12px;border-radius:6px;border:1px solid ${(selMonth==='all')?'var(--accent)':'var(--border)'};background:${(selMonth==='all')?'var(--accent)':'var(--bg)'};color:${(selMonth==='all')?'#fff':'var(--text2)'};font-size:12px;font-weight:700;cursor:pointer">전체</button>
     <span style="margin-left:auto;font-size:11px;color:var(--text3)">영업일: ${BIZ_PERIOD.s} ~ ${BIZ_PERIOD.e}</span>
   </div>`;
 }
