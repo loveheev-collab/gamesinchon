@@ -19,7 +19,7 @@
 }
 </style>
 <style>
-*{box-sizing:border-box;margin:0;padding:0;font-variant-numeric:normal}
+*{box-sizing:border-box;margin:0;padding:0;font-variant-numeric:normal;outline:none !important}
 .layout{display:flex;min-height:100vh}
 .sidebar{width:200px;background:#fff;border-right:1px solid #E8ECF0;flex-shrink:0;position:fixed;top:0;left:0;height:100vh;overflow-y:auto;z-index:200;display:flex;flex-direction:column}
 .sb-logo{padding:20px 18px 16px;border-bottom:1px solid #F0F2F5}
@@ -191,22 +191,28 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .search-clear{padding:7px 13px;border-radius:7px;border:1px solid var(--border);background:var(--bg2);color:var(--text2);font-size:12px;cursor:pointer;font-family:'Noto Sans KR',sans-serif}
 .search-clear:hover{background:var(--bg3)}
 .search-result-cnt{font-size:12px;color:var(--text3)}
-.dhdr{display:flex;align-items:center;justify-content:space-between;padding:8px 13px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;margin-bottom:5px;cursor:pointer;user-select:none}
-.dtc{font-size:13px;font-weight:700;color:var(--accent)}
-.dts{font-size:11px;color:var(--text2);font-family:'Roboto',monospace}
-.ctbl{width:100%;border-collapse:collapse;background:var(--bg2);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:2px}
-.ctbl th{padding:7px 8px;font-size:11px;font-weight:700;color:var(--text3);text-align:left;background:var(--bg);border-bottom:1px solid var(--border);white-space:nowrap}
-.ctbl td{padding:4px 6px;border-bottom:1px solid var(--border);vertical-align:middle}
-.ctbl tr:last-child td{border-bottom:none}.ctbl tr:hover td{background:#FAFBFC}
-.tsect{background:var(--bg);padding:4px 11px;font-size:11px;font-weight:700;border-left:3px solid}
-.ci{width:100%;padding:4px 5px;border:1px solid transparent;border-radius:4px;font-size:12px;font-family:'Noto Sans KR',sans-serif;background:transparent;color:var(--text)}
-.ci:hover{border-color:var(--border);background:var(--bg)}.ci:focus{outline:none;border-color:var(--accent);background:#fff}
-.cs{width:100%;padding:4px 3px;border:1px solid transparent;border-radius:4px;font-size:12px;font-family:'Noto Sans KR',sans-serif;background:transparent;cursor:pointer}
-.cs:hover{border-color:var(--border);background:var(--bg)}.cs:focus{outline:none;border-color:var(--accent);background:#fff}
-.cn{width:100%;padding:4px 5px;border:1px solid transparent;border-radius:4px;font-size:12px;font-family:'Roboto',monospace;background:transparent;text-align:right;color:var(--text)}
-.cn:hover{border-color:var(--border);background:var(--bg)}.cn:focus{outline:none;border-color:var(--accent);background:#fff}
-.arb{width:100%;padding:5px;font-size:12px;color:var(--text3);background:var(--bg);border:1px dashed var(--border);border-top:none;cursor:pointer;border-radius:0 0 8px 8px}
-.arb:hover{background:var(--accent-light);color:var(--accent);border-color:var(--accent)}
+.dhdr{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:var(--bg2);border:1px solid var(--border);border-left:4px solid var(--accent);border-radius:8px 8px 0 0;margin-bottom:0;cursor:pointer;user-select:none;transition:background .1s}
+.dhdr:hover{background:#F8FAFF}
+.dtc{font-size:14px;font-weight:900;color:var(--accent)}
+.dts{font-size:12px;color:var(--text2);font-family:'Roboto',monospace}
+.ctbl{width:100%;border-collapse:collapse;background:var(--bg2);border:1px solid var(--border);border-top:none;border-radius:0 0 8px 8px;margin-bottom:12px}
+.ctbl th{padding:8px 10px;font-size:11px;font-weight:700;color:var(--text3);text-align:left;background:var(--bg);border-bottom:1px solid var(--border);white-space:nowrap}
+.ctbl td{padding:6px 8px;border-bottom:1px solid var(--border);vertical-align:middle;background:inherit}
+.ctbl tr:last-child td{border-bottom:none}.ctbl tr:hover td{background:#FAFBFF}
+.ctbl .team-sep td{font-size:11px;font-weight:700;padding:5px 12px;border-bottom:1px solid var(--border);isolation:isolate}
+.ci{width:100%;padding:4px 6px;border:1px solid transparent;border-radius:4px;font-size:12px;font-family:'Noto Sans KR',sans-serif;background:transparent;color:var(--text)}
+.ci:hover{border-color:var(--border);background:var(--bg)}.ci:focus{outline:none;border-color:var(--accent);background:#EFF6FF}
+.cs{width:100%;padding:4px 4px;border:1px solid transparent;border-radius:4px;font-size:12px;font-family:'Noto Sans KR',sans-serif;background:transparent;cursor:pointer}
+.cs:hover{border-color:var(--border);background:var(--bg)}.cs:focus{outline:none;border-color:var(--accent);background:#EFF6FF}
+.cn{width:100%;padding:4px 6px;border:1px solid transparent;border-radius:4px;font-size:12px;font-family:'Roboto',monospace;background:transparent;text-align:right;color:var(--text)}
+.cn:hover{border-color:var(--border);background:var(--bg)}.cn:focus{outline:none;border-color:var(--accent);background:#EFF6FF}
+.arb{width:100%;padding:7px;font-size:12px;color:var(--text3);background:var(--bg);border:1px solid var(--border);border-top:1px dashed var(--border);cursor:pointer;border-radius:0 0 8px 8px;transition:all .15s;margin-bottom:12px}
+.arb:hover{background:var(--accent-light);color:var(--accent)}
+.rbadge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;white-space:nowrap}
+.rb-완납{background:#FEF08A;color:#854D0E}.rb-미납{background:#FEE2E2;color:#DC2626}
+.rb-취소{background:#E5E7EB;color:#6B7280}.rb-COD{background:#EFF4FF;color:#2563EB}
+.rb-추가{background:#F0FDF4;color:#16A34A}.rb-미등록회수{background:#F5F3FF;color:#7C3AED}
+.rb-대기{background:#F1F5F9;color:#64748B}
 .dbc{width:21px;height:21px;border-radius:50%;border:none;background:transparent;color:var(--text3);cursor:pointer;font-size:13px;line-height:1;display:flex;align-items:center;justify-content:center}
 .dbc:hover{background:#FEE2E2;color:var(--red)}
 .main{max-width:100%;margin:0;padding:20px 24px}
@@ -289,7 +295,42 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .sb-완납{background:#FEF08A;color:#854D0E}
 .sb-미납{background:#E5E7EB;color:#374151}
 .sb-진행중{background:var(--accent-light);color:var(--accent)}
-/* ── 입금파악 전용 레이아웃 ── */
+/* ── 주차별 계획표 ── */
+.wp-tbl{width:100%;border-collapse:collapse;background:var(--bg2);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:20px}
+.wp-tbl th{padding:9px 12px;font-size:11px;font-weight:700;color:var(--text3);background:var(--bg);border-bottom:2px solid var(--border);text-align:center;white-space:nowrap}
+.wp-tbl th:first-child{text-align:left}
+.wp-tbl td{padding:8px 12px;border-bottom:1px solid var(--border);font-size:13px;vertical-align:middle;text-align:center}
+.wp-tbl tr:last-child td{border-bottom:none}
+.wp-tbl td:first-child{text-align:left;font-weight:700}
+.wp-tbl .wp-cur{background:#EFF4FF}
+.wp-week-lbl{font-weight:900;font-size:13px}
+.wp-period{font-size:11px;color:var(--text3);margin-left:4px}
+.wp-inp{width:100%;padding:4px 6px;border:1px solid transparent;border-radius:5px;font-size:13px;font-family:'Roboto',monospace;background:transparent;text-align:right;color:var(--text)}
+.wp-inp:hover{border-color:var(--border);background:var(--bg)}
+.wp-inp:focus{outline:none;border-color:var(--accent);background:#fff}
+.wp-rate{font-weight:700;font-size:13px}
+.wp-remain{color:var(--gold);font-weight:700}
+.wp-daily{color:var(--accent);font-weight:700}
+/* ── 팀별 성과 카드 ── */
+.tp-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;margin-bottom:20px}
+.tp-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.tp-card-hdr{padding:10px 14px;color:#fff;font-size:14px;font-weight:900}
+.tp-card-body{padding:12px 14px}
+.tp-row{display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid var(--border);font-size:12px}
+.tp-row:last-child{border-bottom:none}
+.tp-row .lbl{color:var(--text3);font-weight:500}
+.tp-row .val{font-weight:700;font-family:'Roboto',monospace;font-size:13px}
+.tp-row .val.g{color:#16A34A}
+.tp-row .val.b{color:#2563EB}
+.tp-row .val.o{color:#D97706}
+.tp-row .val.r{color:#DC2626}
+.tp-badges{display:flex;gap:6px;padding:8px 0 4px}
+.tp-badge{padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700}
+.tp-divider{height:1px;background:var(--border);margin:6px 0}
+.tp-rate-row{display:flex;gap:12px;padding:4px 0}
+.tp-rate-item{flex:1;text-align:center}
+.tp-rate-item .r-lbl{font-size:10px;color:var(--text3);margin-bottom:2px}
+.tp-rate-item .r-val{font-size:16px;font-weight:900;color:var(--accent)}
 .dep-layout{display:grid;grid-template-columns:1fr 1.4fr;gap:20px;align-items:start}
 @media(max-width:1100px){.dep-layout{grid-template-columns:1fr}}
 .dep-panel{background:var(--bg2);border:1px solid var(--border);border-radius:12px;overflow:hidden}
@@ -331,16 +372,10 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
   <div class="sb-sec">
     <div class="sb-sec-lbl">메뉴</div>
     <div class="sb-item" id="nav-dash" onclick="W._swDash()"><span class="ico">📊</span> 대시보드</div>
-    <div class="sb-sub" id="nav-dash-sub" style="display:none">
-      <div class="sb-sub-item" id="nav-w0" onclick="W._sw(0)">📅 1주차</div>
-      <div class="sb-sub-item" id="nav-w1" onclick="W._sw(1)">📅 2주차</div>
-      <div class="sb-sub-item" id="nav-w2" onclick="W._sw(2)">📅 3주차</div>
-      <div class="sb-sub-item" id="nav-w3" onclick="W._sw(3)">📅 4주차</div>
-    </div>
     <div class="sb-item" id="nav-dep" onclick="W._swDep()"><span class="ico">💵</span> 입금 파악</div>
     <div class="sb-item" id="nav-biz" onclick="W._toggleBiz()"><span class="ico">💼</span> 영업현황 <span id="nav-biz-arrow" style="margin-left:auto;font-size:10px;transition:transform .2s">▼</span></div>
     <div class="sb-sub" id="nav-biz-sub" style="display:none">
-      <div class="sb-sub-item" id="nav-biz-sum" onclick="W._swBiz('요약')">📊 영업 요약</div>
+      <div class="sb-sub-item" id="nav-biz-sum" onclick="W._swBiz('요약')">📊 영업 데이터</div>
       <div class="sb-sub-item" id="nav-biz-con" onclick="W._swBiz('상담내역')">📋 상담 내역</div>
       <div class="sb-sub-item" id="nav-biz-unp" onclick="W._swBiz('미납리스트')">💰 미납 리스트</div>
       <div class="sb-sub-item" id="nav-biz-add" onclick="W._swBiz('추가리스트')">📋 추가 리스트</div>
@@ -422,10 +457,15 @@ const rFeedback = ref(db,'feedback2025'); // 미납 피드백
 // ── 설정 ─────────────────────────────────────────────
 const STS = ['상담','추가'];
 const RES = ['완납','미납','추가','미등록회수','취소','COD'];
-let WEEKS = [{label:'1주차',period:'6/1~6/8',total:110000000},{label:'2주차',period:'6/9~6/14',total:111000000},{label:'3주차',period:'6/15~6/20',total:60000000},{label:'4주차',period:'6/21~6/30',total:150000000}];
+let WEEKS = [
+  {label:'1주차',period:'6/1~6/8',  startDate:'2026-06-01',endDate:'2026-06-08', total:110000000},
+  {label:'2주차',period:'6/9~6/14', startDate:'2026-06-09',endDate:'2026-06-14', total:111000000},
+  {label:'3주차',period:'6/15~6/20',startDate:'2026-06-15',endDate:'2026-06-20', total:60000000},
+  {label:'4주차',period:'6/21~6/30',startDate:'2026-06-21',endDate:'2026-06-30', total:150000000}
+];
 let TEAMS = [{name:'1팀',members:4,color:'#2563EB'},{name:'2팀',members:3,color:'#16A34A'},{name:'3팀',members:3,color:'#7C3AED'},{name:'4팀',members:3,color:'#EA580C'}];
 let TM_CFG = [{name:'1팀',color:'#2563EB',members:['정충만','박효선','강채원','송평강']},{name:'2팀',color:'#16A34A',members:['이재운','김태정','한대희']},{name:'3팀',color:'#7C3AED',members:['백영광','이상천','안현우']},{name:'4팀',color:'#EA580C',members:['서승표','송준수','한가흔']}];
-let BIZ_PERIOD = {s:'2026-05-14', e:'2026-06-11'};
+let BIZ_PERIOD = {s:'2026-05-01', e:'2026-05-31'};
 let TG = 431000000, TM = 13, MONTH_LABEL = '6월';
 
 function applyConfig(cfg) {
@@ -626,92 +666,261 @@ function renderSbMonths() {
 
 // ── 결산 메인 ─────────────────────────────────────────
 function renderAllDashboard() {
-  // 전체 대시보드: 오늘 현황 + 1~4주차 전체
   const mc = document.getElementById('mc');
+  const today = new Date();
+  const todayMs = today.getTime();
 
-  // 오늘 현황 HTML
-  let h = `
-    ${renderNoticeBar()}
-    <div class="stitle">📊 오늘의 매출 현황</div>
+  // 현재 주차 계산
+  let curWeekIdx = -1;
+  WEEKS.forEach((w,i) => {
+    if (!w.startDate || !w.endDate) return;
+    const s = new Date(w.startDate+'T00:00:00').getTime();
+    const e = new Date(w.endDate+'T23:59:59').getTime();
+    if (todayMs >= s && todayMs <= e) curWeekIdx = i;
+  });
+
+  const diff = DAILY.thisYear - DAILY.prevYear;
+  let h = `${renderNoticeBar()}
+    <div class="stitle">오늘의 매출 현황</div>
     <div class="dw">
       <div class="dg">
-        <div class="dc"><label>📅 전년 누계 매출 (원)</label><input class="dinp" id="dp" type="text" inputmode="numeric"></div>
-        <div class="dc"><label>💰 올해 누계 매출 (원)</label><input class="dinp" id="dt" type="text" inputmode="numeric"></div>
-        <div class="dc"><label>📞 전일 상담 건수</label><input class="dinp" id="dco" type="text" inputmode="numeric"></div>
-        <div class="dc"><label>✅ 전일 등록 건수</label><input class="dinp" id="dr" type="text" inputmode="numeric"></div>
-        <div class="dc"><label>💵 전일 매출 (원)</label><input class="dinp" id="ds" type="text" inputmode="numeric"></div>
+        <div class="dc"><label>전년 누계 매출 (원)</label><input class="dinp" id="dp" type="text" inputmode="numeric"></div>
+        <div class="dc"><label>올해 누계 매출 (원)</label><input class="dinp" id="dt" type="text" inputmode="numeric"></div>
+        <div class="dc"><label>전일 상담 건수</label><input class="dinp" id="dco" type="text" inputmode="numeric"></div>
+        <div class="dc"><label>전일 등록 건수</label><input class="dinp" id="dr" type="text" inputmode="numeric"></div>
+        <div class="dc"><label>전일 매출 (원)</label><input class="dinp" id="ds" type="text" inputmode="numeric"></div>
       </div>
       <div class="dcalc">
         <div class="dcc" id="ddc" style="background:var(--bg);border:1px solid var(--border);border-radius:8px">
-          <span style="font-size:12px;font-weight:700;color:var(--text2)">📉 전년대비 차이</span>
+          <span style="font-size:12px;font-weight:700;color:var(--text2)">전년대비 차이</span>
           <span style="font-size:14px;font-weight:900;font-family:'Roboto',monospace;color:var(--red)" id="ddv">-</span>
         </div>
         <div class="dcc" style="background:var(--bg);border:1px solid var(--border);border-radius:8px">
-          <span style="font-size:12px;font-weight:700;color:var(--text2)">🔄 전일 전환율</span>
+          <span style="font-size:12px;font-weight:700;color:var(--text2)">전일 전환율</span>
           <span style="font-size:14px;font-weight:900;font-family:'Roboto',monospace;color:var(--text)" id="dcv">-</span>
         </div>
       </div>
     </div>`;
 
-  // 누계 KPI
-  const totalSales = TEAMS.reduce((s,t)=>WEEKS.reduce((ss,_,i)=>ss+N(DATA[t.name]?.[i]?.sales||0),s),0);
-  const diff = DAILY.thisYear - DAILY.prevYear;
-  h += `<div class="kg-highlight-label">📈 결산 누계 현황</div>
+  // 결산 누계
+  h += `<div class="kg-highlight-label">결산 누계 현황</div>
     <div class="kg-highlight">
-      <div class="kc-hl hl-go">
-        <div class="klbl">🎯 월 목표</div>
-        <div class="kval" style="color:#D97706">${F(TG)}</div>
-        <div class="ksub">원</div>
-      </div>
-      <div class="kc-hl hl-g">
-        <div class="klbl">💰 누계 실적</div>
-        <div class="kval" style="color:#16A34A" id="dash-kpi-sales">${F(DAILY.thisYear||0)}</div>
-        <div class="ksub">원</div>
-      </div>
-      <div class="kc-hl hl-a">
-        <div class="klbl">📊 달성률</div>
-        <div class="kval" style="color:#2563EB" id="dash-kpi-rate">${TG>0?((DAILY.thisYear||0)/TG*100).toFixed(1)+'%':'0.0%'}</div>
-        <div class="ksub">누계 기준</div>
-      </div>
-      <div class="kc-hl hl-diff" id="dash-kpi-diff-card" style="--diff-color:${diff>=0?'#16A34A':'#DC2626'}">
-        <div class="klbl">📉 전년대비</div>
-        <div class="kval" style="color:${diff>=0?'#16A34A':'#DC2626'}" id="dash-kpi-diff">${diff>=0?'+':''}${F(diff)}</div>
+      <div class="kc-hl hl-go"><div class="klbl">월 목표</div><div class="kval" style="color:#D97706">${F(TG)}</div><div class="ksub">원</div></div>
+      <div class="kc-hl hl-g"><div class="klbl">누계 실적</div><div class="kval" style="color:#16A34A" id="dash-kpi-sales">${F(DAILY.thisYear||0)}</div><div class="ksub">원</div></div>
+      <div class="kc-hl hl-a"><div class="klbl">달성률</div><div class="kval" style="color:#2563EB" id="dash-kpi-rate">${TG>0?((DAILY.thisYear||0)/TG*100).toFixed(1)+'%':'0.0%'}</div><div class="ksub">누계 기준</div></div>
+      <div class="kc-hl hl-diff" id="dash-kpi-diff-card">
+        <div class="klbl">잔여 목표</div>
+        <div class="kval" style="color:${TG-(DAILY.thisYear||0)>0?'#DC2626':'#16A34A'}" id="dash-kpi-diff">${F(Math.max(0,TG-(DAILY.thisYear||0)))}</div>
         <div class="ksub">원</div>
       </div>
     </div>`;
 
-  // 주차별 결산 (1~4주차 전체)
-  WEEKS.forEach((w,i) => {
-    const ws = TEAMS.reduce((s,t)=>s+N(DATA[t.name]?.[i]?.sales||0),0);
-    const r = w.total>0?ws/w.total:0; const st = ST(r);
-    const teamRows = TEAMS.map(t=>{
-      const d=DATA[t.name]?.[i]||{};
-      const s=N(d.sales),c=N(d.consult),k=N(d.contract);
-      const g=Math.round(w.total*(t.members/TM)/10000)*10000;
-      const tr=g>0?s/g:0; const tst=ST(tr);
-      return `<tr>
-        <td><span class="tdot" style="background:${t.color}"></span>${t.name} (${t.members}명)</td>
-        <td>${F(g)}</td><td>${F(s)}</td>
-        <td style="color:${TC(tr)};font-weight:700">${tst.b} ${(tr*100).toFixed(1)}%</td>
-        <td>${c}</td><td>${k}</td><td>${P(k,c)}</td>
-      </tr>`;
-    }).join('');
-    h += `<div class="stitle" style="margin-top:20px">
-        ${w.label} <span style="font-size:12px;font-weight:400;color:var(--text3)">${w.period}</span>
-        <span style="margin-left:10px;font-size:12px;color:${TC(r)};font-weight:700">${st.b} ${(r*100).toFixed(1)}% &nbsp;|&nbsp; ${F(ws)}원 / 목표 ${F(w.total)}원</span>
+  // ── 주차별 매출 계획 (탭 방식) ──
+  const selWeek = window._dashWeekTab ?? (curWeekIdx >= 0 ? curWeekIdx : 0);
+  window._dashWeekTab = selWeek;
+  const w = WEEKS[selWeek];
+
+  // 탭 상단에 전체 주차 요약 미니 바
+  const weekSummaryBtns = WEEKS.map((ww,i) => {
+    const ws2 = TEAMS.reduce((s,t)=>s+N(DATA[t.name]?.[i]?.sales||0),0);
+    const g2 = N(ww.total||0);
+    const r2 = g2>0?ws2/g2:0;
+    const isSel = i === selWeek;
+    const isCurW = i === curWeekIdx;
+    return `<button onclick="W._dashWeekTab(${i})" style="
+      flex:1;padding:10px 8px;border:none;cursor:pointer;border-radius:8px;
+      background:${isSel?ww.color||'#2563EB':'var(--bg)'};
+      color:${isSel?'#fff':'var(--text)'};
+      border:2px solid ${isCurW?'#F59E0B':(isSel?'transparent':'var(--border)')};
+      transition:all .15s;position:relative">
+      ${isCurW?'<span style="position:absolute;top:4px;right:6px;font-size:9px;background:#F59E0B;color:#fff;padding:1px 4px;border-radius:8px">진행중</span>':''}
+      <div style="font-size:13px;font-weight:900">${ww.label}</div>
+      <div style="font-size:11px;margin-top:3px;opacity:.85">${F(ws2)}</div>
+      <div style="font-size:11px;font-weight:700;color:${isSel?'#fff':TC(r2)}">${(r2*100).toFixed(1)}%</div>
+    </button>`;
+  }).join('');
+
+  // 선택 주차 상세
+  const ws = TEAMS.reduce((s,t)=>s+N(DATA[t.name]?.[selWeek]?.sales||0),0);
+  const goal = N(w?.total||0);
+  const rate = goal > 0 ? ws/goal : 0;
+  const remain = Math.max(0, goal - ws);
+  const st = ST(rate);
+
+  let remainDays = '—', dailyTarget = '—';
+  if (w?.endDate) {
+    const endDate = new Date(w.endDate+'T23:59:59');
+    const days = Math.max(0, Math.ceil((endDate - today) / 86400000));
+    remainDays = days + '일';
+    dailyTarget = days > 0 ? F(Math.ceil(remain/days))+'원' : (ws>=goal?'달성':'—');
+  }
+
+  const weekColor = TM_CFG[0]?.color || '#2563EB';
+
+  h += `<div class="kg-highlight-label" style="margin-top:20px">주차별 매출 계획</div>
+    <div style="display:flex;gap:8px;margin-bottom:14px">${weekSummaryBtns}</div>
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:16px">
+      <div style="padding:12px 16px;background:${WEEKS[selWeek]?.color||'#1A2340'}18;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <span style="font-size:15px;font-weight:900">${w?.label||''}</span>
+        <span style="font-size:12px;color:var(--text3)">기간:</span>
+        <input type="date" value="${w?.startDate||''}" style="border:1px solid var(--border);border-radius:4px;padding:2px 6px;font-size:12px;background:var(--bg)"
+          onchange="W._weekDate(${selWeek},'startDate',this.value)">
+        <span style="color:var(--text3)">~</span>
+        <input type="date" value="${w?.endDate||''}" style="border:1px solid var(--border);border-radius:4px;padding:2px 6px;font-size:12px;background:var(--bg)"
+          onchange="W._weekDate(${selWeek},'endDate',this.value)">
+        <span style="margin-left:auto;font-size:13px;font-weight:700;color:${TC(rate)}">${st.b} ${(rate*100).toFixed(1)}% &nbsp;|&nbsp; ${F(ws)}원 / ${F(goal)}원</span>
       </div>
-      <div class="sw"><table class="tbl">
-        <thead><tr><th>팀</th><th style="text-align:right">목표</th><th style="text-align:right">실적</th>
-        <th style="text-align:right">달성률</th><th style="text-align:right">상담</th>
-        <th style="text-align:right">등록</th><th style="text-align:right">전환율</th></tr></thead>
-        <tbody>${teamRows}</tbody>
-      </table></div>`;
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:0;border-bottom:1px solid var(--border)">
+        <div style="padding:12px 16px;border-right:1px solid var(--border)">
+          <div style="font-size:11px;color:var(--text3);margin-bottom:4px">목표</div>
+          <input class="wp-inp" value="${F(goal)}" style="width:100%;text-align:right;font-size:16px;font-weight:900;font-family:'Roboto',monospace"
+            onblur="W._weekGoal(${selWeek},this.value)">
+        </div>
+        <div style="padding:12px 16px;border-right:1px solid var(--border)">
+          <div style="font-size:11px;color:var(--text3);margin-bottom:4px">잔여 필요</div>
+          <div style="font-size:16px;font-weight:900;font-family:'Roboto',monospace;color:var(--gold)">${remain>0?F(remain):'—'}</div>
+        </div>
+        <div style="padding:12px 16px;border-right:1px solid var(--border)">
+          <div style="font-size:11px;color:var(--text3);margin-bottom:4px">남은일</div>
+          <div style="font-size:16px;font-weight:900;color:var(--text2)">${remainDays}</div>
+        </div>
+        <div style="padding:12px 16px">
+          <div style="font-size:11px;color:var(--text3);margin-bottom:4px">일별 목표</div>
+          <div style="font-size:16px;font-weight:900;font-family:'Roboto',monospace;color:var(--accent)">${dailyTarget}</div>
+        </div>
+      </div>
+      <table class="wp-tbl" style="border-radius:0;margin:0;border:none;table-layout:fixed">
+        <thead><tr>
+          <th style="width:100px;text-align:left">팀</th>
+          <th style="width:130px">목표</th>
+          <th style="width:130px">실적 (직접입력)</th>
+          <th style="width:80px">달성률</th>
+          <th style="width:130px">잔여</th>
+          <th style="width:80px">상담</th>
+          <th style="width:80px">등록</th>
+          <th style="width:80px">전환율</th>
+        </tr></thead>
+        <tbody>`;
+
+  TEAMS.forEach(t => {
+    const d = DATA[t.name]?.[selWeek]||{};
+    const ts = N(d.sales);
+    const tc2 = N(d.consult);
+    const tk2 = N(d.contract);
+    // 저장된 팀 목표가 있으면 사용, 없으면 자동계산
+    const autoTg = Math.round((goal||0)*(t.members/TM)/10000)*10000;
+    const tg = d.teamGoal ? N(d.teamGoal) : autoTg;
+    const tr2 = tg>0?ts/tg:0;
+    h += `<tr style="background:${t.color}08">
+      <td style="font-size:12px;color:${t.color};font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.name} (${t.members}명)</td>
+      <td style="text-align:right;padding:3px 6px">
+        <input class="wp-inp" value="${F(tg)}" style="width:100%;text-align:right;font-size:12px;color:var(--text2)"
+          title="자동계산: ${F(autoTg)} | 직접 수정 가능"
+          onblur="W._weekField(${selWeek},'${t.name}','teamGoal',this.value)">
+      </td>
+      <td style="text-align:right;padding:3px 6px">
+        <input class="wp-inp" value="${ts?F(ts):''}" placeholder="0" style="width:100%;text-align:right;font-size:12px;color:${t.color}"
+          onblur="W._weekSales(${selWeek},'${t.name}',this.value)">
+      </td>
+      <td style="text-align:center;font-size:12px"><span style="color:${TC(tr2)};font-weight:700">${(tr2*100).toFixed(1)}%</span></td>
+      <td style="text-align:right;font-family:'Roboto',monospace;font-size:12px;color:var(--gold);padding:3px 6px">${tg>ts?F(tg-ts):'—'}</td>
+      <td style="text-align:right;padding:3px 6px">
+        <input class="wp-inp" value="${tc2||''}" placeholder="0" style="width:100%;text-align:right;font-size:12px"
+          onblur="W._weekField(${selWeek},'${t.name}','consult',this.value)">
+      </td>
+      <td style="text-align:right;padding:3px 6px">
+        <input class="wp-inp" value="${tk2||''}" placeholder="0" style="width:100%;text-align:right;font-size:12px"
+          onblur="W._weekField(${selWeek},'${t.name}','contract',this.value)">
+      </td>
+      <td style="text-align:center;font-size:12px;color:var(--text2)">${tc2>0?P(tk2,tc2):'—'}</td>
+    </tr>`;
   });
 
+  // 주차 합계
+  const totalC_w = TEAMS.reduce((s,t)=>s+N(DATA[t.name]?.[selWeek]?.consult||0),0);
+  const totalK_w = TEAMS.reduce((s,t)=>s+N(DATA[t.name]?.[selWeek]?.contract||0),0);
+  h += `<tr style="background:#1A2340;color:#fff;font-weight:700">
+    <td style="text-align:left">합계</td>
+    <td style="text-align:right;font-family:'Roboto',monospace;color:#FCD34D">${F(goal)}</td>
+    <td style="text-align:right;font-family:'Roboto',monospace;color:#6EE7B7">${F(ws)}</td>
+    <td style="text-align:center"><span style="color:${TC(rate)}">${(rate*100).toFixed(1)}%</span></td>
+    <td style="text-align:right;font-family:'Roboto',monospace;color:#FCD34D">${remain>0?F(remain):'—'}</td>
+    <td style="text-align:right;font-family:'Roboto',monospace">${totalC_w}</td>
+    <td style="text-align:right;font-family:'Roboto',monospace">${totalK_w}</td>
+    <td style="text-align:center">${totalC_w>0?P(totalK_w,totalC_w):'—'}</td>
+  </tr>`;
+  h += `</tbody></table></div>`;
+
+  // 월 합계 미니
+  const totalGoal = WEEKS.reduce((s,ww)=>s+N(ww.total||0),0);
+  const totalResult = TEAMS.reduce((s,t)=>WEEKS.reduce((ss,_,i)=>ss+N(DATA[t.name]?.[i]?.sales||0),s),0);
+  const totalRate = totalGoal>0?totalResult/totalGoal:0;
+  h += `<div style="background:#0F172A;color:#fff;border-radius:10px;padding:10px 16px;display:flex;gap:20px;align-items:center;margin-bottom:16px;font-size:13px">
+    <span style="font-weight:900">월 합계</span>
+    <span>목표 <b style="font-family:'Roboto',monospace;color:#FCD34D">${F(totalGoal)}</b>원</span>
+    <span>실적 <b style="font-family:'Roboto',monospace;color:#6EE7B7">${F(totalResult)}</b>원</span>
+    <span style="font-weight:700;color:${TC(totalRate)}">${ST(totalRate).b} ${(totalRate*100).toFixed(1)}%</span>
+  </div>`;
+
+  // ── 팀별 성과 (영업현황 BIZ 데이터 기준) ──
+  const ms = calcMS();
+  h += `<div class="kg-highlight-label" style="margin-top:8px">팀별 성과 (당월 누계)</div>
+    <div class="tp-grid">`;
+
+  TM_CFG.forEach(t => {
+    const mList = t.members;
+
+    // BIZ 영업현황 집계
+    const tBizSales  = mList.reduce((s,m)=>s+(BIZ[t.name]?.[m]?.totalSales||0),0);   // 영업총매출 (입력값)
+    const tRefund    = mList.reduce((s,m)=>s+(BIZ[t.name]?.[m]?.refund||0),0);        // 환불
+    const tGoalBiz   = mList.reduce((s,m)=>s+(BIZ[t.name]?.[m]?.goal||0),0);         // 목표매출
+    const tInq       = mList.reduce((s,m)=>s+(BIZ[t.name]?.[m]?.inquiry||0),0);      // 문의
+    const tNetSales  = tBizSales - tRefund;                                             // 순매출
+
+    // 상담내역(calcMS) 집계
+    const tWan    = mList.reduce((s,m)=>s+(ms[m]?.완납||0),0);
+    const tMiNap  = mList.reduce((s,m)=>s+(ms[m]?.미납||0),0);
+    const tCancel = mList.reduce((s,m)=>s+(ms[m]?.취소||0),0);
+    const tCOD    = mList.reduce((s,m)=>s+(ms[m]?.COD||0),0);
+    const tReg    = mList.reduce((s,m)=>s+(ms[m]?.등록||0),0);
+    const tSang   = mList.reduce((s,m)=>s+(ms[m]?.상담||0),0);
+
+    // 달성률: 순매출 ÷ 목표매출
+    const tRate = tGoalBiz>0 ? tNetSales/tGoalBiz : 0;
+    // 상담률: 상담수 ÷ 문의수
+    const consultRate = tInq>0 ? (tSang/tInq*100).toFixed(1)+'%' : '—';
+    // 등록률: 등록수 ÷ 상담수
+    const regRate = tSang>0 ? (tReg/tSang*100).toFixed(1)+'%' : '—';
+
+    h += `<div class="tp-card">
+      <div class="tp-card-hdr" style="background:${t.color}">${t.name} (${mList.length}명)</div>
+      <div class="tp-card-body">
+        <div class="tp-row"><span class="lbl">영업 총매출</span><span class="val g">${F(tBizSales)}원</span></div>
+        <div class="tp-row"><span class="lbl">순매출</span><span class="val" style="color:var(--accent)">${F(tNetSales)}원</span></div>
+        <div class="tp-row"><span class="lbl">목표 매출</span><span class="val o">${tGoalBiz>0?F(tGoalBiz)+'원':'미설정'}</span></div>
+        <div class="tp-row"><span class="lbl">달성률</span><span class="val" style="color:${TC(tRate)}">${ST(tRate).b} ${(tRate*100).toFixed(1)}%</span></div>
+        <div class="tp-divider"></div>
+        <div class="tp-badges">
+          <span class="tp-badge" style="background:#FEF08A;color:#854D0E">완납 ${F(tWan)}</span>
+          <span class="tp-badge" style="background:#E5E7EB;color:#374151">미납 ${F(tMiNap)}</span>
+          <span class="tp-badge" style="background:#FEE2E2;color:#991B1B">취소 ${tCancel}</span>
+          ${tCOD>0?`<span class="tp-badge" style="background:#EFF4FF;color:#2563EB">COD ${tCOD}</span>`:''}
+        </div>
+        <div class="tp-divider"></div>
+        <div class="tp-rate-row">
+          <div class="tp-rate-item"><div class="r-lbl">상담률</div><div class="r-val" style="color:${t.color}">${consultRate}</div></div>
+          <div class="tp-rate-item"><div class="r-lbl">등록률</div><div class="r-val" style="color:${t.color}">${regRate}</div></div>
+          <div class="tp-rate-item"><div class="r-lbl">문의</div><div class="r-val" style="color:${t.color}">${tInq}</div></div>
+          <div class="tp-rate-item"><div class="r-lbl">등록수</div><div class="r-val" style="color:${t.color}">${tReg}</div></div>
+        </div>
+      </div>
+    </div>`;
+  });
+
+  h += `</div>`;
   h += `<div class="rtn">🟢 실시간 공유 중 — 누구든 입력하면 모든 접속자 화면에 즉시 반영됩니다</div>`;
   mc.innerHTML = h;
 
-  // 이벤트 연결
   const fields = [['dp','prevYear'],['dt','thisYear'],['dco','consult'],['dr','contract'],['ds','sales']];
   fields.forEach(([id,key]) => {
     const el = document.getElementById(id);
@@ -728,22 +937,22 @@ function renderMain() {
   if (cw === -1) { renderAllDashboard(); return; }
   document.getElementById('mc').innerHTML = `
     ${renderNoticeBar()}
-    <div class="stitle">📊 오늘의 매출 현황</div>
+    <div class="stitle">오늘의 매출 현황</div>
     <div class="dw">
       <div class="dg">
-        <div class="dc"><label>📅 전년 누계 매출 (원)</label><input class="dinp" id="dp" type="text" inputmode="numeric" oninput="W._di('prevYear',this.value);formatBizInp(this)"></div>
-        <div class="dc"><label>💰 올해 누계 매출 (원)</label><input class="dinp" id="dt" type="text" inputmode="numeric" oninput="W._di('thisYear',this.value);formatBizInp(this)"></div>
-        <div class="dc"><label>📞 전일 상담 건수</label><input class="dinp" id="dco" type="text" inputmode="numeric" oninput="W._di('consult',this.value)"></div>
-        <div class="dc"><label>✅ 전일 등록 건수</label><input class="dinp" id="dr" type="text" inputmode="numeric" oninput="W._di('contract',this.value)"></div>
-        <div class="dc"><label>💵 전일 매출 (원)</label><input class="dinp" id="ds" type="text" inputmode="numeric" oninput="W._di('sales',this.value);formatBizInp(this)"></div>
+        <div class="dc"><label>전년 누계 매출 (원)</label><input class="dinp" id="dp" type="text" inputmode="numeric" oninput="W._di('prevYear',this.value);formatBizInp(this)"></div>
+        <div class="dc"><label>올해 누계 매출 (원)</label><input class="dinp" id="dt" type="text" inputmode="numeric" oninput="W._di('thisYear',this.value);formatBizInp(this)"></div>
+        <div class="dc"><label>전일 상담 건수</label><input class="dinp" id="dco" type="text" inputmode="numeric" oninput="W._di('consult',this.value)"></div>
+        <div class="dc"><label>전일 등록 건수</label><input class="dinp" id="dr" type="text" inputmode="numeric" oninput="W._di('contract',this.value)"></div>
+        <div class="dc"><label>전일 매출 (원)</label><input class="dinp" id="ds" type="text" inputmode="numeric" oninput="W._di('sales',this.value);formatBizInp(this)"></div>
       </div>
       <div class="dcalc">
         <div class="dcc" id="ddc" style="background:var(--bg);border:1px solid var(--border);border-radius:8px">
-          <span style="font-size:12px;font-weight:700;color:var(--text2)">📉 전년대비 차이</span>
+          <span style="font-size:12px;font-weight:700;color:var(--text2)">전년대비 차이</span>
           <span style="font-size:14px;font-weight:900;font-family:'Roboto',monospace;color:var(--red)" id="ddv">-</span>
         </div>
         <div class="dcc" style="background:var(--bg);border:1px solid var(--border);border-radius:8px">
-          <span style="font-size:12px;font-weight:700;color:var(--text2)">🔄 전일 전환율</span>
+          <span style="font-size:12px;font-weight:700;color:var(--text2)">전일 전환율</span>
           <span style="font-size:14px;font-weight:900;font-family:'Roboto',monospace;color:var(--text)" id="dcv">-</span>
         </div>
       </div>
@@ -782,8 +991,12 @@ function updDailyCalc() {
   const kc = document.getElementById('dash-kpi-diff-card');
   if (ks) ks.textContent = F(DAILY.thisYear||0);
   if (kr) kr.textContent = TG>0 ? ((DAILY.thisYear||0)/TG*100).toFixed(1)+'%' : '0.0%';
-  if (kd) { kd.textContent=(diff>=0?'+':'')+F(diff); kd.style.color=diff>=0?'#16A34A':'#DC2626'; }
-  if (kc) { kc.style.setProperty('--diff-color', diff>=0?'#16A34A':'#DC2626'); }
+  if (kd) {
+    const remain = Math.max(0, TG - (DAILY.thisYear||0));
+    kd.textContent = F(remain);
+    kd.style.color = remain > 0 ? '#DC2626' : '#16A34A';
+  }
+  if (kc) { kc.style.cssText = ''; }
 }
 
 function renderKPI() {
@@ -889,7 +1102,7 @@ function renderMsg() {
   const lines=[
     `📊 [${w.label} ${w.period}] 매출 현황`,`━━━━━━━━━━━━━━━━━`,
     `📅 전년 누계: ${F(DAILY.prevYear)}원`,`💰 올해 누계: ${F(DAILY.thisYear)}원`,
-    `📉 전년대비: ${diff>=0?'+':''}${F(diff)}원`,
+    `전년대비: ${diff>=0?'+':''}${F(diff)}원`,
     `📞 전일 상담: ${DAILY.consult}건 → 등록: ${DAILY.contract}건 (전환율 ${conv}%)`,
     `💵 전일 매출: ${F(DAILY.sales)}원`,`━━━━━━━━━━━━━━━━━`,
     `🎯 주간 목표: ${F(w.total)}원`,`📈 전체 실적: ${F(ws)}원 (${P(ws,w.total)}) ${st.b} ${st.m}`,`━━━━━━━━━━━━━━━━━`,
@@ -1119,25 +1332,58 @@ function calcMS() {
 }
 
 // ── 영업 탭 ──────────────────────────────────────────
+
+function makeBizMonthNav() {
+  const bizStart = new Date(BIZ_PERIOD.s+'T00:00:00');
+  const bizEnd   = new Date(BIZ_PERIOD.e+'T00:00:00');
+  const bizMonths = [];
+  let cur = new Date(bizStart.getFullYear(), bizStart.getMonth(), 1);
+  while(cur <= bizEnd) {
+    bizMonths.push(`${cur.getFullYear()}-${String(cur.getMonth()+1).padStart(2,'0')}`);
+    cur.setMonth(cur.getMonth()+1);
+  }
+  const selMonth = window._bizSelMonth || 'current';
+  const selIdx = selMonth === 'current' ? bizMonths.length-1 : Math.max(0, bizMonths.indexOf(selMonth) >= 0 ? bizMonths.indexOf(selMonth) : bizMonths.length-1);
+  const dispMonth = bizMonths[selIdx] || bizMonths[bizMonths.length-1];
+  const dispLbl = dispMonth.slice(0,4) + '년 ' + Number(dispMonth.slice(5)) + '월';
+  const isCurrent = selIdx === bizMonths.length-1;
+  const canPrev = selIdx > 0;
+  const canNext = selIdx < bizMonths.length-1;
+  const mj = JSON.stringify(bizMonths).replace(/"/g,"'");
+  return `<div style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;margin-bottom:14px;flex-wrap:wrap">
+    <button onclick="W._bizMonth(${selIdx-1},'${mj}')" style="width:28px;height:28px;border-radius:6px;border:1px solid var(--border);background:var(--bg);cursor:pointer;font-size:14px;${canPrev?'':'opacity:.3;cursor:not-allowed'}" ${canPrev?'':'disabled'}>◀</button>
+    <span style="font-size:15px;font-weight:900;min-width:100px;text-align:center">${dispLbl} 영업</span>
+    ${isCurrent?'<span style="padding:2px 8px;background:#DBEAFE;color:#2563EB;border-radius:20px;font-size:11px;font-weight:700">현재</span>':''}
+    <button onclick="W._bizMonth(${selIdx+1},'${mj}')" style="width:28px;height:28px;border-radius:6px;border:1px solid var(--border);background:var(--bg);cursor:pointer;font-size:14px;${canNext?'':'opacity:.3;cursor:not-allowed'}" ${canNext?'':'disabled'}>▶</button>
+    <div style="width:1px;height:24px;background:var(--border);margin:0 4px"></div>
+    <button onclick="W._bizMonthCur()" style="padding:5px 12px;border-radius:6px;border:1px solid ${isCurrent?'var(--accent)':'var(--border)'};background:${isCurrent?'var(--accent)':'var(--bg)'};color:${isCurrent?'#fff':'var(--text2)'};font-size:12px;font-weight:700;cursor:pointer">현재 영업월</button>
+    <button onclick="W._bizMonthAll()" style="padding:5px 12px;border-radius:6px;border:1px solid ${(selMonth==='all')?'var(--accent)':'var(--border)'};background:${(selMonth==='all')?'var(--accent)':'var(--bg)'};color:${(selMonth==='all')?'#fff':'var(--text2)'};font-size:12px;font-weight:700;cursor:pointer">전체</button>
+    <span style="margin-left:auto;font-size:11px;color:var(--text3)">영업일: ${BIZ_PERIOD.s} ~ ${BIZ_PERIOD.e}</span>
+  </div>`;
+}
+
 function showBiz() {
+  try {
   document.getElementById('mc').style.display = 'none';
   document.getElementById('bc').style.display = '';
   document.getElementById('sc').style.display = 'none';
   document.getElementById('dc').style.display = 'none';
   const nav = `<div class="bsn">
-    <button class="bst${bst==='요약'?' on':''}" onclick="W._bst('요약')">📊 영업 요약</button>
+    <button class="bst${bst==='요약'?' on':''}" onclick="W._bst('요약')">📊 영업 데이터</button>
     <button class="bst${bst==='상담내역'?' on':''}" onclick="W._bst('상담내역')">📋 상담 내역</button>
     <button class="bst${bst==='미납리스트'?' on':''}" onclick="W._bst('미납리스트')" style="${bst==='미납리스트'?'color:#D97706;border-bottom-color:#D97706':''}">💰 미납 리스트</button>
     <button class="bst${bst==='추가리스트'?' on':''}" onclick="W._bst('추가리스트')" style="${bst==='추가리스트'?'color:#7C3AED;border-bottom-color:#7C3AED':''}">📋 추가 리스트</button>
   </div>`;
 
+  const monthNav = makeBizMonthNav();
+
   if (bst === '상담내역') {
     const prevKw = document.getElementById('consult-search')?.value || '';
-    document.getElementById('bc').innerHTML = nav + renderConsult(prevKw);
+    document.getElementById('bc').innerHTML = nav + monthNav + renderConsult(prevKw);
     return;
   }
   if (bst === '미납리스트') {
-    document.getElementById('bc').innerHTML = nav + renderUnpaidList();
+    document.getElementById('bc').innerHTML = nav + monthNav + renderUnpaidList();
     return;
   }
   if (bst === '추가리스트') {
@@ -1145,7 +1391,7 @@ function showBiz() {
     return;
   }
 
-  // 영업 요약
+  // 영업 데이터
   const ms = calcMS();
   let totBiz=0, totTM=0, totRef=0, totInq=0, tot상담=0, tot등록=0, tot미등록=0, tot취소=0, totWan=0, totMi=0;
   let validCnt=0, sumRate=0;
@@ -1162,8 +1408,7 @@ function showBiz() {
   const totNet = totTM - totRef;
   const avgRate = validCnt > 0 ? (sumRate/validCnt*100).toFixed(1)+'%' : '0.0%';
 
-  let h = nav;
-  h += `<div style="margin-bottom:6px;font-size:12px;color:var(--text3);font-weight:700">📅 영업일: ${BIZ_PERIOD.s} ~ ${BIZ_PERIOD.e}</div>`;
+  let h = nav + monthNav;
   h += `<div class="kg" style="margin-bottom:16px">
     <div class="kc a"><div class="klbl">누적 완납</div><div class="kval">${F(totWan)}</div><div class="ksub">원</div></div>
     <div class="kc go"><div class="klbl">누적 미납</div><div class="kval">${F(totMi)}</div><div class="ksub">원</div></div>
@@ -1251,6 +1496,11 @@ function showBiz() {
 
   h += `<div class="rtn">🟢 영업 실적 실시간 저장 · 상담/등록/미등록은 상담내역에서 자동 집계</div>`;
   document.getElementById('bc').innerHTML = h;
+  } catch(e) {
+    document.getElementById('bc').style.display='';
+    document.getElementById('bc').innerHTML = `<div style="color:red;padding:20px;font-weight:700;background:#FEF2F2;border-radius:8px;margin:20px">영업현황 오류: ${e.message}<br><pre style="font-size:11px;font-weight:400;white-space:pre-wrap">${e.stack}</pre></div>`;
+    console.error('showBiz error:', e);
+  }
 }
 
 function updBizKPI() {
@@ -1288,7 +1538,6 @@ function renderConsult(searchKw='') {
     if(t){ts[t.name].paid+=N(r.paid);ts[t.name].exp+=N(r.expected);ts[t.name].cnt++;if(r.result==='완납'||r.result==='추가'||r.result==='미등록회수')ts[t.name].wan++;}
   }));
 
-  // 검색 필터
   let allRows = [];
   Object.entries(CONSULT).forEach(([date, rows]) => {
     Object.entries(rows||{}).forEach(([rid, r]) => allRows.push({date,rid,r}));
@@ -1301,58 +1550,56 @@ function renderConsult(searchKw='') {
   ) : null;
 
   let h = `<div class="search-bar">
-    <input class="search-inp" type="text" placeholder="🔍 학생이름 / 과목 / 멘토 검색..." 
-      value="${searchKw}"
-      oninput="W._csearchDebounce(this.value)"
-      id="consult-search">
+    <div style="display:flex;gap:8px;align-items:center;flex-shrink:0">
+      <input type="date" id="cdi" value="${todayStr()}"
+        style="padding:6px 10px;border:1px solid var(--border);border-radius:7px;font-size:12px;color:var(--text);background:var(--bg2)">
+      <button onclick="W._cad()" style="padding:6px 14px;border-radius:7px;font-size:12px;font-weight:700;background:var(--accent);color:#fff;border:none;cursor:pointer;white-space:nowrap">+ 날짜 추가</button>
+    </div>
+    <input class="search-inp" type="text" placeholder="🔍 학생이름 / 과목 / 멘토 검색..."
+      value="${searchKw}" oninput="W._csearchDebounce(this.value)" id="consult-search">
     ${kw ? `<button class="search-clear" onclick="W._csearch('')">✕ 초기화</button>
     <span class="search-result-cnt">${matched.length}건 검색됨</span>` : ''}
   </div>`;
 
+  const makeRow = (date, rid, r) => {
+    const rowBg = r.result==='완납' ? 'background:#FFFDE7' : r.result==='미납' ? 'background:#FEF2F2' : r.result==='취소' ? 'background:#E5E7EB;color:#6B7280' : r.result==='COD' ? 'background:#EFF4FF' : '';
+    const resSty = r.result==='완납' ? 'background:#FEF08A;color:#854D0E' : r.result==='미납' ? 'background:#FEE2E2;color:#DC2626' : r.result==='취소' ? 'background:#E5E7EB;color:#6B7280' : r.result==='COD' ? 'background:#EFF4FF;color:#2563EB' : r.result==='추가' ? 'background:#F0FDF4;color:#16A34A' : r.result==='미등록회수' ? 'background:#F5F3FF;color:#7C3AED' : 'background:#F1F5F9;color:#64748B';
+    return `<tr style="${rowBg}">
+      <td><select class="cs" onchange="W._cu('${date}','${rid}','mentor',this.value)">
+        <option value="">선택</option>
+        ${TM_CFG.map(tm=>`<optgroup label="${tm.name}">${tm.members.map(m=>`<option value="${m}"${r.mentor===m?' selected':''}>${m}</option>`).join('')}</optgroup>`).join('')}
+      </select></td>
+      <td><input class="ci" value="${r.student||''}" placeholder="이름" oninput="W._cu('${date}','${rid}','student',this.value)"></td>
+      <td><input class="ci" value="${r.subject||''}" placeholder="과목" oninput="W._cu('${date}','${rid}','subject',this.value)"></td>
+      <td><select class="cs" onchange="W._cu('${date}','${rid}','status',this.value)">
+        ${STS.map(s=>`<option value="${s}"${r.status===s?' selected':''}>${s}</option>`).join('')}
+      </select></td>
+      <td><select class="cs" onchange="W._cu('${date}','${rid}','result',this.value)" style="${resSty};border-radius:20px;padding:2px 8px;font-size:11px;font-weight:700;appearance:none;-webkit-appearance:none;text-align:center">
+        <option value="">대기</option>
+        ${RES.map(s=>`<option value="${s}"${r.result===s?' selected':''}>${s}</option>`).join('')}
+      </select></td>
+      <td><input class="cn" value="${r.paid?F(N(r.paid)):''}" placeholder="0" oninput="W._cu('${date}','${rid}','paid',this.value)"></td>
+      <td><input class="cn" value="${r.expected?F(N(r.expected)):''}" placeholder="0" oninput="W._cu('${date}','${rid}','expected',this.value)"></td>
+      <td><input class="ci" value="${r.note||''}" placeholder="비고" oninput="W._cu('${date}','${rid}','note',this.value)"></td>
+      <td><button class="dbc" onclick="W._cd('${date}','${rid}')">×</button></td>
+    </tr>`;
+  };
+
+  const makeTbl = (rowsHtml) => `<table class="ctbl"><thead><tr>
+    <th style="width:68px">멘토</th><th style="width:78px">학생이름</th>
+    <th style="width:80px">과목</th><th style="width:63px">상태</th><th style="width:90px">결과</th>
+    <th style="width:86px">완납(원)</th><th style="width:86px">예정(원)</th>
+    <th>비고</th><th style="width:22px"></th>
+  </tr></thead><tbody>${rowsHtml}</tbody></table>`;
+
   if(kw && matched.length > 0) {
-    // 검색 결과만 표시
     const to = TM_CFG.map(t=>t.name);
     const sorted = matched.sort((a,b)=>to.indexOf(getTeam(a.r.mentor)?.name||'')-to.indexOf(getTeam(b.r.mentor)?.name||''));
-    h += `<table class="ctbl"><thead><tr>
-        <th style="width:68px">멘토</th><th style="width:78px">학생이름</th>
-        <th style="width:80px">과목</th>
-        <th style="width:63px">상태</th><th style="width:73px">결과</th>
-        <th style="width:86px">완납(원)</th><th style="width:86px">예정(원)</th>
-        <th>비고</th><th style="width:22px"></th>
-      </tr></thead><tbody>`;
-    let lt=null;
-    sorted.forEach(({date,rid,r})=>{
-      const t=getTeam(r.mentor);
-      const rowBg = r.result==='완납' ? 'background:#FFFDE7' : r.result==='미납' ? 'background:#FEF2F2' : r.result==='취소' ? 'background:#E5E7EB;color:#6B7280' : r.result==='COD' ? 'background:#EFF4FF' : '';
-      if(t&&t.name!==lt){lt=t.name;h+=`<tr><td colspan="10" style="padding:0"><div class="tsect" style="border-left-color:${t.color};color:${t.color}">${t.name} · ${date}</div></td></tr>`;}
-      h+=`<tr style="${rowBg}">
-        <td><select class="cs" onchange="W._cu('${date}','${rid}','mentor',this.value)">
-          <option value="">선택</option>
-          ${TM_CFG.map(tm=>`<optgroup label="${tm.name}">${tm.members.map(m=>`<option value="${m}"${r.mentor===m?' selected':''}>${m}</option>`).join('')}</optgroup>`).join('')}
-        </select></td>
-        <td><input class="ci" value="${r.student||''}" placeholder="이름" oninput="W._cu('${date}','${rid}','student',this.value)"></td>
-        <td><input class="ci" value="${r.subject||''}" placeholder="과목" oninput="W._cu('${date}','${rid}','subject',this.value)"></td>
-        <td><select class="cs" onchange="W._cu('${date}','${rid}','status',this.value)">
-          ${STS.map(s=>`<option value="${s}"${r.status===s?' selected':''}>${s}</option>`).join('')}
-        </select></td>
-        <td><select class="cs" onchange="W._cu('${date}','${rid}','result',this.value)">
-          <option value="">-</option>
-          ${RES.map(s=>`<option value="${s}"${r.result===s?' selected':''}>${s}</option>`).join('')}
-        </select></td>
-        <td><input class="cn" value="${r.paid?F(N(r.paid)):''}" placeholder="0" oninput="W._cu('${date}','${rid}','paid',this.value)"></td>
-        <td><input class="cn" value="${r.expected?F(N(r.expected)):''}" placeholder="0" oninput="W._cu('${date}','${rid}','expected',this.value)"></td>
-        <td><input class="ci" value="${r.note||''}" placeholder="비고" oninput="W._cu('${date}','${rid}','note',this.value)"></td>
-        <td><button class="dbc" onclick="W._cd('${date}','${rid}')">×</button></td>
-      </tr>`;
-    });
-    h += `</tbody></table>`;
-    h += `<div style="margin-top:11px;display:flex;gap:8px;align-items:center">
-      <input type="date" id="cdi" value="${todayStr()}"
-        style="padding:6px 10px;border:1px solid var(--border);border-radius:7px;font-size:12px;color:var(--text);background:var(--bg2)">
-      <button onclick="W._cad()" style="padding:6px 14px;border-radius:7px;font-size:12px;font-weight:700;background:var(--accent);color:#fff;border:none;cursor:pointer">+ 날짜 추가</button>
-    </div>`;
+    let rowsHtml = sorted.map(({date,rid,r}) => makeRow(date,rid,r)).join('');
+    h += makeTbl(rowsHtml);
     return h;
-  } else if(kw && matched.length === 0) {
+  }
+  if(kw && matched.length === 0) {
     h += `<div style="text-align:center;padding:40px;color:var(--text3);font-size:14px">검색 결과가 없어요 🔍</div>`;
     return h;
   }
@@ -1360,7 +1607,6 @@ function renderConsult(searchKw='') {
   h += `<div class="csg">
     <div class="csc g"><div class="cslb">완납 합계</div><div class="csv">${F(tPaid)}</div><div class="csse">원</div></div>
     <div class="csc go"><div class="cslb">예정 합계</div><div class="csv">${F(tExp)}</div><div class="csse">원</div></div>
-
     <div class="csc b"><div class="cslb">총 건수</div><div class="csv">${tRows}</div><div class="csse">완납 ${cWan} / 상담 ${cSang}</div></div>
   </div><div class="tcg">`;
 
@@ -1380,60 +1626,37 @@ function renderConsult(searchKw='') {
   dates.forEach(date => {
     const rows=Object.entries(CONSULT[date]||{});
     if(!rows.length) return;
-    let dp=0,dem=0;
-    rows.forEach(([,r])=>{dp+=N(r.paid);dem+=N(r.expected)*(N(r.rate)/100);});
+    let dp=0;
+    rows.forEach(([,r])=>{dp+=N(r.paid);});
     const col=cCol[date];
     h+=`<div class="dhdr" onclick="W._cc('${date}')">
-      <span class="dtc">${dlbl(date)}</span>
-      <div style="display:flex;gap:11px;align-items:center">
-        <span class="dts">${rows.length}건 · 완납 ${F(dp)}원 · 기대 ${F(dem)}원</span>
-        <span style="font-size:11px;color:var(--text3)">${col?'▼':'▲'}</span>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span class="dtc">${dlbl(date)}</span>
+        <span style="font-size:11px;color:var(--text3)">${rows.length}건</span>
+      </div>
+      <div style="display:flex;gap:14px;align-items:center">
+        <span style="font-size:12px;color:var(--text2);font-family:'Roboto',monospace">완납 ${F(dp)}원</span>
+        <span id="dhdr-arr-${date}" style="font-size:12px;color:var(--text3);font-weight:700">${col?'▼':'▲'}</span>
       </div>
     </div>`;
-    if (!col) {
+    if(!col) {
       const to=TM_CFG.map(t=>t.name);
       const sorted=rows.sort(([,a],[,b])=>to.indexOf(getTeam(a.mentor)?.name||'')-to.indexOf(getTeam(b.mentor)?.name||''));
-      h+=`<table class="ctbl"><thead><tr>
-        <th style="width:68px">멘토</th><th style="width:78px">학생이름</th>
-        <th style="width:80px">과목</th>
-        <th style="width:63px">상태</th><th style="width:73px">결과</th>
-        <th style="width:86px">완납(원)</th><th style="width:86px">예정(원)</th>
-        <th>비고</th><th style="width:22px"></th>
-      </tr></thead><tbody>`;
+      let rowsHtml = '';
       let lt=null;
       sorted.forEach(([rid,r])=>{
         const t=getTeam(r.mentor);
-        if(t&&t.name!==lt){lt=t.name;h+=`<tr><td colspan="10" style="padding:0"><div class="tsect" style="border-left-color:${t.color};color:${t.color}">${t.name}</div></td></tr>`;}
-        const rowBg = r.result==='완납' ? 'background:#FFFDE7' : r.result==='미납' ? 'background:#FEF2F2' : r.result==='취소' ? 'background:#E5E7EB;color:#6B7280' : r.result==='COD' ? 'background:#EFF4FF' : '';
-        h+=`<tr style="${rowBg}">
-          <td><select class="cs" onchange="W._cu('${date}','${rid}','mentor',this.value)">
-            <option value="">선택</option>
-            ${TM_CFG.map(tm=>`<optgroup label="${tm.name}">${tm.members.map(m=>`<option value="${m}"${r.mentor===m?' selected':''}>${m}</option>`).join('')}</optgroup>`).join('')}
-          </select></td>
-          <td><input class="ci" value="${r.student||''}" placeholder="이름" oninput="W._cu('${date}','${rid}','student',this.value)"></td>
-          <td><input class="ci" value="${r.subject||''}" placeholder="과목" oninput="W._cu('${date}','${rid}','subject',this.value)"></td>
-          <td><select class="cs" onchange="W._cu('${date}','${rid}','status',this.value)">
-            ${STS.map(s=>`<option value="${s}"${r.status===s?' selected':''}>${s}</option>`).join('')}
-          </select></td>
-          <td><select class="cs" onchange="W._cu('${date}','${rid}','result',this.value)">
-            <option value="">-</option>
-            ${RES.map(s=>`<option value="${s}"${r.result===s?' selected':''}>${s}</option>`).join('')}
-          </select></td>
-          <td><input class="cn" value="${r.paid?F(N(r.paid)):''}" placeholder="0" oninput="W._cu('${date}','${rid}','paid',this.value)"></td>
-          <td><input class="cn" value="${r.expected?F(N(r.expected)):''}" placeholder="0" oninput="W._cu('${date}','${rid}','expected',this.value)"></td>
-          <td><input class="ci" value="${r.note||''}" placeholder="비고" oninput="W._cu('${date}','${rid}','note',this.value)"></td>
-          <td><button class="dbc" onclick="W._cd('${date}','${rid}')">×</button></td>
-        </tr>`;
+        if(t&&t.name!==lt){
+          lt=t.name;
+          rowsHtml+=`<tr class="team-sep" style="background:${t.color}12"><td colspan="9" style="color:${t.color};border-left:3px solid ${t.color}">${t.name}</td></tr>`;
+        }
+        rowsHtml += makeRow(date,rid,r);
       });
-      h+=`</tbody></table><button class="arb" onclick="W._ca('${date}')">+ 행 추가</button>`;
+      h+=`<div id="ctbl-${date}">${makeTbl(rowsHtml)}</div>`;
+      h+=`<button id="arb-${date}" class="arb" onclick="W._ca('${date}')">+ 행 추가</button>`;
     }
   });
 
-  h+=`<div style="margin-top:11px;display:flex;gap:8px;align-items:center">
-    <input type="date" id="cdi" value="${todayStr()}"
-      style="padding:6px 10px;border:1px solid var(--border);border-radius:7px;font-size:12px;color:var(--text);background:var(--bg2)">
-    <button onclick="W._cad()" style="padding:6px 14px;border-radius:7px;font-size:12px;font-weight:700;background:var(--accent);color:#fff;border:none;cursor:pointer">+ 날짜 추가</button>
-  </div>`;
   return h;
 }
 
@@ -1451,7 +1674,8 @@ function formatBizInp(el) {
 
 // ── 입금 파악 (독립 페이지) ───────────────────────────
 function showDep() {
-  window._depRendering = true; // Firebase onValue 재트리거 방지
+  window._depRendering = true;
+  try {
   document.getElementById('mc').style.display='none';
   document.getElementById('bc').style.display='none';
   document.getElementById('sc').style.display='none';
@@ -1490,6 +1714,13 @@ function showDep() {
   if (needSave) set(rSchedule, SCHEDULE);
   setTimeout(() => { window._depRendering = false; }, 1500);
 
+  let depLeftHtml = '';
+  let schGumilHtml = '';
+  let schIkilHtml = '';
+  try { depLeftHtml = renderDepLeft(today); } catch(e) { depLeftHtml = '<div style="color:red;padding:12px">renderDepLeft 오류: ' + e.message + '</div>'; }
+  try { schGumilHtml = renderSchPanel(today,'금일'); } catch(e) { schGumilHtml = '<div style="color:red;padding:12px">금일 오류: ' + e.message + '</div>'; }
+  try { schIkilHtml = renderSchPanel(today,'익일'); } catch(e) { schIkilHtml = '<div style="color:red;padding:12px">익일 오류: ' + e.message + '</div>'; }
+
   document.getElementById('dc').innerHTML = `
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap">
       <span style="font-size:16px;font-weight:900;color:var(--text)">💵 입금 파악 · ${today}</span>
@@ -1497,12 +1728,21 @@ function showDep() {
       <button onclick="W._depReset('${today}')" style="padding:4px 11px;border-radius:6px;font-size:11px;font-weight:700;background:#FEF2F2;border:1px solid #FECACA;color:#DC2626;cursor:pointer">🔄 초기화</button>
     </div>
     <div class="dep-layout">
-      <div>${renderDepLeft(today)}</div>
+      <div>${depLeftHtml}</div>
       <div style="display:flex;flex-direction:column;gap:14px">
-        ${renderSchPanel(today,'금일')}
-        ${renderSchPanel(today,'익일')}
+        ${schGumilHtml}
+        ${schIkilHtml}
       </div>
     </div>`;
+  } catch(e) {
+    window._depRendering = false;
+    const dc = document.getElementById('dc');
+    if(dc) {
+      dc.style.display='';
+      dc.innerHTML = '<div style="color:red;padding:20px;font-weight:700;background:#FEF2F2;border-radius:8px;margin:20px">입금파악 오류: ' + e.message + '<br><pre style="font-size:11px;font-weight:400;white-space:pre-wrap">' + e.stack + '</pre></div>';
+    }
+    console.error('showDep error:', e);
+  }
 }
 
 function renderDepLeft(today) {
@@ -1785,16 +2025,21 @@ function showStaff() {
     <button class="staff-tab${staffTab==='대체휴무'?' on':''}" onclick="W._stab('대체휴무')">🗓 대체휴무</button>
   </div>`;
   let content = '';
-  if (staffTab==='업무량') content = renderWorkload();
-  else if (staffTab==='대체휴무') content = `<div style="text-align:center;padding:60px 20px;color:var(--text3)">
-    <div style="font-size:40px;margin-bottom:12px">🗓</div>
-    <div style="font-size:16px;font-weight:700;color:var(--text2);margin-bottom:6px">대체휴무 기능</div>
-    <div style="font-size:13px">준비 중입니다</div>
-  </div>`;
+  try {
+    if (staffTab==='업무량') content = renderWorkload();
+    else if (staffTab==='대체휴무') content = `<div style="text-align:center;padding:60px 20px;color:var(--text3)">
+      <div style="font-size:40px;margin-bottom:12px">🗓</div>
+      <div style="font-size:16px;font-weight:700;color:var(--text2);margin-bottom:6px">대체휴무 기능</div>
+      <div style="font-size:13px">준비 중입니다</div>
+    </div>`;
+  } catch(e2) {
+    content = '<div style="color:red;padding:20px;font-weight:700;background:#FEF2F2;border-radius:8px">렌더 오류: ' + e2.message + '<br><pre style="font-size:11px;font-weight:400">' + e2.stack + '</pre></div>';
+  }
 
   document.getElementById('sc').innerHTML = nav + content;
   } catch(e) {
-    document.getElementById('sc').innerHTML = `<div style="color:red;padding:20px;font-weight:700">오류: ${e.message}<br><pre style="font-size:11px">${e.stack}</pre></div>`;
+    document.getElementById('sc').style.display='';
+    document.getElementById('sc').innerHTML = `<div style="color:red;padding:20px;font-weight:700;background:#FEF2F2;border-radius:8px;margin:20px">직원관리 오류: ${e.message}<br><pre style="font-size:11px;font-weight:400;white-space:pre-wrap">${e.stack}</pre></div>`;
     console.error('showStaff error:', e);
   }
 }
@@ -1864,28 +2109,35 @@ function renderDeposit() {
       h += `<tr>
         ${firstMember ? '<td rowspan="' + t.members.length + '" style="background:' + t.color + '18;color:' + t.color + ';font-weight:900;font-size:12px;text-align:center;border-right:3px solid ' + t.color + ';vertical-align:middle">' + t.name + '</td>' : ''}
         <td class="dep-name">${m}</td>
-        <td><input class="dep-inp" value="${d.완료금액?F(N(d.완료금액)):''}" placeholder="0"
+        <td><input class="dep-inp dep-focus" value="${d.완료금액?F(N(d.완료금액)):''}" placeholder="0"
           oninput="${mk};DEPOSIT['${today}']['${t.name}']['${m}'].완료금액=this.value"
-          onblur="W._dep('${today}','${t.name}','${m}','완료금액',this.value);this.value=this.value?F(N(this.value)):''"></td>
-        <td><input class="dep-inp" value="${d.남은금액?F(N(d.남은금액)):''}" placeholder="0"
+          onblur="W._dep('${today}','${t.name}','${m}','완료금액',this.value);this.value=this.value?F(N(this.value)):''"
+          onkeydown="W._depTab(event,this)"></td>
+        <td><input class="dep-inp dep-focus" value="${d.남은금액?F(N(d.남은금액)):''}" placeholder="0"
           oninput="${mk};DEPOSIT['${today}']['${t.name}']['${m}'].남은금액=this.value"
-          onblur="W._dep('${today}','${t.name}','${m}','남은금액',this.value);this.value=this.value?F(N(this.value)):''"></td>
-        <td style="font-family:'Roboto',monospace;font-weight:700;color:${total>0?'var(--accent)':'var(--text3)'};text-align:right;padding-right:8px;background:#F8FAFF">${total>0?F(total):'0'}</td>
-        <td><input class="dep-inp" value="${d.금일완료||''}" placeholder="0"
+          onblur="W._dep('${today}','${t.name}','${m}','남은금액',this.value);this.value=this.value?F(N(this.value)):''"
+          onkeydown="W._depTab(event,this)"></td>
+        <td data-total="${m}" style="font-family:'Roboto',monospace;font-weight:700;color:${total>0?'var(--accent)':'var(--text3)'};text-align:right;padding-right:8px;background:#F8FAFF">${total>0?F(total):'0'}</td>
+        <td><input class="dep-inp dep-focus" value="${d.금일완료||''}" placeholder="0"
           oninput="${mk};DEPOSIT['${today}']['${t.name}']['${m}'].금일완료=this.value"
-          onblur="W._dep('${today}','${t.name}','${m}','금일완료',this.value)"></td>
-        <td><input class="dep-inp" value="${d.익일예정||''}" placeholder="0"
+          onblur="W._dep('${today}','${t.name}','${m}','금일완료',this.value)"
+          onkeydown="W._depTab(event,this)"></td>
+        <td><input class="dep-inp dep-focus" value="${d.익일예정||''}" placeholder="0"
           oninput="${mk};DEPOSIT['${today}']['${t.name}']['${m}'].익일예정=this.value"
-          onblur="W._dep('${today}','${t.name}','${m}','익일예정',this.value)"></td>
-        <td><input class="dep-inp" value="${d.모레예정||''}" placeholder="0"
+          onblur="W._dep('${today}','${t.name}','${m}','익일예정',this.value)"
+          onkeydown="W._depTab(event,this)"></td>
+        <td><input class="dep-inp dep-focus" value="${d.모레예정||''}" placeholder="0"
           oninput="${mk};DEPOSIT['${today}']['${t.name}']['${m}'].모레예정=this.value"
-          onblur="W._dep('${today}','${t.name}','${m}','모레예정',this.value)"></td>
-        <td style="background:#FAF5FF"><input class="dep-inp" value="${d.금일완료f||''}" placeholder="-"
+          onblur="W._dep('${today}','${t.name}','${m}','모레예정',this.value)"
+          onkeydown="W._depTab(event,this)"></td>
+        <td style="background:#FAF5FF"><input class="dep-inp dep-focus" value="${d.금일완료f||''}" placeholder="-"
           oninput="${mk};DEPOSIT['${today}']['${t.name}']['${m}'].금일완료f=this.value"
-          onblur="W._dep('${today}','${t.name}','${m}','금일완료f',this.value)"></td>
-        <td style="background:#FAF5FF"><input class="dep-inp" value="${d.익일예정f||''}" placeholder="-"
+          onblur="W._dep('${today}','${t.name}','${m}','금일완료f',this.value)"
+          onkeydown="W._depTab(event,this)"></td>
+        <td style="background:#FAF5FF"><input class="dep-inp dep-focus" value="${d.익일예정f||''}" placeholder="-"
           oninput="${mk};DEPOSIT['${today}']['${t.name}']['${m}'].익일예정f=this.value"
-          onblur="W._dep('${today}','${t.name}','${m}','익일예정f',this.value)"></td>
+          onblur="W._dep('${today}','${t.name}','${m}','익일예정f',this.value)"
+          onkeydown="W._depTab(event,this)"></td>
         <td style="text-align:center;background:#FEFCE8"><input type="checkbox" class="dep-chk" ${d.출근?'checked':''}
           onchange="W._dep('${today}','${t.name}','${m}','출근',this.checked)"></td>
         <td style="text-align:center;background:#FEFCE8"><input type="checkbox" class="dep-chk" ${d.출근14?'checked':''}
@@ -1894,16 +2146,16 @@ function renderDeposit() {
       firstMember = false;
     });
     const ts = teamSum[t.name];
-    h += `<tr style="background:#F1F5F9;border-top:1px solid #CBD5E1;border-bottom:2px solid ${t.color}60">
+    h += `<tr data-sum="${t.name}" style="background:#F1F5F9;border-top:1px solid #CBD5E1;border-bottom:2px solid ${t.color}60">
       <td colspan="2" style="text-align:center;color:${t.color};font-weight:900;font-size:12px">합계</td>
-      <td style="font-family:'Roboto',monospace;color:var(--green);text-align:right;font-weight:700;padding-right:8px">${F(ts.완료금액)}</td>
-      <td style="font-family:'Roboto',monospace;color:var(--gold);text-align:right;font-weight:700;padding-right:8px">${F(ts.남은금액)}</td>
+      <td style="font-family:'Roboto',monospace;color:var(--green);text-align:right;font-weight:700;padding-right:8px">${F(ts.완료)}</td>
+      <td style="font-family:'Roboto',monospace;color:var(--gold);text-align:right;font-weight:700;padding-right:8px">${F(ts.남은)}</td>
       <td style="font-family:'Roboto',monospace;color:var(--accent);font-weight:900;text-align:right;padding-right:8px;background:#EFF4FF">${F(ts.총합)}</td>
       <td style="text-align:center;font-weight:700">${ts.금일완료}</td>
       <td style="text-align:center;font-weight:700">${ts.익일예정}</td>
       <td style="text-align:center;font-weight:700">${ts.모레예정}</td>
-      <td style="text-align:center;font-weight:700;background:#FAF5FF">${ts.금일완료f}</td>
-      <td style="text-align:center;font-weight:700;background:#FAF5FF">${ts.익일예정f}</td>
+      <td style="text-align:center;font-weight:700;background:#FAF5FF">-</td>
+      <td style="text-align:center;font-weight:700;background:#FAF5FF">-</td>
       <td style="text-align:center;font-weight:700;background:#FEFCE8">${ts.출근}/${t.members.length}</td>
       <td style="text-align:center;font-weight:700;background:#FEFCE8">${ts.출근14}/${t.members.length}</td>
     </tr>`;
@@ -1974,7 +2226,20 @@ function renderWorkload() {
   return h;
 }
 
-const W = {
+window.W = {
+  _bizMonth(idx, monthsJson) {
+    const months = JSON.parse(monthsJson.replace(/'/g,'"'));
+    window._bizSelMonth = months[idx] || 'current';
+    showBiz();
+  },
+  _bizMonthCur() {
+    window._bizSelMonth = 'current';
+    showBiz();
+  },
+  _bizMonthAll() {
+    window._bizSelMonth = 'all';
+    showBiz();
+  },
   _swStaff(tab) {
     cw=200; staffTab=tab;
     document.getElementById('mc').style.display='none';
@@ -2125,7 +2390,8 @@ const W = {
     document.getElementById('nav-dep')?.classList.add('on');
     document.getElementById('nav-biz-sub').style.display='none';
     document.getElementById('nav-staff-sub').style.display='none';
-    document.getElementById('nav-dash-sub').style.display='none';
+    const navDashSub = document.getElementById('nav-dash-sub');
+    if(navDashSub) navDashSub.style.display='none';
     const pt=document.getElementById('page-title');
     if(pt) pt.textContent='입금 파악';
     showDep();
@@ -2369,19 +2635,45 @@ const W = {
       }, 220);
     }
   },
+  _dashWeekTab(idx) {
+    window._dashWeekTab = idx;
+    renderAllDashboard();
+  },
+  _weekField(weekIdx, teamName, field, val) {
+    if (!DATA[teamName]) DATA[teamName] = {};
+    if (!DATA[teamName][weekIdx]) DATA[teamName][weekIdx] = {sales:'',consult:'',contract:''};
+    DATA[teamName][weekIdx][field] = N(val);
+    set(rSales, DATA);
+  },
+  _weekDate(idx, field, val) {
+    WEEKS[idx][field] = val;
+    set(ref(db,'config'), {teams:TM_CFG, weeks:WEEKS, goals:{monthly:TG,monthLabel:MONTH_LABEL}});
+    renderAllDashboard();
+  },
+  _weekGoal(idx, val) {
+    WEEKS[idx].total = N(val);
+    set(ref(db,'config'), {teams:TM_CFG, weeks:WEEKS, goals:{monthly:TG,monthLabel:MONTH_LABEL}});
+    renderAllDashboard();
+  },
+  _weekSales(weekIdx, teamName, val) {
+    if (!DATA[teamName]) DATA[teamName] = {};
+    if (!DATA[teamName][weekIdx]) DATA[teamName][weekIdx] = {sales:'',consult:'',contract:''};
+    DATA[teamName][weekIdx].sales = N(val);
+    set(rSales, DATA);
+    renderAllDashboard();
+  },
   _swDash() {
     curMonth='current'; cw=-1;
-    const dashSub = document.getElementById('nav-dash-sub');
-    const isOpen = dashSub && dashSub.style.display !== 'none';
-    if(dashSub) dashSub.style.display = isOpen ? 'none' : '';
-    const bizSub = document.getElementById('nav-biz-sub');
-    if(bizSub) bizSub.style.display = 'none';
-    const staffSub = document.getElementById('nav-staff-sub');
-    if(staffSub) staffSub.style.display = 'none';
+    document.getElementById('nav-biz-sub').style.display='none';
+    const ba = document.getElementById('nav-biz-arrow');
+    if(ba) ba.style.transform='rotate(0deg)';
+    document.getElementById('nav-staff-sub').style.display='none';
+    const sa = document.getElementById('nav-staff-arrow');
+    if(sa) sa.style.transform='rotate(0deg)';
     ['nav-dash','nav-w0','nav-w1','nav-w2','nav-w3','nav-biz','nav-biz-sum','nav-biz-con','nav-staff','nav-dep'].forEach(id=>document.getElementById(id)?.classList.remove('on'));
     document.getElementById('nav-dash')?.classList.add('on');
-    const pt = document.getElementById('page-title');
-    if(pt) pt.textContent = '대시보드';
+    const pt=document.getElementById('page-title');
+    if(pt) pt.textContent='대시보드';
     renderMain();
   },
   _swBiz(tab) {
@@ -2402,7 +2694,7 @@ const W = {
     else if(tab==='추가리스트') document.getElementById('nav-biz-add')?.classList.add('on');
     
     const pt=document.getElementById('page-title');
-    const titles = {요약:'영업 요약',상담내역:'상담 내역',미납리스트:'미납 리스트',추가리스트:'추가 리스트',입금파악:'입금 파악'};
+    const titles = {요약:'영업 데이터',상담내역:'상담 내역',미납리스트:'미납 리스트',추가리스트:'추가 리스트',입금파악:'입금 파악'};
     if(pt) pt.textContent = titles[tab]||tab;
     showBiz();
   },
@@ -2444,7 +2736,7 @@ const W = {
     else if(tab==='추가리스트') document.getElementById('nav-biz-add')?.classList.add('on');
     
     const pt=document.getElementById('page-title');
-    const titles = {요약:'영업 요약',상담내역:'상담 내역',미납리스트:'미납 리스트',추가리스트:'추가 리스트',입금파악:'입금 파악'};
+    const titles = {요약:'영업 데이터',상담내역:'상담 내역',미납리스트:'미납 리스트',추가리스트:'추가 리스트',입금파악:'입금 파악'};
     if(pt) pt.textContent = titles[tab]||tab;
     showBiz();
   },
@@ -2475,10 +2767,45 @@ const W = {
     }
     set(rBiz,BIZ); updBizKPI();
   },
-  _cc(date) { cCol[date]=!cCol[date]; showBiz(); },
-  _cu(date,rid,field,val) {
+  _cc(date) {
+    cCol[date] = !cCol[date];
+    // DOM에서 해당 날짜 테이블 직접 토글 (재렌더 없이)
+    const tbl = document.getElementById('ctbl-' + date);
+    const arb = document.getElementById('arb-' + date);
+    const arr = document.getElementById('dhdr-arr-' + date);
+    if (tbl) tbl.style.display = cCol[date] ? 'none' : '';
+    if (arb) arb.style.display = cCol[date] ? 'none' : '';
+    if (arr) arr.textContent = cCol[date] ? '▼' : '▲';
+  },
+  _cu(date, rid, field, val) {
     if(!CONSULT[date]||!CONSULT[date][rid]) return;
-    CONSULT[date][rid][field]=val; set(rConsult,CONSULT); updBizKPI();
+    CONSULT[date][rid][field] = val;
+    set(rConsult, CONSULT);
+    updBizKPI();
+    // 결과 변경 시 배지 색상 즉시 반영
+    if (field === 'result') {
+      const sel = document.querySelector(`[onchange*="_cu('${date}','${rid}','result'"]`);
+      if (sel) {
+        const style =
+          val==='완납' ? 'background:#FEF08A;color:#854D0E' :
+          val==='미납' ? 'background:#FEE2E2;color:#DC2626' :
+          val==='취소' ? 'background:#E5E7EB;color:#6B7280' :
+          val==='COD'  ? 'background:#EFF4FF;color:#2563EB' :
+          val==='추가' ? 'background:#F0FDF4;color:#16A34A' :
+          val==='미등록회수' ? 'background:#F5F3FF;color:#7C3AED' :
+          'background:#F1F5F9;color:#64748B';
+        sel.style.cssText += ';' + style;
+        // 행 배경도 즉시 변경
+        const tr = sel.closest('tr');
+        if (tr) {
+          tr.style.background =
+            val==='완납' ? '#FFFDE7' :
+            val==='미납' ? '#FEF2F2' :
+            val==='취소' ? '#E5E7EB' :
+            val==='COD'  ? '#EFF4FF' : '';
+        }
+      }
+    }
   },
   _ca(date) {
     if(!CONSULT[date]) CONSULT[date]={};
