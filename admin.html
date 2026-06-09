@@ -526,8 +526,14 @@ window.saveBizSchedule = async () => {
   if (!BIZ_SCHEDULE.length) { alert('영업일 일정을 먼저 추가해주세요'); return; }
   const invalid = BIZ_SCHEDULE.find(s => !s.start || !s.end);
   if (invalid) { alert('모든 영업일의 시작일/종료일을 입력해주세요'); return; }
-  // 날짜 기준 정렬
+  // 날짜 기준 정렬 + 라벨 자동 생성
   BIZ_SCHEDULE.sort((a,b) => a.start.localeCompare(b.start));
+  BIZ_SCHEDULE.forEach(s => {
+    if (!s.label) {
+      const d = new Date(s.start+'T00:00:00');
+      s.label = `${d.getMonth()+1}월`;
+    }
+  });
   CFG.bizSchedule = BIZ_SCHEDULE;
   // 현재 날짜에 해당하는 영업일 자동으로 bizStart/bizEnd 설정
   const today = new Date().toISOString().slice(0,10);
