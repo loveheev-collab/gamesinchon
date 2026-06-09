@@ -1651,15 +1651,24 @@ function renderSchPanel(today, type) {
   const hdrColor = type==='금일' ? '#2563EB' : '#7C3AED';
   const totalAmt = rows.reduce((s,[,r])=>s+N(r.금액||0),0);
   const filledRows = rows.filter(([,r])=>r.멘토||r.이름);
+  const wannapRows = rows.filter(([,r])=>r.완납);
+  const minapRows  = rows.filter(([,r])=>r.미납);
+  const wannapAmt  = wannapRows.reduce((s,[,r])=>s+N(r.금액||0),0);
+  const minapAmt   = minapRows.reduce((s,[,r])=>s+N(r.금액||0),0);
   const panelId = 'sch-panel-' + type;
 
   let h = `<div class="dep-panel" id="${panelId}">
     <div class="dep-panel-hdr" style="background:${hdrColor}">
       <span>${type==='금일'?'📅':'📆'} ${type} 예정건</span>
     </div>
-    <div class="sch-summary" style="padding:9px 16px;background:${type==='금일'?'#EFF4FF':'#F5F3FF'};border-bottom:2px solid ${type==='금일'?'#93C5FD':'#C4B5FD'};display:flex;gap:20px;align-items:center;flex-wrap:wrap">
+    <div class="sch-summary" style="padding:9px 16px;background:${type==='금일'?'#EFF4FF':'#F5F3FF'};border-bottom:2px solid ${type==='금일'?'#93C5FD':'#C4B5FD'};display:flex;gap:16px;align-items:center;flex-wrap:wrap">
       <span style="font-size:13px;font-weight:900;color:${hdrColor};background:${type==='금일'?'#DBEAFE':'#EDE9FE'};padding:3px 10px;border-radius:20px">${filledRows.length}건</span>
       <span style="font-size:22px;font-weight:900;font-family:'Roboto',monospace;color:${hdrColor}">${F(totalAmt)}<span style="font-size:13px">원</span></span>
+      ${type==='금일' ? `
+      <span style="font-size:11px;color:#666;margin-left:4px">|</span>
+      <span style="font-size:12px;font-weight:700;color:#16A34A">✅ 완납 <b style="font-family:'Roboto',monospace;font-size:14px">${F(wannapAmt)}</b>원</span>
+      <span style="font-size:12px;font-weight:700;color:#6B7280">⬜ 미납 <b style="font-family:'Roboto',monospace;font-size:14px">${F(minapAmt)}</b>원</span>
+      ` : ''}
       <span style="font-size:11px;color:var(--text3);margin-left:auto">전체 ${rows.length}행</span>
     </div>
     <div class="sch-wrap">
@@ -2172,14 +2181,15 @@ const W = {
   _schDone(date, type, id, checked) {
     if(!SCHEDULE[date]?.[type]?.[id]) return;
     SCHEDULE[date][type][id].완납 = checked;
+    // 완납 시 미납 해제
+    if(checked) SCHEDULE[date][type][id].미납 = false;
     window._depRendering = true;
     set(rSchedule, SCHEDULE);
     setTimeout(() => { window._depRendering = false; }, 1500);
-    // 행 숨기기/보이기 — 내용은 유지, display만 토글
+    W._updateSchSummary(date, type);
     const tr = document.querySelector(`[onclick*="_schDel('${date}','${type}','${id}')"]`)?.closest('tr');
     if (tr) {
       if (checked) {
-        // 줄긋기 먼저 적용
         tr.querySelectorAll('input:not([type=checkbox]),select').forEach(el => {
           el.style.textDecoration = 'line-through';
           el.style.color = 'var(--text3)';
@@ -2192,7 +2202,6 @@ const W = {
           W._updateDoneToggle(date, type);
         }, 260);
       } else {
-        // 줄긋기 제거 후 표시
         tr.querySelectorAll('input:not([type=checkbox]),select').forEach(el => {
           el.style.textDecoration = '';
           el.style.color = '';
@@ -2203,6 +2212,25 @@ const W = {
         W._updateDoneToggle(date, type);
       }
     }
+  },
+  _updateSchSummary(date, type) {
+    const panelId = 'sch-panel-' + type;
+    const sumEl = document.querySelector(`#${panelId} .sch-summary`);
+    if (!sumEl) return;
+    const rows = Object.values(SCHEDULE[date]?.[type]||{});
+    const filled  = rows.filter(r=>r.멘토||r.이름).length;
+    const total   = rows.reduce((s,r)=>s+N(r.금액||0),0);
+    const wannap  = rows.filter(r=>r.완납).reduce((s,r)=>s+N(r.금액||0),0);
+    const minap   = rows.filter(r=>r.미납).reduce((s,r)=>s+N(r.금액||0),0);
+    const hdrColor = type==='금일' ? '#2563EB' : '#7C3AED';
+    const bg = type==='금일' ? '#DBEAFE' : '#EDE9FE';
+    sumEl.innerHTML = `
+      <span style="font-size:13px;font-weight:900;color:${hdrColor};background:${bg};padding:3px 10px;border-radius:20px">${filled}건</span>
+      <span style="font-size:22px;font-weight:900;font-family:'Roboto',monospace;color:${hdrColor}">${F(total)}<span style="font-size:13px">원</span></span>
+      ${type==='금일' ? `<span style="font-size:11px;color:#666;margin-left:4px">|</span>
+      <span style="font-size:12px;font-weight:700;color:#16A34A">✅ 완납 <b style="font-family:'Roboto',monospace;font-size:14px">${F(wannap)}</b>원</span>
+      <span style="font-size:12px;font-weight:700;color:#6B7280">⬜ 미납 <b style="font-family:'Roboto',monospace;font-size:14px">${F(minap)}</b>원</span>` : ''}
+      <span style="font-size:11px;color:var(--text3);margin-left:auto">전체 ${rows.length}행</span>`;
   },
   _updateDoneToggle(date, type) {
     const panelId = 'sch-panel-' + type;
@@ -2227,6 +2255,7 @@ const W = {
     window._depRendering = true;
     set(rSchedule, SCHEDULE);
     setTimeout(() => { window._depRendering = false; }, 1500);
+    W._updateSchSummary(date, '금일');
     const tr = document.querySelector(`[onclick*="_schDel('${date}','금일','${id}')"]`)?.closest('tr');
     if (tr) {
       tr.style.background = checked ? '#F3F4F6' : '';
@@ -2289,11 +2318,14 @@ const W = {
       const rows = Object.values(SCHEDULE[date]?.[type]||{});
       const filled = rows.filter(r=>r.멘토||r.이름).length;
       const total = rows.reduce((s,r)=>s+N(r.금액||0),0);
+      const wannap = rows.filter(r=>r.완납).reduce((s,r)=>s+N(r.금액||0),0);
+      const minap  = rows.filter(r=>r.미납).reduce((s,r)=>s+N(r.금액||0),0);
       const hdrColor = type==='금일' ? '#2563EB' : '#7C3AED';
       const sumEl = panel.querySelector('.sch-summary');
       if (sumEl) {
-        sumEl.innerHTML = `<span style="font-size:13px;font-weight:900;color:${hdrColor}">${filled}건</span>
-          <span style="font-size:18px;font-weight:900;font-family:'Roboto',monospace;color:${hdrColor}">${F(total)}원</span>
+        sumEl.innerHTML = `<span style="font-size:13px;font-weight:900;color:${hdrColor};background:${type==='금일'?'#DBEAFE':'#EDE9FE'};padding:3px 10px;border-radius:20px">${filled}건</span>
+          <span style="font-size:22px;font-weight:900;font-family:'Roboto',monospace;color:${hdrColor}">${F(total)}<span style="font-size:13px">원</span></span>
+          ${type==='금일'?`<span style="font-size:11px;color:#666;margin-left:4px">|</span><span style="font-size:12px;font-weight:700;color:#16A34A">✅ 완납 <b style="font-family:'Roboto',monospace;font-size:14px">${F(wannap)}</b>원</span><span style="font-size:12px;font-weight:700;color:#6B7280"> ⬜ 미납 <b style="font-family:'Roboto',monospace;font-size:14px">${F(minap)}</b>원</span>`:''}
           <span style="font-size:11px;color:var(--text3);margin-left:auto">전체 ${rows.length}행</span>`;
       }
     }
@@ -2326,9 +2358,12 @@ const W = {
         const panelId = 'sch-panel-' + type;
         const sumEl = document.querySelector(`#${panelId} .sch-summary`);
         if (sumEl) {
+          const wannap2 = rows.filter(r=>r.완납).reduce((s,r)=>s+N(r.금액||0),0);
+          const minap2  = rows.filter(r=>r.미납).reduce((s,r)=>s+N(r.금액||0),0);
           const hdrColor = type==='금일' ? '#2563EB' : '#7C3AED';
           sumEl.innerHTML = `<span style="font-size:13px;font-weight:900;color:${hdrColor};background:${type==='금일'?'#DBEAFE':'#EDE9FE'};padding:3px 10px;border-radius:20px">${filled}건</span>
             <span style="font-size:22px;font-weight:900;font-family:'Roboto',monospace;color:${hdrColor}">${F(total)}<span style="font-size:13px">원</span></span>
+            ${type==='금일'?`<span style="font-size:11px;color:#666;margin-left:4px">|</span><span style="font-size:12px;font-weight:700;color:#16A34A">✅ 완납 <b style="font-family:'Roboto',monospace;font-size:14px">${F(wannap2)}</b>원</span><span style="font-size:12px;font-weight:700;color:#6B7280"> ⬜ 미납 <b style="font-family:'Roboto',monospace;font-size:14px">${F(minap2)}</b>원</span>`:''}
             <span style="font-size:11px;color:var(--text3);margin-left:auto">전체 ${rows.length}행</span>`;
         }
       }, 220);
