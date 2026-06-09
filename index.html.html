@@ -1561,7 +1561,7 @@ function renderDepLeft(today) {
       const total = N(d.완료금액||0)+N(d.남은금액||0);
       const mk = `if(!DEPOSIT['${today}'])DEPOSIT['${today}']={};if(!DEPOSIT['${today}']['${t.name}'])DEPOSIT['${today}']['${t.name}']={};if(!DEPOSIT['${today}']['${t.name}']['${m}'])DEPOSIT['${today}']['${t.name}']['${m}']={}`;
       h += `<tr>
-        ${first?`<td rowspan="${t.members.length}" style="background:${t.color}18;color:${t.color};font-weight:900;font-size:11px;text-align:center;border-right:3px solid ${t.color};vertical-align:middle">${t.name}</td>`:''}
+        ${first?'<td rowspan="' + t.members.length + '" style="background:' + t.color + '18;color:' + t.color + ';font-weight:900;font-size:11px;text-align:center;border-right:3px solid ' + t.color + ';vertical-align:middle">' + t.name + '</td>':''}
         <td style="font-size:11px;font-weight:600;padding-left:6px;white-space:nowrap">${m}</td>
         <td style="background:#F8FBFF"><input class="dep-inp dep-focus" style="width:64px" value="${d.완료금액?F(N(d.완료금액)):''}" placeholder="0"
           oninput="${mk};DEPOSIT['${today}']['${t.name}']['${m}'].완료금액=this.value"
@@ -1665,7 +1665,8 @@ function renderSchPanel(today, type) {
     <div class="sch-wrap">
     <table class="sch-tbl">
       <thead><tr>
-        <th style="width:28px">${type==='익일'?'→금일':''}</th>
+        <th style="width:28px">${type==='익일'?'→금일':'완납'}</th>
+        ${type==='금일' ? '<th style="width:28px">미납</th>' : ''}
         <th style="width:72px">멘토</th>
         <th style="width:64px">이름</th>
         <th style="width:60px">시간</th>
@@ -1681,8 +1682,10 @@ function renderSchPanel(today, type) {
     const sk = `if(!SCHEDULE['${today}'])SCHEDULE['${today}']={};if(!SCHEDULE['${today}']['${type}'])SCHEDULE['${today}']['${type}']={};if(!SCHEDULE['${today}']['${type}']['${id}'])SCHEDULE['${today}']['${type}']['${id}']={}`;
     const typeBadge = r.종류==='추가' ? 'background:#EFF4FF;color:#2563EB' : r.종류==='신규' ? 'background:#F0FDF4;color:#16A34A' : '';
     const isDone = r.완납 === true;
+    const isMiNap = r.미납 === true;
     const ds = isDone ? 'text-decoration:line-through;color:var(--text3)' : '';
-    h += `<tr style="${isDone?'display:none':''}">
+    const rowBg = isDone ? 'display:none' : isMiNap ? 'background:#F3F4F6' : '';
+    h += `<tr style="${rowBg}">
       <td style="text-align:center">
         ${type==='익일'
           ? `<button title="금일로 이동" onclick="W._schMove('${today}','${id}')"
@@ -1691,6 +1694,10 @@ function renderSchPanel(today, type) {
                onchange="W._schDone('${today}','${type}','${id}',this.checked)" title="완납">`
         }
       </td>
+      ${type==='금일' ? `<td style="text-align:center">
+        <input type="checkbox" class="dep-chk" style="accent-color:#6B7280" ${isMiNap?'checked':''}
+          onchange="W._schMiNap('${today}','${id}',this.checked)" title="미납">
+      </td>` : ''}
       <td>
         <select class="sch-sel sch-focus" data-panel="${panelId}" style="${ds}"
           onchange="W._sch('${today}','${type}','${id}','멘토',this.value)"
@@ -2048,6 +2055,37 @@ const W = {
       hdrSummary.textContent = `완료 ${F(allWan)} · 남은 ${F(allNam)} · 출근 ${allOut}/${TM}`;
     }
   },
+  _depStatus(date, team, member, type, checked) {
+    if(!DEPOSIT[date]) DEPOSIT[date]={};
+    if(!DEPOSIT[date][team]) DEPOSIT[date][team]={};
+    if(!DEPOSIT[date][team][member]) DEPOSIT[date][team][member]={};
+    // 완납/미납 상호 배타 처리
+    DEPOSIT[date][team][member][type] = checked;
+    if(checked) {
+      const other = type==='완납' ? '미납' : '완납';
+      DEPOSIT[date][team][member][other] = false;
+    }
+    window._depRendering = true;
+    set(rDeposit, DEPOSIT);
+    setTimeout(() => { window._depRendering = false; }, 2000);
+    // 행 배경 즉시 업데이트
+    const d = DEPOSIT[date][team][member];
+    const allRows = document.querySelectorAll('#dep-panel-left tbody tr:not([data-sum]):not([data-total-row])');
+    allRows.forEach(tr => {
+      const nameTd = tr.querySelector('td:nth-child(2)');
+      if (nameTd && nameTd.textContent.trim() === member) {
+        tr.style.background = d.완납 ? '#FFFDE7' : d.미납 ? '#F3F4F6' : '';
+        nameTd.style.textDecoration = d.완납 ? 'line-through' : '';
+        nameTd.style.color = d.완납 ? 'var(--text3)' : '';
+        // 반대 체크박스 해제
+        const checkboxes = tr.querySelectorAll('input[type=checkbox]');
+        checkboxes.forEach(cb => {
+          if (cb.onchange && cb.onchange.toString().includes("'완납'")) cb.checked = !!d.완납;
+          if (cb.onchange && cb.onchange.toString().includes("'미납'")) cb.checked = !!d.미납;
+        });
+      }
+    });
+  },
   _depReset(date) {
     if(!confirm(`${date} 입금파악 데이터를 초기화할까요?\n(예정건 행도 함께 초기화됩니다)`)) return;
     // DEPOSIT 초기화
@@ -2180,6 +2218,22 @@ const W = {
       btn.style.display = '';
       const showing = btn.dataset.showing === 'true';
       btn.textContent = `완납 ${doneRows.length}건 숨겨짐 ${showing ? '▲ 접기' : '▼ 펼치기'}`;
+    }
+  },
+  _schMiNap(date, id, checked) {
+    if(!SCHEDULE[date]?.금일?.[id]) return;
+    SCHEDULE[date].금일[id].미납 = checked;
+    if(checked) SCHEDULE[date].금일[id].완납 = false;
+    window._depRendering = true;
+    set(rSchedule, SCHEDULE);
+    setTimeout(() => { window._depRendering = false; }, 1500);
+    const tr = document.querySelector(`[onclick*="_schDel('${date}','금일','${id}')"]`)?.closest('tr');
+    if (tr) {
+      tr.style.background = checked ? '#F3F4F6' : '';
+      if (checked) {
+        const doneChk = tr.querySelector('[onchange*="_schDone"]');
+        if (doneChk) doneChk.checked = false;
+      }
     }
   },
   _toggleDone(date, type) {
