@@ -150,8 +150,8 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
         </div>
       </div>
       <div style="margin-top:10px;font-size:12px;color:var(--text3);line-height:1.8;background:#F8FAFF;padding:10px 14px;border-radius:8px;border:1px solid #BFCFFF">
-        💡 <b>한 번에 처리:</b> 영업현황·상담내역·주차실적을 아카이브에 백업하고, config 영업일 기간도 자동 업데이트해요.<br>
-        ⚠ 저장 후 <b>기본 설정</b>에서 새 영업월 날짜로 변경해주세요.
+        💡 <b>마감할 영업일 기간</b>을 입력하고 저장하면 해당 기간의 영업현황·상담내역·주차실적이 아카이브에 백업돼요.<br>
+        ℹ️ 현재 진행 중인 영업일은 <b>기본 설정</b>에서 따로 관리해요. 두 칸은 독립적이에요.
       </div>
       <div id="biz-archive-list" style="margin-top:14px"></div>
     </div>
@@ -169,13 +169,11 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
         </div>
         <div class="cfg-item">
           <label>영업일 시작</label>
-          <input class="cfg-inp" id="cfg-bizStart" type="date"
-            onchange="document.getElementById('biz-archive-start').value=this.value">
+          <input class="cfg-inp" id="cfg-bizStart" type="date">
         </div>
         <div class="cfg-item">
           <label>영업일 종료</label>
-          <input class="cfg-inp" id="cfg-bizEnd" type="date"
-            onchange="document.getElementById('biz-archive-end').value=this.value">
+          <input class="cfg-inp" id="cfg-bizEnd" type="date">
         </div>
       </div>
     </div>
@@ -299,9 +297,6 @@ function renderAll() {
   document.getElementById('cfg-monthLabel').value = CFG.monthLabel || '';
   document.getElementById('cfg-bizStart').value = CFG.bizStart || '';
   document.getElementById('cfg-bizEnd').value = CFG.bizEnd || '';
-  // 영업일 마감 아카이브 날짜도 같이 채우기
-  if (CFG.bizStart) document.getElementById('biz-archive-start').value = CFG.bizStart;
-  if (CFG.bizEnd)   document.getElementById('biz-archive-end').value   = CFG.bizEnd;
   renderWeeks();
   renderTeams();
 }
@@ -458,17 +453,6 @@ window.doBizArchive = async () => {
 
     // archive/biz/YYYY_MM 에 저장
     await dbSet(dbRef(db, `archive/biz/${key}`), archiveData);
-
-    // config 영업일 업데이트
-    CFG.bizStart = s;
-    CFG.bizEnd = e;
-    await dbSet(dbRef(db, 'config'), CFG);
-
-    // cfg-bizStart/End 인풋도 업데이트
-    const cs = document.getElementById('cfg-bizStart');
-    const ce = document.getElementById('cfg-bizEnd');
-    if (cs) cs.value = s;
-    if (ce) ce.value = e;
 
     alert(`✅ 아카이브 저장 완료!\n\n${label} 영업 데이터가 저장됐어요.\n현황판 사이드바 아카이브에서 확인하세요.`);
     loadBizArchiveList();
