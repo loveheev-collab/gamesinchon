@@ -4,9 +4,22 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>게임신촌 업무 현황판</title>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=Roboto+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=Roboto:wght@500;700&family=Roboto+Mono:wght@500;700&display=swap" rel="stylesheet">
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
+*, *::before, *::after {
+  font-variant-numeric: normal !important;
+  font-feature-settings: "zero" 0 !important;
+}
+/* Roboto Mono 인라인 오버라이드 */
+[style*="Roboto Mono"], .rnum, .kval, .kc-hl .kval,
+.dstr, .dinp, .inp, .sv, .binp, .dep-inp, .sch-num,
+.al-num, .wl-cell, td, th, input, textarea {
+  font-variant-numeric: normal !important;
+  font-feature-settings: "zero" 0 !important;
+}
+</style>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-variant-numeric:normal}
 .layout{display:flex;min-height:100vh}
 .sidebar{width:200px;background:#fff;border-right:1px solid #E8ECF0;flex-shrink:0;position:fixed;top:0;left:0;height:100vh;overflow-y:auto;z-index:200;display:flex;flex-direction:column}
 .sb-logo{padding:20px 18px 16px;border-bottom:1px solid #F0F2F5}
@@ -43,7 +56,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .sdot{width:7px;height:7px;border-radius:50%;background:#ccc;display:inline-block;margin-right:4px}
 .sdot.live{background:var(--green);animation:blink 2s infinite}
 .slbl{font-size:11px;color:var(--text3)}
-.dstr{color:var(--text3);font-size:12px;font-family:'Roboto Mono',monospace}
+.dstr{color:var(--text3);font-size:12px;font-family:'Roboto',monospace}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.4}}
 .wnav{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 24px}
 .wnav-in{display:flex;max-width:1400px;margin:0 auto;overflow-x:auto}
@@ -60,7 +73,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .kc.a{border-top-color:var(--accent)}.kc.g{border-top-color:var(--green)}
 .kc.go{border-top-color:var(--gold)}.kc.r{border-top-color:var(--red)}.kc.p{border-top-color:var(--purple)}
 .klbl{font-size:11px;font-weight:700;color:var(--text3);margin-bottom:5px}
-.kval{font-size:19px;font-weight:900;font-family:'Roboto Mono',monospace;color:var(--text);letter-spacing:-1px}
+.kval{font-size:19px;font-weight:900;font-family:'Roboto',monospace;color:var(--text);letter-spacing:-1px}
 .ksub{font-size:11px;color:var(--text3);margin-top:2px}
 /* 결산 누계 강조 KPI */
 .kg-highlight{display:grid;grid-template-columns:repeat(auto-fit,minmax(195px,1fr));gap:0;margin-bottom:22px;border-radius:14px;overflow:hidden;border:3px solid #1D4ED8;box-shadow:0 4px 24px rgba(37,99,235,.18)}
@@ -72,7 +85,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .kc-hl.hl-a::before{background:#2563EB}
 .kc-hl.hl-diff::before{background:var(--diff-color,#DC2626)}
 .kc-hl .klbl{font-size:11px;font-weight:900;color:#6B7280;letter-spacing:.3px;margin-bottom:7px;text-transform:uppercase}
-.kc-hl .kval{font-size:24px;font-weight:900;font-family:'Roboto Mono',monospace;letter-spacing:-1.5px}
+.kc-hl .kval{font-size:24px;font-weight:900;font-family:'Roboto',monospace;letter-spacing:-1.5px}
 .kc-hl .ksub{font-size:11px;color:#9CA3AF;margin-top:4px}
 .kg-highlight-label{font-size:13px;font-weight:900;color:#1D4ED8;margin-bottom:8px;display:flex;align-items:center;gap:7px}
 .kg-highlight-label::before{content:'';display:block;width:4px;height:16px;background:#1D4ED8;border-radius:2px}
@@ -81,7 +94,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .dg{display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:10px;margin-bottom:11px}
 .dc{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px}
 .dc label{font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:5px}
-.dinp{width:100%;padding:6px 8px;background:var(--bg2);border:1.5px solid var(--accent);border-radius:6px;color:var(--accent);font-size:13px;font-weight:700;text-align:right;font-family:'Roboto Mono',monospace}
+.dinp{width:100%;padding:6px 8px;background:var(--bg2);border:1.5px solid var(--accent);border-radius:6px;color:var(--accent);font-size:13px;font-weight:700;text-align:right;font-family:'Roboto',monospace}
 .dinp:focus{outline:none;box-shadow:0 0 0 3px rgba(37,99,235,.1)}
 .dcalc{display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:10px}
 .dcc{border-radius:8px;padding:10px 13px;display:flex;align-items:center;justify-content:space-between}
@@ -101,14 +114,14 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .ir{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
 .il{font-size:12px;color:var(--text2);font-weight:500}
 .irr{display:flex;align-items:center;gap:5px}
-.inp{width:126px;padding:5px 8px;background:var(--bg);border:1px solid var(--border);border-radius:7px;color:var(--text);font-size:13px;font-weight:700;text-align:right;font-family:'Roboto Mono',monospace}
+.inp{width:126px;padding:5px 8px;background:var(--bg);border:1px solid var(--border);border-radius:7px;color:var(--text);font-size:13px;font-weight:700;text-align:right;font-family:'Roboto',monospace}
 .inp:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(37,99,235,.1)}
 .iunit{font-size:11px;color:var(--text3)}
 .dvd{border:none;border-top:1px solid var(--border);margin:9px 0}
 .sr{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}
-.sl{font-size:12px;color:var(--text2)}.sv{font-size:13px;font-weight:700;font-family:'Roboto Mono',monospace;color:var(--text)}
+.sl{font-size:12px;color:var(--text2)}.sv{font-size:13px;font-weight:700;font-family:'Roboto',monospace;color:var(--text)}
 .rbig{display:flex;align-items:center;justify-content:space-between;padding:9px 11px;border-radius:8px;margin-top:9px;border:1px solid var(--border)}
-.rnum{font-size:20px;font-weight:900;font-family:'Roboto Mono',monospace}
+.rnum{font-size:20px;font-weight:900;font-family:'Roboto',monospace}
 .rmsg{font-size:11px;font-weight:700;text-align:right;line-height:1.4}
 /* summary */
 .sw{background:var(--bg2);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:18px}
@@ -116,7 +129,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .tbl th{padding:8px 11px;font-size:11px;font-weight:700;color:var(--text3);text-align:left;background:var(--bg);border-bottom:1px solid var(--border)}
 .tbl th:not(:first-child){text-align:right}
 .tbl td{padding:9px 11px;border-bottom:1px solid var(--border);color:var(--text)}
-.tbl td:not(:first-child){text-align:right;font-family:'Roboto Mono',monospace}
+.tbl td:not(:first-child){text-align:right;font-family:'Roboto',monospace}
 .tbl tr:last-child td{border-bottom:none;font-weight:700}
 .tdot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:6px;vertical-align:middle}
 /* msg */
@@ -124,7 +137,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .mh{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px}
 .cbtn{padding:6px 14px;border-radius:7px;background:var(--accent);color:#fff;font-weight:700;font-size:12px;border:none;cursor:pointer}
 .cbtn:hover{background:#1D4ED8}.cbtn.done{background:var(--green)}
-.mbox{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px;font-family:'Roboto Mono',monospace;font-size:12px;line-height:1.9;color:var(--text2);white-space:pre-wrap;word-break:break-all}
+.mbox{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px;font-family:'Roboto',monospace;font-size:12px;line-height:1.9;color:var(--text2);white-space:pre-wrap;word-break:break-all}
 /* review */
 .rg{display:grid;grid-template-columns:repeat(auto-fit,minmax(228px,1fr));gap:11px;margin-bottom:18px}
 .rc{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:13px}
@@ -155,16 +168,16 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .bmtbl th:not(:first-child){text-align:right}
 .bmtbl td{padding:8px 9px;border-bottom:1px solid var(--border);vertical-align:middle}
 .bmtbl tr:last-child td{border-bottom:none;background:var(--bg)}
-.binp{padding:4px 7px;border:1px solid var(--border);border-radius:5px;font-size:12px;font-weight:700;font-family:'Roboto Mono',monospace;background:var(--bg);text-align:right;width:100%;box-sizing:border-box}
+.binp{padding:4px 7px;border:1px solid var(--border);border-radius:5px;font-size:12px;font-weight:700;font-family:'Roboto',monospace;background:var(--bg);text-align:right;width:100%;box-sizing:border-box}
 .binp:focus{outline:none;box-shadow:0 0 0 2px rgba(37,99,235,.1);background:#fff}
-.nr{text-align:right;font-family:'Roboto Mono',monospace;font-size:12px}
+.nr{text-align:right;font-family:'Roboto',monospace;font-size:12px}
 /* consult */
 .csg{display:grid;grid-template-columns:repeat(auto-fit,minmax(142px,1fr));gap:10px;margin-bottom:13px}
 .csc{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:11px 12px;border-top:3px solid var(--border)}
 .csc.g{border-top-color:var(--green)}.csc.go{border-top-color:var(--gold)}
 .csc.p{border-top-color:var(--purple)}.csc.b{border-top-color:var(--accent)}
 .cslb{font-size:11px;font-weight:700;color:var(--text3);margin-bottom:4px}
-.csv{font-size:16px;font-weight:900;font-family:'Roboto Mono',monospace;color:var(--text)}
+.csv{font-size:16px;font-weight:900;font-family:'Roboto',monospace;color:var(--text)}
 .csse{font-size:11px;color:var(--text3);margin-top:2px}
 .tcg{display:grid;grid-template-columns:repeat(auto-fit,minmax(205px,1fr));gap:10px;margin-bottom:13px}
 .tcc{background:var(--bg2);border:1px solid var(--border);border-radius:10px;overflow:hidden}
@@ -180,7 +193,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .search-result-cnt{font-size:12px;color:var(--text3)}
 .dhdr{display:flex;align-items:center;justify-content:space-between;padding:8px 13px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;margin-bottom:5px;cursor:pointer;user-select:none}
 .dtc{font-size:13px;font-weight:700;color:var(--accent)}
-.dts{font-size:11px;color:var(--text2);font-family:'Roboto Mono',monospace}
+.dts{font-size:11px;color:var(--text2);font-family:'Roboto',monospace}
 .ctbl{width:100%;border-collapse:collapse;background:var(--bg2);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:2px}
 .ctbl th{padding:7px 8px;font-size:11px;font-weight:700;color:var(--text3);text-align:left;background:var(--bg);border-bottom:1px solid var(--border);white-space:nowrap}
 .ctbl td{padding:4px 6px;border-bottom:1px solid var(--border);vertical-align:middle}
@@ -190,7 +203,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .ci:hover{border-color:var(--border);background:var(--bg)}.ci:focus{outline:none;border-color:var(--accent);background:#fff}
 .cs{width:100%;padding:4px 3px;border:1px solid transparent;border-radius:4px;font-size:12px;font-family:'Noto Sans KR',sans-serif;background:transparent;cursor:pointer}
 .cs:hover{border-color:var(--border);background:var(--bg)}.cs:focus{outline:none;border-color:var(--accent);background:#fff}
-.cn{width:100%;padding:4px 5px;border:1px solid transparent;border-radius:4px;font-size:12px;font-family:'Roboto Mono',monospace;background:transparent;text-align:right;color:var(--text)}
+.cn{width:100%;padding:4px 5px;border:1px solid transparent;border-radius:4px;font-size:12px;font-family:'Roboto',monospace;background:transparent;text-align:right;color:var(--text)}
 .cn:hover{border-color:var(--border);background:var(--bg)}.cn:focus{outline:none;border-color:var(--accent);background:#fff}
 .arb{width:100%;padding:5px;font-size:12px;color:var(--text3);background:var(--bg);border:1px dashed var(--border);border-top:none;cursor:pointer;border-radius:0 0 8px 8px}
 .arb:hover{background:var(--accent-light);color:var(--accent);border-color:var(--accent)}
@@ -213,7 +226,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .dep-tbl td{padding:5px 6px;border:1px solid var(--border);text-align:center;font-size:12px;vertical-align:middle}
 .dep-tbl .team-hdr td{background:var(--bg3);font-weight:900;font-size:12px}
 .dep-tbl .sum-row td{background:#F0FDF4;font-weight:700;font-size:12px}
-.dep-inp{width:100%;padding:3px 5px;border:1px solid transparent;border-radius:4px;font-size:11px;font-family:'Roboto Mono',monospace;text-align:right;background:transparent;color:var(--text);min-width:70px}
+.dep-inp{width:100%;padding:3px 5px;border:1px solid transparent;border-radius:4px;font-size:11px;font-family:'Roboto',monospace;text-align:right;background:transparent;color:var(--text);min-width:70px}
 .dep-inp:hover{border-color:var(--border);background:var(--bg)}
 .dep-inp:focus{outline:none;border-color:var(--accent);background:#fff}
 .dep-chk{width:16px;height:16px;cursor:pointer;accent-color:var(--accent)}
@@ -246,9 +259,9 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .unpaid-wrap{margin-top:16px}
 .unpaid-team-block{margin-bottom:14px;border:1px solid var(--border);border-radius:10px;overflow:hidden}
 .unpaid-team-hdr{padding:8px 13px;color:#fff;font-weight:900;font-size:13px;display:flex;align-items:center;justify-content:space-between}
-.unpaid-tbl{width:100%;border-collapse:collapse;background:var(--bg2)}
-.unpaid-tbl th{padding:7px 9px;font-size:11px;font-weight:700;color:var(--text3);text-align:left;background:var(--bg);border-bottom:1px solid var(--border)}
-.unpaid-tbl td{padding:7px 9px;border-bottom:1px solid var(--border);font-size:12px;vertical-align:middle}
+.unpaid-tbl{width:100%;border-collapse:collapse;background:var(--bg2);table-layout:fixed}
+.unpaid-tbl th{padding:7px 9px;font-size:11px;font-weight:700;color:var(--text3);text-align:left;background:var(--bg);border-bottom:1px solid var(--border);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.unpaid-tbl td{padding:7px 9px;border-bottom:1px solid var(--border);font-size:12px;vertical-align:top;overflow:hidden;word-break:keep-all;overflow-wrap:break-word}
 .unpaid-tbl tr:last-child td{border-bottom:none}
 .unpaid-tbl .member-row{background:var(--bg)}
 .unpaid-tbl .member-row td{font-weight:700;font-size:11px;color:var(--text3);padding:4px 9px}
@@ -269,7 +282,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .al-sel{width:100%;padding:3px 3px;border:1px solid transparent;border-radius:4px;font-size:12px;font-family:'Noto Sans KR',sans-serif;background:transparent;cursor:pointer}
 .al-sel:hover{border-color:var(--border);background:var(--bg)}
 .al-sel:focus{outline:none;border-color:var(--accent);background:#fff}
-.al-num{width:100%;padding:3px 5px;border:1px solid transparent;border-radius:4px;font-size:12px;font-family:'Roboto Mono',monospace;background:transparent;text-align:right;color:var(--text)}
+.al-num{width:100%;padding:3px 5px;border:1px solid transparent;border-radius:4px;font-size:12px;font-family:'Roboto',monospace;background:transparent;text-align:right;color:var(--text)}
 .al-num:hover{border-color:var(--border);background:var(--bg)}
 .al-num:focus{outline:none;border-color:var(--accent);background:#fff}
 .status-badge{display:inline-block;padding:2px 7px;border-radius:10px;font-size:10px;font-weight:700}
@@ -291,7 +304,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .sch-inp{width:100%;padding:4px 5px;border:1px solid transparent;border-radius:4px;font-size:12px;font-family:'Noto Sans KR',sans-serif;background:transparent;color:var(--text);min-width:0}
 .sch-inp:hover{border-color:var(--border);background:var(--bg)}
 .sch-inp:focus{outline:none;border-color:var(--accent);background:#fff}
-.sch-num{width:100%;padding:4px 5px;border:1px solid transparent;border-radius:4px;font-size:12px;font-family:'Roboto Mono',monospace;background:transparent;text-align:right;color:var(--text)}
+.sch-num{width:100%;padding:4px 5px;border:1px solid transparent;border-radius:4px;font-size:12px;font-family:'Roboto',monospace;background:transparent;text-align:right;color:var(--text)}
 .sch-num:hover{border-color:var(--border);background:var(--bg)}
 .sch-num:focus{outline:none;border-color:var(--accent);background:#fff}
 .sch-sel{width:100%;padding:3px 3px;border:1px solid transparent;border-radius:4px;font-size:12px;font-family:'Noto Sans KR',sans-serif;background:transparent;cursor:pointer}
@@ -303,7 +316,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .badge-신규{background:#F0FDF4;color:#16A34A;padding:1px 6px;border-radius:8px;font-size:10px;font-weight:700}
 .dep-summary{display:flex;gap:12px;padding:10px 14px;border-bottom:1px solid var(--border);flex-wrap:wrap}
 .dep-sum-item{font-size:11px;font-weight:700}
-.dep-sum-item span{font-family:'Roboto Mono',monospace;font-size:13px;font-weight:900}
+.dep-sum-item span{font-family:'Roboto',monospace;font-size:13px;font-weight:900}
 </style>
 </head>
 <body>
@@ -631,11 +644,11 @@ function renderAllDashboard() {
       <div class="dcalc">
         <div class="dcc" id="ddc" style="background:var(--bg);border:1px solid var(--border);border-radius:8px">
           <span style="font-size:12px;font-weight:700;color:var(--text2)">📉 전년대비 차이</span>
-          <span style="font-size:14px;font-weight:900;font-family:'Roboto Mono',monospace;color:var(--red)" id="ddv">-</span>
+          <span style="font-size:14px;font-weight:900;font-family:'Roboto',monospace;color:var(--red)" id="ddv">-</span>
         </div>
         <div class="dcc" style="background:var(--bg);border:1px solid var(--border);border-radius:8px">
           <span style="font-size:12px;font-weight:700;color:var(--text2)">🔄 전일 전환율</span>
-          <span style="font-size:14px;font-weight:900;font-family:'Roboto Mono',monospace;color:var(--text)" id="dcv">-</span>
+          <span style="font-size:14px;font-weight:900;font-family:'Roboto',monospace;color:var(--text)" id="dcv">-</span>
         </div>
       </div>
     </div>`;
@@ -727,11 +740,11 @@ function renderMain() {
       <div class="dcalc">
         <div class="dcc" id="ddc" style="background:var(--bg);border:1px solid var(--border);border-radius:8px">
           <span style="font-size:12px;font-weight:700;color:var(--text2)">📉 전년대비 차이</span>
-          <span style="font-size:14px;font-weight:900;font-family:'Roboto Mono',monospace;color:var(--red)" id="ddv">-</span>
+          <span style="font-size:14px;font-weight:900;font-family:'Roboto',monospace;color:var(--red)" id="ddv">-</span>
         </div>
         <div class="dcc" style="background:var(--bg);border:1px solid var(--border);border-radius:8px">
           <span style="font-size:12px;font-weight:700;color:var(--text2)">🔄 전일 전환율</span>
-          <span style="font-size:14px;font-weight:900;font-family:'Roboto Mono',monospace;color:var(--text)" id="dcv">-</span>
+          <span style="font-size:14px;font-weight:900;font-family:'Roboto',monospace;color:var(--text)" id="dcv">-</span>
         </div>
       </div>
     </div>
@@ -793,7 +806,7 @@ function buildTC() {
       <div class="tch" style="background:${t.color}"><span class="tnm">${t.name}</span><span class="tmb">경력 ${t.members}명</span></div>
       <div class="tcb">
         <div class="sbdg ${st.cl}" id="sb-${t.name}">${st.b} ${st.m}</div>
-        <div class="ir"><span class="il">팀 목표</span><span style="font-size:12px;font-weight:700;font-family:'Roboto Mono',monospace;color:${t.color}">${F(goal)}원</span></div>
+        <div class="ir"><span class="il">팀 목표</span><span style="font-size:12px;font-weight:700;font-family:'Roboto',monospace;color:${t.color}">${F(goal)}원</span></div>
         <div class="pw"><div class="pb" id="pb-${t.name}" style="width:${Math.min(r*100,100)}%;background:${BC(r)}"></div></div>
         <div class="ir"><span class="il">실제 매출 (원)</span>
           <input class="inp" id="i-${t.name}-sales" type="text" inputmode="numeric" value="${d.sales}" placeholder="0" style="border-color:${t.color}44" oninput="W._sv('${t.name}','sales',this.value);formatBizInp(this)">
@@ -956,17 +969,16 @@ function renderUnpaidList() {
     if (!teamItems.length) return;
     hasAny = true;
     h += `<div class="unpaid-team-block"><div class="unpaid-team-hdr" style="background:${t.color}">
-      <span>${t.name}</span>
-      <span style="font-size:11px;font-weight:400;opacity:.85">${teamItems.length}건 · 예정 ${F(teamItems.reduce((s,{r})=>s+N(r.expected),0))}원</span>
+      <span>${t.name} <span style="font-size:12px;font-weight:400;opacity:.9;margin-left:8px">${teamItems.length}건 · 예정 ${F(teamItems.reduce((s,{r})=>s+N(r.expected),0))}원</span></span>
     </div>
     <table class="unpaid-tbl">
       <thead><tr>
-        <th style="width:68px">직원</th>
-        <th style="width:72px">학생</th>
+        <th style="width:64px">직원</th>
+        <th style="width:64px">학생</th>
         <th style="width:72px">과목</th>
-        <th style="width:60px">날짜</th>
-        <th style="width:88px">예정금액</th>
-        <th style="width:120px">비고</th>
+        <th style="width:56px">날짜</th>
+        <th style="width:84px">예정금액</th>
+        <th style="width:180px">비고</th>
         <th>📝 피드백</th>
       </tr></thead><tbody>`;
     t.members.forEach(m => {
@@ -980,9 +992,9 @@ function renderUnpaidList() {
           <td style="color:${t.color};font-weight:600">${m}</td>
           <td>${r.student||'-'}</td>
           <td>${r.subject||'-'}</td>
-          <td style="font-family:'Roboto Mono',monospace;font-size:11px">${fmtDate(date)}</td>
-          <td style="text-align:right;font-family:'Roboto Mono',monospace;color:var(--gold);font-weight:700">${r.expected?F(N(r.expected)):'-'}</td>
-          <td style="color:var(--text2);font-size:11px">${r.note||''}</td>
+          <td style="font-family:'Roboto',monospace;font-size:11px">${fmtDate(date)}</td>
+          <td style="text-align:right;font-family:'Roboto',monospace;color:var(--gold);font-weight:700">${r.expected?F(N(r.expected)):'-'}</td>
+          <td style="color:var(--text2);font-size:11px;line-height:1.5;word-break:keep-all;overflow-wrap:break-word">${r.note||''}</td>
           <td>
             <input class="unpaid-fb-inp" value="${fb.replace(/"/g,'&quot;')}" placeholder="피드백 입력..."
               data-key="${fbKey}"
@@ -1356,8 +1368,8 @@ function renderConsult(searchKw='') {
     h+=`<div class="tcc">
       <div class="tcch" style="background:${t.color}"><span>${t.name}</span><span style="font-size:11px;opacity:.8">${t.members.join(' · ')}</span></div>
       <div class="tccb">
-        <div class="tcr"><span style="color:var(--text2)">완납</span><span style="font-weight:700;color:var(--green);font-family:'Roboto Mono',monospace">${F(s.paid)}원</span></div>
-        <div class="tcr"><span style="color:var(--text2)">예정</span><span style="font-weight:700;color:var(--gold);font-family:'Roboto Mono',monospace">${F(s.exp)}원</span></div>
+        <div class="tcr"><span style="color:var(--text2)">완납</span><span style="font-weight:700;color:var(--green);font-family:'Roboto',monospace">${F(s.paid)}원</span></div>
+        <div class="tcr"><span style="color:var(--text2)">예정</span><span style="font-weight:700;color:var(--gold);font-family:'Roboto',monospace">${F(s.exp)}원</span></div>
         <div class="tcr"><span style="color:var(--text2)">건수</span><span style="font-weight:700">${s.cnt}건 (등록 ${s.wan})</span></div>
       </div>
     </div>`;
@@ -1517,7 +1529,7 @@ function renderDepLeft(today) {
   let h = `<div class="dep-panel" id="dep-panel-left">
     <div class="dep-panel-hdr" style="background:#1A2340">
       <span>📊 일별 입금 파악</span>
-      <span style="font-size:11px;font-weight:400;opacity:.8">완료 <b style="font-family:'Roboto Mono',monospace">${F(total완)}</b> · 남은 <b style="font-family:'Roboto Mono',monospace">${F(total남)}</b> · 출근 ${total출}/${TM}</span>
+      <span style="font-size:11px;font-weight:400;opacity:.8">완료 <b style="font-family:'Roboto',monospace">${F(total완)}</b> · 남은 <b style="font-family:'Roboto',monospace">${F(total남)}</b> · 출근 ${total출}/${TM}</span>
     </div>
     <div style="overflow-x:auto">
     <table class="dep-tbl" style="min-width:0">
@@ -1558,7 +1570,7 @@ function renderDepLeft(today) {
           oninput="${mk};DEPOSIT['${today}']['${t.name}']['${m}'].남은금액=this.value"
           onblur="W._dep('${today}','${t.name}','${m}','남은금액',this.value);this.value=this.value?F(N(this.value)):''"
           onkeydown="W._depTab(event,this)"></td>
-        <td data-total="${m}" style="font-family:'Roboto Mono',monospace;font-size:11px;font-weight:700;text-align:right;padding-right:5px;color:${total>0?'var(--accent)':'var(--text3)'};background:#EFF4FF;white-space:nowrap">${total>0?F(total):'0'}</td>
+        <td data-total="${m}" style="font-family:'Roboto',monospace;font-size:11px;font-weight:700;text-align:right;padding-right:5px;color:${total>0?'var(--accent)':'var(--text3)'};background:#EFF4FF;white-space:nowrap">${total>0?F(total):'0'}</td>
         <td style="background:#F0FDF4"><input class="dep-inp dep-focus" style="width:36px;text-align:center" value="${d.금일완료||''}" placeholder="0"
           oninput="${mk};DEPOSIT['${today}']['${t.name}']['${m}'].금일완료=this.value"
           onblur="W._dep('${today}','${t.name}','${m}','금일완료',this.value)"
@@ -1579,9 +1591,9 @@ function renderDepLeft(today) {
     const ts = teamSum[t.name];
     h += `<tr data-sum="${t.name}" style="background:#F1F5F9;border-top:1px solid #CBD5E1;border-bottom:2px solid ${t.color}50">
       <td colspan="2" style="text-align:center;font-size:11px;color:${t.color};font-weight:900">합계</td>
-      <td style="font-family:'Roboto Mono',monospace;font-size:11px;color:var(--green);text-align:right;font-weight:700;padding-right:5px">${F(ts.완료)}</td>
-      <td style="font-family:'Roboto Mono',monospace;font-size:11px;color:var(--gold);text-align:right;font-weight:700;padding-right:5px">${F(ts.남은)}</td>
-      <td style="font-family:'Roboto Mono',monospace;font-size:11px;color:var(--accent);font-weight:900;text-align:right;padding-right:5px;background:#EFF4FF">${F(ts.총합)}</td>
+      <td style="font-family:'Roboto',monospace;font-size:11px;color:var(--green);text-align:right;font-weight:700;padding-right:5px">${F(ts.완료)}</td>
+      <td style="font-family:'Roboto',monospace;font-size:11px;color:var(--gold);text-align:right;font-weight:700;padding-right:5px">${F(ts.남은)}</td>
+      <td style="font-family:'Roboto',monospace;font-size:11px;color:var(--accent);font-weight:900;text-align:right;padding-right:5px;background:#EFF4FF">${F(ts.총합)}</td>
       <td style="text-align:center;font-size:11px;font-weight:700;background:#F0FDF4">${ts.금일완료}</td>
       <td style="text-align:center;font-size:11px;font-weight:700;background:#F0FDF4">${ts.익일예정}</td>
       <td style="text-align:center;font-size:11px;font-weight:700;background:#F0FDF4">${ts.모레예정}</td>
@@ -1595,9 +1607,9 @@ function renderDepLeft(today) {
   const t모 = TM_CFG.reduce((s,t)=>s+teamSum[t.name].모레예정,0);
   h += `<tr data-total-row style="background:#0F172A;color:#fff">
     <td colspan="2" style="font-weight:900;font-size:12px;padding-left:8px;text-align:center">전체</td>
-    <td style="font-family:'Roboto Mono',monospace;font-size:11px;color:#6EE7B7;text-align:right;padding-right:5px">${F(total완)}</td>
-    <td style="font-family:'Roboto Mono',monospace;font-size:11px;color:#FCD34D;text-align:right;padding-right:5px">${F(total남)}</td>
-    <td style="font-family:'Roboto Mono',monospace;font-size:11px;color:#93C5FD;font-weight:900;text-align:right;padding-right:5px">${F(total완+total남)}</td>
+    <td style="font-family:'Roboto',monospace;font-size:11px;color:#6EE7B7;text-align:right;padding-right:5px">${F(total완)}</td>
+    <td style="font-family:'Roboto',monospace;font-size:11px;color:#FCD34D;text-align:right;padding-right:5px">${F(total남)}</td>
+    <td style="font-family:'Roboto',monospace;font-size:11px;color:#93C5FD;font-weight:900;text-align:right;padding-right:5px">${F(total완+total남)}</td>
     <td style="text-align:center;font-size:11px;color:#86EFAC;font-weight:700">${t금}</td>
     <td style="text-align:center;font-size:11px;color:#86EFAC;font-weight:700">${t익}</td>
     <td style="text-align:center;font-size:11px;color:#86EFAC;font-weight:700">${t모}</td>
@@ -1646,7 +1658,7 @@ function renderSchPanel(today, type) {
     </div>
     <div class="sch-summary" style="padding:9px 16px;background:${type==='금일'?'#EFF4FF':'#F5F3FF'};border-bottom:2px solid ${type==='금일'?'#93C5FD':'#C4B5FD'};display:flex;gap:20px;align-items:center;flex-wrap:wrap">
       <span style="font-size:13px;font-weight:900;color:${hdrColor};background:${type==='금일'?'#DBEAFE':'#EDE9FE'};padding:3px 10px;border-radius:20px">${filledRows.length}건</span>
-      <span style="font-size:22px;font-weight:900;font-family:'Roboto Mono',monospace;color:${hdrColor}">${F(totalAmt)}<span style="font-size:13px">원</span></span>
+      <span style="font-size:22px;font-weight:900;font-family:'Roboto',monospace;color:${hdrColor}">${F(totalAmt)}<span style="font-size:13px">원</span></span>
       <span style="font-size:11px;color:var(--text3);margin-left:auto">전체 ${rows.length}행</span>
     </div>
     <div class="sch-wrap">
@@ -1841,7 +1853,7 @@ function renderDeposit() {
         <td><input class="dep-inp" value="${d.남은금액?F(N(d.남은금액)):''}" placeholder="0"
           oninput="${mk};DEPOSIT['${today}']['${t.name}']['${m}'].남은금액=this.value"
           onblur="W._dep('${today}','${t.name}','${m}','남은금액',this.value);this.value=this.value?F(N(this.value)):''"></td>
-        <td style="font-family:'Roboto Mono',monospace;font-weight:700;color:${total>0?'var(--accent)':'var(--text3)'};text-align:right;padding-right:8px;background:#F8FAFF">${total>0?F(total):'0'}</td>
+        <td style="font-family:'Roboto',monospace;font-weight:700;color:${total>0?'var(--accent)':'var(--text3)'};text-align:right;padding-right:8px;background:#F8FAFF">${total>0?F(total):'0'}</td>
         <td><input class="dep-inp" value="${d.금일완료||''}" placeholder="0"
           oninput="${mk};DEPOSIT['${today}']['${t.name}']['${m}'].금일완료=this.value"
           onblur="W._dep('${today}','${t.name}','${m}','금일완료',this.value)"></td>
@@ -1867,9 +1879,9 @@ function renderDeposit() {
     const ts = teamSum[t.name];
     h += `<tr style="background:#F1F5F9;border-top:1px solid #CBD5E1;border-bottom:2px solid ${t.color}60">
       <td colspan="2" style="text-align:center;color:${t.color};font-weight:900;font-size:12px">합계</td>
-      <td style="font-family:'Roboto Mono',monospace;color:var(--green);text-align:right;font-weight:700;padding-right:8px">${F(ts.완료금액)}</td>
-      <td style="font-family:'Roboto Mono',monospace;color:var(--gold);text-align:right;font-weight:700;padding-right:8px">${F(ts.남은금액)}</td>
-      <td style="font-family:'Roboto Mono',monospace;color:var(--accent);font-weight:900;text-align:right;padding-right:8px;background:#EFF4FF">${F(ts.총합)}</td>
+      <td style="font-family:'Roboto',monospace;color:var(--green);text-align:right;font-weight:700;padding-right:8px">${F(ts.완료금액)}</td>
+      <td style="font-family:'Roboto',monospace;color:var(--gold);text-align:right;font-weight:700;padding-right:8px">${F(ts.남은금액)}</td>
+      <td style="font-family:'Roboto',monospace;color:var(--accent);font-weight:900;text-align:right;padding-right:8px;background:#EFF4FF">${F(ts.총합)}</td>
       <td style="text-align:center;font-weight:700">${ts.금일완료}</td>
       <td style="text-align:center;font-weight:700">${ts.익일예정}</td>
       <td style="text-align:center;font-weight:700">${ts.모레예정}</td>
@@ -1882,9 +1894,9 @@ function renderDeposit() {
 
   h += `<tr style="background:#0F172A;color:#fff">
     <td colspan="2" style="font-weight:900;padding-left:12px;font-size:13px">🏁 전체</td>
-    <td style="font-family:'Roboto Mono',monospace;font-size:11px;color:#6EE7B7;text-align:right;padding-right:5px">${F(total완)}</td>
-    <td style="font-family:'Roboto Mono',monospace;font-size:11px;color:#FCD34D;text-align:right;padding-right:5px">${F(total남)}</td>
-    <td style="font-family:'Roboto Mono',monospace;font-size:11px;color:#93C5FD;font-weight:900;text-align:right;padding-right:5px">${F(total완+total남)}</td>
+    <td style="font-family:'Roboto',monospace;font-size:11px;color:#6EE7B7;text-align:right;padding-right:5px">${F(total완)}</td>
+    <td style="font-family:'Roboto',monospace;font-size:11px;color:#FCD34D;text-align:right;padding-right:5px">${F(total남)}</td>
+    <td style="font-family:'Roboto',monospace;font-size:11px;color:#93C5FD;font-weight:900;text-align:right;padding-right:5px">${F(total완+total남)}</td>
     <td></td><td></td><td></td><td></td><td></td>
     <td style="text-align:center;font-size:11px;color:#FCD34D;font-weight:700">${total출}/${TM}</td>
     <td style="text-align:center;font-size:11px;color:#FCD34D;font-weight:700">${total14}/${TM}</td>
@@ -2226,7 +2238,7 @@ const W = {
       const sumEl = panel.querySelector('.sch-summary');
       if (sumEl) {
         sumEl.innerHTML = `<span style="font-size:13px;font-weight:900;color:${hdrColor}">${filled}건</span>
-          <span style="font-size:18px;font-weight:900;font-family:'Roboto Mono',monospace;color:${hdrColor}">${F(total)}원</span>
+          <span style="font-size:18px;font-weight:900;font-family:'Roboto',monospace;color:${hdrColor}">${F(total)}원</span>
           <span style="font-size:11px;color:var(--text3);margin-left:auto">전체 ${rows.length}행</span>`;
       }
     }
@@ -2261,7 +2273,7 @@ const W = {
         if (sumEl) {
           const hdrColor = type==='금일' ? '#2563EB' : '#7C3AED';
           sumEl.innerHTML = `<span style="font-size:13px;font-weight:900;color:${hdrColor};background:${type==='금일'?'#DBEAFE':'#EDE9FE'};padding:3px 10px;border-radius:20px">${filled}건</span>
-            <span style="font-size:22px;font-weight:900;font-family:'Roboto Mono',monospace;color:${hdrColor}">${F(total)}<span style="font-size:13px">원</span></span>
+            <span style="font-size:22px;font-weight:900;font-family:'Roboto',monospace;color:${hdrColor}">${F(total)}<span style="font-size:13px">원</span></span>
             <span style="font-size:11px;color:var(--text3);margin-left:auto">전체 ${rows.length}행</span>`;
         }
       }, 220);
