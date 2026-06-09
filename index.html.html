@@ -465,7 +465,8 @@ let WEEKS = [
 ];
 let TEAMS = [{name:'1팀',members:4,color:'#2563EB'},{name:'2팀',members:3,color:'#16A34A'},{name:'3팀',members:3,color:'#7C3AED'},{name:'4팀',members:3,color:'#EA580C'}];
 let TM_CFG = [{name:'1팀',color:'#2563EB',members:['정충만','박효선','강채원','송평강']},{name:'2팀',color:'#16A34A',members:['이재운','김태정','한대희']},{name:'3팀',color:'#7C3AED',members:['백영광','이상천','안현우']},{name:'4팀',color:'#EA580C',members:['서승표','송준수','한가흔']}];
-let BIZ_PERIOD = {s:'2026-05-01', e:'2026-05-31'};
+let BIZ_PERIOD = {s:'2026-05-14', e:'2026-06-11'};
+let BIZ_SCHEDULE_ALL = [];
 let TG = 431000000, TM = 13, MONTH_LABEL = '6월';
 
 function applyConfig(cfg) {
@@ -478,8 +479,23 @@ function applyConfig(cfg) {
   }
   if (cfg.totalGoal) TG = cfg.totalGoal;
   if (cfg.monthLabel) MONTH_LABEL = cfg.monthLabel;
-  if (cfg.bizStart) BIZ_PERIOD.s = cfg.bizStart;
-  if (cfg.bizEnd) BIZ_PERIOD.e = cfg.bizEnd;
+  if (cfg.bizSchedule && Array.isArray(cfg.bizSchedule) && cfg.bizSchedule.length) {
+    // 현재 날짜에 맞는 영업일 자동 감지
+    const today = todayStr();
+    const curSch = cfg.bizSchedule.find(s => today >= s.start && today <= s.end);
+    if (curSch) {
+      BIZ_PERIOD.s = curSch.start;
+      BIZ_PERIOD.e = curSch.end;
+    } else if (cfg.bizStart) {
+      BIZ_PERIOD.s = cfg.bizStart;
+      BIZ_PERIOD.e = cfg.bizEnd || BIZ_PERIOD.e;
+    }
+    BIZ_SCHEDULE_ALL = cfg.bizSchedule;
+  } else {
+    if (cfg.bizStart) BIZ_PERIOD.s = cfg.bizStart;
+    if (cfg.bizEnd) BIZ_PERIOD.e = cfg.bizEnd;
+    BIZ_SCHEDULE_ALL = [];
+  }
   TEAMS.forEach(t => {
     if (!DATA[t.name]) DATA[t.name] = {};
     WEEKS.forEach((_,wi) => { if (!DATA[t.name][wi]) DATA[t.name][wi] = {sales:'',consult:'',contract:''}; });
@@ -1335,37 +1351,43 @@ function calcMS() {
 
 function makeBizMonthNav() {
   const bizStart = new Date(BIZ_PERIOD.s+'T00:00:00');
-  const bizEnd   = new Date(BIZ_PERIOD.e+'T00:00:00');
-  // 영업월 이름 = 시작일의 월 기준
-  const curMonthKey = `${bizStart.getFullYear()}-${String(bizStart.getMonth()+1).padStart(2,'0')}`;
-  const curMonthLbl = `${bizStart.getFullYear()}년 ${bizStart.getMonth()+1}월`;
+  const today = todayStr();
 
-  // 아카이브에서 과거 영업월 목록 로드 (ARCHIVE에 biz 데이터 있으면)
-  const archiveKeys = Object.keys(ARCHIVE.biz || {}).sort();
-  // 현재 영업월 키가 아카이브에 없으면 추가
-  const allMonths = [...new Set([...archiveKeys, curMonthKey])].sort();
+  // 영업일 일정 전체 목록 활용
+  let schedules = BIZ_SCHEDULE_ALL.length
+    ? [...BIZ_SCHEDULE_ALL].sort((a,b)=>a.start.localeCompare(b.start))
+    : [{label:'', start:BIZ_PERIOD.s, end:BIZ_PERIOD.e}];
 
-  const selMonth = window._bizSelMonth || 'current';
-  const selIdx = selMonth === 'current'
-    ? allMonths.length - 1
-    : allMonths.indexOf(selMonth) >= 0 ? allMonths.indexOf(selMonth) : allMonths.length - 1;
-  const dispKey = allMonths[selIdx] || curMonthKey;
-  const isCurrent = dispKey === curMonthKey;
-  const dispYear = parseInt(dispKey.slice(0,4));
-  const dispMon  = parseInt(dispKey.slice(5,7));
-  const dispLbl  = `${dispYear}년 ${dispMon}월`;
+  // 현재 영업월 인덱스 (오늘 날짜 기준)
+  const curIdx = schedules.findIndex(s => today >= s.start && today <= s.end);
+  const curActualIdx = curIdx >= 0 ? curIdx : schedules.length - 1;
+
+  const selMonth = window._bizSelMonth;
+  let selIdx = selMonth === undefined || selMonth === 'current'
+    ? curActualIdx
+    : schedules.findIndex(s => s.start === selMonth);
+  if (selIdx < 0) selIdx = curActualIdx;
+
+  const sch = schedules[selIdx] || schedules[schedules.length-1];
+  const dispStart = new Date(sch.start+'T00:00:00');
+  const dispLbl = sch.label || `${dispStart.getFullYear()}년 ${dispStart.getMonth()+1}월`;
+  const isCurrent = selIdx === curActualIdx;
   const canPrev = selIdx > 0;
-  const canNext = selIdx < allMonths.length - 1;
-  const mj = JSON.stringify(allMonths).replace(/"/g,"'");
+  const canNext = selIdx < schedules.length - 1;
+  // 각 버튼에 start 날짜를 키로 전달
+  const prevStart = canPrev ? schedules[selIdx-1].start : '';
+  const nextStart = canNext ? schedules[selIdx+1].start : '';
 
   return `<div style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;margin-bottom:14px;flex-wrap:wrap">
-    <button onclick="W._bizMonth(${selIdx-1},'${mj}')" style="width:28px;height:28px;border-radius:6px;border:1px solid var(--border);background:var(--bg);cursor:pointer;font-size:14px;${canPrev?'':'opacity:.3;cursor:not-allowed'}" ${canPrev?'':'disabled'}>◀</button>
-    <span style="font-size:15px;font-weight:900;min-width:110px;text-align:center">${dispLbl} 영업</span>
+    <button onclick="W._bizMonthKey('${prevStart}')" style="width:28px;height:28px;border-radius:6px;border:1px solid var(--border);background:var(--bg);cursor:pointer;font-size:14px;${canPrev?'':'opacity:.3;cursor:not-allowed'}" ${canPrev?'':'disabled'}>◀</button>
+    <div style="text-align:center;min-width:140px">
+      <div style="font-size:15px;font-weight:900">${dispLbl} 영업</div>
+      <div style="font-size:11px;color:var(--text3);margin-top:2px">${sch.start} ~ ${sch.end}</div>
+    </div>
     ${isCurrent?'<span style="padding:2px 8px;background:#DBEAFE;color:#2563EB;border-radius:20px;font-size:11px;font-weight:700">현재</span>':''}
-    <button onclick="W._bizMonth(${selIdx+1},'${mj}')" style="width:28px;height:28px;border-radius:6px;border:1px solid var(--border);background:var(--bg);cursor:pointer;font-size:14px;${canNext?'':'opacity:.3;cursor:not-allowed'}" ${canNext?'':'disabled'}>▶</button>
+    <button onclick="W._bizMonthKey('${nextStart}')" style="width:28px;height:28px;border-radius:6px;border:1px solid var(--border);background:var(--bg);cursor:pointer;font-size:14px;${canNext?'':'opacity:.3;cursor:not-allowed'}" ${canNext?'':'disabled'}>▶</button>
     <div style="width:1px;height:24px;background:var(--border);margin:0 4px"></div>
     <button onclick="W._bizMonthCur()" style="padding:5px 12px;border-radius:6px;border:1px solid ${isCurrent?'var(--accent)':'var(--border)'};background:${isCurrent?'var(--accent)':'var(--bg)'};color:${isCurrent?'#fff':'var(--text2)'};font-size:12px;font-weight:700;cursor:pointer">현재 영업월</button>
-    <span style="margin-left:auto;font-size:11px;color:var(--text3)">영업일: ${BIZ_PERIOD.s} ~ ${BIZ_PERIOD.e}</span>
   </div>`;
 }
 
@@ -2234,6 +2256,14 @@ function renderWorkload() {
 }
 
 window.W = {
+  _bizMonthKey(startKey) {
+    if (!startKey) return;
+    window._bizSelMonth = startKey;
+    // 선택된 영업월의 BIZ_PERIOD 임시 변경
+    const sch = BIZ_SCHEDULE_ALL.find(s => s.start === startKey);
+    if (sch) { BIZ_PERIOD.s = sch.start; BIZ_PERIOD.e = sch.end; }
+    showBiz();
+  },
   _bizMonth(idx, monthsJson) {
     const months = JSON.parse(monthsJson.replace(/'/g,'"'));
     window._bizSelMonth = months[idx] || 'current';
@@ -2241,6 +2271,9 @@ window.W = {
   },
   _bizMonthCur() {
     window._bizSelMonth = 'current';
+    const today = todayStr();
+    const cur = BIZ_SCHEDULE_ALL.find(s => today >= s.start && today <= s.end);
+    if (cur) { BIZ_PERIOD.s = cur.start; BIZ_PERIOD.e = cur.end; }
     showBiz();
   },
   _bizMonthAll() {
