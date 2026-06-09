@@ -131,9 +131,29 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
       <div id="sales-archive-list" style="margin-top:14px"></div>
     </div>
 
+    <!-- 영업일 일정 관리 -->
+    <div class="stitle">📅 영업일 일정 관리</div>
+    <div class="section">
+      <div style="font-size:12px;color:var(--text2);margin-bottom:12px;line-height:1.8;background:#F0FDF4;padding:10px 14px;border-radius:8px;border:1px solid #BBF7D0">
+        💡 영업일 일정을 미리 등록해두면 현재 날짜에 맞는 영업월이 <b>자동으로 [현재]</b>로 표시돼요.<br>
+        현황판에서 ◀▶ 로 월별 이동도 가능해요.
+      </div>
+      <div id="biz-schedule-list"></div>
+      <button class="btn btn-outline" style="width:100%;margin-top:8px" onclick="addBizSchedule()">+ 영업일 추가</button>
+      <button class="btn btn-primary" style="width:100%;margin-top:8px" onclick="saveBizSchedule()">💾 영업일 일정 저장</button>
+    </div>
+
     <!-- 영업일 마감 -->
     <div class="stitle">💼 영업일 마감 & 아카이브</div>
     <div class="section">
+      <div style="background:#FFFDE7;border:1px solid #FCD34D;border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:12px;display:flex;align-items:center;gap:12px">
+        <span>⚡ 현재 영업일이 잘못 저장된 경우:</span>
+        <button class="btn btn-outline btn-sm" onclick="
+          document.getElementById('cfg-bizStart').value='2026-05-01';
+          document.getElementById('cfg-bizEnd').value='2026-05-31';
+          alert('기본 설정 영업일을 5월로 변경했어요.\n아래 저장 & 현황판 반영 버튼을 눌러주세요!');
+        ">5월 영업일로 복구</button>
+      </div>
       <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:12px;align-items:end">
         <div class="cfg-item">
           <label>영업일 시작</label>
@@ -230,6 +250,8 @@ const archiveRef= ref(db, 'archive');
 
 // ── 기본 설정값 ─────────────────────────────────────
 const DEFAULT_CFG = {
+  bizStart: '2026-05-01',
+  bizEnd: '2026-05-31',
   totalGoal: 431000000,
   monthLabel: '6월',
   bizStart: '2026-05-14',
@@ -299,6 +321,9 @@ function renderAll() {
   document.getElementById('cfg-bizEnd').value = CFG.bizEnd || '';
   renderWeeks();
   renderTeams();
+  // 영업일 일정
+  BIZ_SCHEDULE = Array.isArray(CFG.bizSchedule) ? CFG.bizSchedule : [];
+  renderBizSchedule();
 }
 
 function renderWeeks() {
@@ -459,6 +484,66 @@ window.doBizArchive = async () => {
   } catch(err) {
     alert('저장 실패: ' + err.message);
   }
+};
+
+// ── 영업일 일정 관리 ──────────────────────────────────
+let BIZ_SCHEDULE = []; // [{label:'5월', start:'2026-05-14', end:'2026-06-11'}, ...]
+
+function renderBizSchedule() {
+  const el = document.getElementById('biz-schedule-list');
+  if (!el) return;
+  const today = new Date().toISOString().slice(0,10);
+  if (!BIZ_SCHEDULE.length) {
+    el.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:12px;text-align:center">등록된 영업일 일정이 없어요</div>';
+    return;
+  }
+  el.innerHTML = BIZ_SCHEDULE.map((s, i) => {
+    const isCur = today >= s.start && today <= s.end;
+    return `<div style="display:grid;grid-template-columns:90px 1fr 1fr auto;gap:8px;align-items:center;margin-bottom:8px;padding:10px;background:${isCur?'#EFF4FF':'var(--bg)'};border:1px solid ${isCur?'var(--accent)':'var(--border)'};border-radius:8px">
+      <div style="font-size:12px;font-weight:700;color:${isCur?'var(--accent)':'var(--text2)'};text-align:center">
+        ${isCur?'<span style="background:var(--accent);color:#fff;padding:1px 6px;border-radius:10px;font-size:10px">현재</span><br>':''}
+        <input style="width:80px;padding:3px 6px;border:1px solid var(--border);border-radius:5px;font-size:12px;font-weight:700;text-align:center;font-family:inherit" value="${s.label||''}" placeholder="이름(예:5월)" onchange="BIZ_SCHEDULE[${i}].label=this.value">
+      </div>
+      <div class="cfg-item" style="margin:0">
+        <label style="font-size:10px">시작일</label>
+        <input class="cfg-inp" type="date" value="${s.start||''}" onchange="BIZ_SCHEDULE[${i}].start=this.value;renderBizSchedule()">
+      </div>
+      <div class="cfg-item" style="margin:0">
+        <label style="font-size:10px">종료일</label>
+        <input class="cfg-inp" type="date" value="${s.end||''}" onchange="BIZ_SCHEDULE[${i}].end=this.value;renderBizSchedule()">
+      </div>
+      <button class="btn btn-red btn-sm" onclick="BIZ_SCHEDULE.splice(${i},1);renderBizSchedule()">×</button>
+    </div>`;
+  }).join('');
+}
+
+window.addBizSchedule = () => {
+  BIZ_SCHEDULE.push({label:'', start:'', end:''});
+  renderBizSchedule();
+};
+
+window.saveBizSchedule = async () => {
+  if (!BIZ_SCHEDULE.length) { alert('영업일 일정을 먼저 추가해주세요'); return; }
+  const invalid = BIZ_SCHEDULE.find(s => !s.start || !s.end);
+  if (invalid) { alert('모든 영업일의 시작일/종료일을 입력해주세요'); return; }
+  // 날짜 기준 정렬
+  BIZ_SCHEDULE.sort((a,b) => a.start.localeCompare(b.start));
+  CFG.bizSchedule = BIZ_SCHEDULE;
+  // 현재 날짜에 해당하는 영업일 자동으로 bizStart/bizEnd 설정
+  const today = new Date().toISOString().slice(0,10);
+  const cur = BIZ_SCHEDULE.find(s => today >= s.start && today <= s.end);
+  if (cur) {
+    CFG.bizStart = cur.start;
+    CFG.bizEnd = cur.end;
+    document.getElementById('cfg-bizStart').value = cur.start;
+    document.getElementById('cfg-bizEnd').value = cur.end;
+  }
+  set(cfgRef, CFG).then(() => {
+    const b = document.getElementById('saved-badge');
+    b.classList.add('show');
+    setTimeout(() => b.classList.remove('show'), 2500);
+    alert(`✅ 영업일 일정 ${BIZ_SCHEDULE.length}개 저장 완료!${cur ? '\n\n현재 영업일: '+cur.label+' ('+cur.start+' ~ '+cur.end+')' : ''}`);
+  });
 };
 
 async function loadBizArchiveList() {
