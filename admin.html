@@ -169,11 +169,13 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
         </div>
         <div class="cfg-item">
           <label>영업일 시작</label>
-          <input class="cfg-inp" id="cfg-bizStart" type="date">
+          <input class="cfg-inp" id="cfg-bizStart" type="date"
+            onchange="document.getElementById('biz-archive-start').value=this.value">
         </div>
         <div class="cfg-item">
           <label>영업일 종료</label>
-          <input class="cfg-inp" id="cfg-bizEnd" type="date">
+          <input class="cfg-inp" id="cfg-bizEnd" type="date"
+            onchange="document.getElementById('biz-archive-end').value=this.value">
         </div>
       </div>
     </div>
@@ -297,6 +299,9 @@ function renderAll() {
   document.getElementById('cfg-monthLabel').value = CFG.monthLabel || '';
   document.getElementById('cfg-bizStart').value = CFG.bizStart || '';
   document.getElementById('cfg-bizEnd').value = CFG.bizEnd || '';
+  // 영업일 마감 아카이브 날짜도 같이 채우기
+  if (CFG.bizStart) document.getElementById('biz-archive-start').value = CFG.bizStart;
+  if (CFG.bizEnd)   document.getElementById('biz-archive-end').value   = CFG.bizEnd;
   renderWeeks();
   renderTeams();
 }
