@@ -1064,10 +1064,11 @@ function renderAddListTab() {
 
   TM_CFG.forEach(t => {
     const teamRows = allRows.filter(([,row]) => row.team === t.name);
+    const filledRows = teamRows.filter(([,row]) => row.student || row.mentor);
+    const totalAmt = teamRows.reduce((s,[,row]) => s + N(row.expectedAmount||0), 0);
     h += `<div class="unpaid-team-block" style="margin-bottom:14px">
       <div class="unpaid-team-hdr" style="background:${t.color}">
-        <span>${t.name}</span>
-        <span style="font-size:11px;font-weight:400;opacity:.85">${teamRows.length}건</span>
+        <span>${t.name} <span style="font-size:12px;font-weight:400;opacity:.9;margin-left:8px">${filledRows.length}건 · 합계 ${F(totalAmt)}원</span></span>
       </div>
       <div style="overflow-x:auto">
       <table class="addlist-tbl">
