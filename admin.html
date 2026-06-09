@@ -137,21 +137,21 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
       <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:12px;align-items:end">
         <div class="cfg-item">
           <label>영업일 시작</label>
-          <input class="cfg-inp" id="biz-archive-start" type="date" value="2026-05-14">
+          <input class="cfg-inp" id="biz-archive-start" type="date" value="2026-05-01">
         </div>
         <div class="cfg-item">
           <label>영업일 종료</label>
-          <input class="cfg-inp" id="biz-archive-end" type="date" value="2026-06-11">
+          <input class="cfg-inp" id="biz-archive-end" type="date" value="2026-05-31">
         </div>
         <div>
           <button class="btn btn-primary" onclick="doBizArchive()" style="padding:9px 20px;white-space:nowrap">
-            💾 영업일 마감 저장
+            💾 마감 & 아카이브 저장
           </button>
         </div>
       </div>
-      <div style="margin-top:10px;font-size:12px;color:var(--text3);line-height:1.8">
-        ✅ 저장 항목: 영업 요약 / 상담 내역<br>
-        ⚠ 마감 후 새 영업일 기간으로 설정 업데이트하세요.
+      <div style="margin-top:10px;font-size:12px;color:var(--text3);line-height:1.8;background:#F8FAFF;padding:10px 14px;border-radius:8px;border:1px solid #BFCFFF">
+        💡 <b>한 번에 처리:</b> 영업현황·상담내역·주차실적을 아카이브에 백업하고, config 영업일 기간도 자동 업데이트해요.<br>
+        ⚠ 저장 후 <b>기본 설정</b>에서 새 영업월 날짜로 변경해주세요.
       </div>
       <div id="biz-archive-list" style="margin-top:14px"></div>
     </div>
@@ -420,6 +420,57 @@ async function loadSalesArchiveList() {
       </div>`;
     }).join('');
 }
+
+window.doBizArchive = async () => {
+  const s = document.getElementById('biz-archive-start').value;
+  const e = document.getElementById('biz-archive-end').value;
+  if (!s || !e) { alert('영업일 시작/종료를 모두 입력해주세요'); return; }
+
+  const label = s.slice(0,7); // YYYY-MM
+  const key = s.slice(0,7).replace('-','_'); // YYYY_MM
+
+  if (!confirm(`${s} ~ ${e} 영업 데이터를 아카이브에 저장할까요?\n\n저장 항목:\n• 영업현황 (BIZ)\n• 상담내역 (CONSULT)\n• 주차별 실적 (SALES)\n• 영업일 기간`)) return;
+
+  try {
+    const { ref: dbRef, get, set: dbSet } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js");
+
+    // 현재 데이터 수집
+    const [bizSnap, consultSnap, salesSnap] = await Promise.all([
+      get(dbRef(db, 'biz2025')),
+      get(dbRef(db, 'consult2025')),
+      get(dbRef(db, 'sales2025')),
+    ]);
+
+    const archiveData = {
+      label: `${s} ~ ${e}`,
+      period: { s, e },
+      biz:     bizSnap.val()     || {},
+      consult: consultSnap.val() || {},
+      sales:   salesSnap.val()   || {},
+      config:  CFG,
+      archivedAt: new Date().toISOString(),
+    };
+
+    // archive/biz/YYYY_MM 에 저장
+    await dbSet(dbRef(db, `archive/biz/${key}`), archiveData);
+
+    // config 영업일 업데이트
+    CFG.bizStart = s;
+    CFG.bizEnd = e;
+    await dbSet(dbRef(db, 'config'), CFG);
+
+    // cfg-bizStart/End 인풋도 업데이트
+    const cs = document.getElementById('cfg-bizStart');
+    const ce = document.getElementById('cfg-bizEnd');
+    if (cs) cs.value = s;
+    if (ce) ce.value = e;
+
+    alert(`✅ 아카이브 저장 완료!\n\n${label} 영업 데이터가 저장됐어요.\n현황판 사이드바 아카이브에서 확인하세요.`);
+    loadBizArchiveList();
+  } catch(err) {
+    alert('저장 실패: ' + err.message);
+  }
+};
 
 async function loadBizArchiveList() {
   const { ref: dbRef, get } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js");
