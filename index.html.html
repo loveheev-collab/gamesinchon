@@ -1306,7 +1306,9 @@ function renderUnpaidList() {
   const unpaidByTeam = {};
   TM_CFG.forEach(t => { unpaidByTeam[t.name] = {}; t.members.forEach(m => { unpaidByTeam[t.name][m] = []; }); });
 
+  // 현재 선택된 영업일 기간 안의 날짜만 필터
   Object.entries(CONSULT).forEach(([date, rows]) => {
+    if (date < BIZ_PERIOD.s || date > BIZ_PERIOD.e) return;
     Object.entries(rows||{}).forEach(([rid, r]) => {
       if (r.result === '미납') {
         const t = getTeam(r.mentor);
