@@ -135,11 +135,13 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
     <div class="stitle">📅 영업일 일정 관리</div>
     <div class="section">
       <div style="font-size:12px;color:var(--text2);margin-bottom:12px;line-height:1.8;background:#F0FDF4;padding:10px 14px;border-radius:8px;border:1px solid #BBF7D0">
-        💡 영업일 일정을 미리 등록해두면 현재 날짜에 맞는 영업월이 <b>자동으로 [현재]</b>로 표시돼요.<br>
-        현황판에서 ◀▶ 로 월별 이동도 가능해요.
+        💡 과거·현재·미래 영업일을 모두 등록해두면 현황판에서 <b>탭으로 이동하며 열람</b>할 수 있어요.<br>
+        ✅ 오늘 날짜에 해당하는 영업월이 <b>[현재]</b>로 자동 표시되고, ◀▶ 버튼으로 다른 영업월로 이동해요.<br>
+        📌 <b>다음 영업일도 미리 추가</b>해두면 다음 달이 시작될 때 자동으로 [현재]로 전환돼요.
       </div>
+      <div id="biz-schedule-status" style="margin-bottom:10px"></div>
       <div id="biz-schedule-list"></div>
-      <button class="btn btn-outline" style="width:100%;margin-top:8px" onclick="addBizSchedule()">+ 영업일 추가</button>
+      <button class="btn btn-outline" style="width:100%;margin-top:8px" onclick="addBizSchedule()">+ 영업일 추가 (과거/미래 모두 가능)</button>
       <button class="btn btn-primary" style="width:100%;margin-top:8px" onclick="saveBizSchedule()">💾 영업일 일정 저장</button>
     </div>
 
@@ -322,7 +324,8 @@ function renderAll() {
   renderWeeks();
   renderTeams();
   // 영업일 일정
-  BIZ_SCHEDULE = Array.isArray(CFG.bizSchedule) ? CFG.bizSchedule : [];
+  // 로드 시 _id 없는 항목에 고유 ID 부여
+  BIZ_SCHEDULE = (Array.isArray(CFG.bizSchedule) ? CFG.bizSchedule : []).map(s => s._id ? s : {...s, _id: Date.now() + Math.random()});
   renderBizSchedule();
 }
 
@@ -493,63 +496,104 @@ function renderBizSchedule() {
   const el = document.getElementById('biz-schedule-list');
   if (!el) return;
   const today = new Date().toISOString().slice(0,10);
+
+  // 상태 요약
+  const statusEl = document.getElementById('biz-schedule-status');
+  if (statusEl) {
+    if (BIZ_SCHEDULE.length) {
+      const valid = BIZ_SCHEDULE.filter(s=>s.start&&s.end);
+      const hasCur = valid.some(s => today >= s.start && today <= s.end);
+      const futureCount = valid.filter(s => s.start > today).length;
+      const pastCount = valid.filter(s => s.end < today).length;
+      statusEl.innerHTML = `<div style="display:flex;gap:8px;flex-wrap:wrap;font-size:11px;font-weight:700;margin-bottom:4px">
+        <span style="padding:3px 10px;border-radius:20px;background:#F1F5F9;color:#64748B">전체 ${BIZ_SCHEDULE.length}개</span>
+        ${pastCount?`<span style="padding:3px 10px;border-radius:20px;background:#F1F5F9;color:#64748B">과거 ${pastCount}개</span>`:''}
+        ${hasCur?`<span style="padding:3px 10px;border-radius:20px;background:#DBEAFE;color:#2563EB">현재 진행중</span>`:'<span style="padding:3px 10px;border-radius:20px;background:#FEF9C3;color:#92400E">현재 해당 없음</span>'}
+        ${futureCount?`<span style="padding:3px 10px;border-radius:20px;background:#DCFCE7;color:#166534">예정 ${futureCount}개</span>`:'<span style="padding:3px 10px;border-radius:20px;background:#FEE2E2;color:#DC2626">다음 영업일 미등록</span>'}
+      </div>`;
+    } else { statusEl.innerHTML = ''; }
+  }
+
   if (!BIZ_SCHEDULE.length) {
     el.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:12px;text-align:center">등록된 영업일 일정이 없어요</div>';
     return;
   }
-  el.innerHTML = BIZ_SCHEDULE.map((s, i) => {
-    const isCur = today >= s.start && today <= s.end;
-    return `<div style="display:grid;grid-template-columns:90px 1fr 1fr auto;gap:8px;align-items:center;margin-bottom:8px;padding:10px;background:${isCur?'#EFF4FF':'var(--bg)'};border:1px solid ${isCur?'var(--accent)':'var(--border)'};border-radius:8px">
-      <div style="font-size:12px;font-weight:700;color:${isCur?'var(--accent)':'var(--text2)'};text-align:center">
-        ${isCur?'<span style="background:var(--accent);color:#fff;padding:1px 6px;border-radius:10px;font-size:10px">현재</span><br>':''}
-        <input style="width:80px;padding:3px 6px;border:1px solid var(--border);border-radius:5px;font-size:12px;font-weight:700;text-align:center;font-family:inherit" value="${s.label||''}" placeholder="이름(예:5월)" onchange="BIZ_SCHEDULE[${i}].label=this.value">
+
+  // 날짜 기준 최신순 정렬 표시 — 인덱스는 data-idx 속성으로 DOM에 저장
+  const sorted = BIZ_SCHEDULE.map((s,i)=>({...s,i})).sort((a,b)=>b.start.localeCompare(a.start));
+
+  el.innerHTML = sorted.map((s) => {
+    const id = s._id;
+    const isCur = s.start && s.end && today >= s.start && today <= s.end;
+    const isPast = s.end && s.end < today;
+    const isFuture = s.start && s.start > today;
+    let statusTxt = '', rowBg = 'var(--bg)', rowBorder = 'var(--border)';
+    if (isCur)         { statusTxt = '<span style="padding:2px 8px;background:#2563EB;color:#fff;border-radius:6px;font-size:10px;font-weight:700">현재</span>'; rowBg='#EFF4FF'; rowBorder='#2563EB'; }
+    else if (isFuture) { statusTxt = '<span style="padding:2px 8px;background:#DCFCE7;color:#166534;border-radius:6px;font-size:10px;font-weight:700">예정</span>'; rowBg='#F0FDF4'; rowBorder='#86EFAC'; }
+    else if (isPast)   { statusTxt = '<span style="padding:2px 8px;background:#F1F5F9;color:#64748B;border-radius:6px;font-size:10px;font-weight:700">과거</span>'; }
+    return `<div style="display:grid;grid-template-columns:110px 1fr 1fr auto;gap:8px;align-items:center;margin-bottom:8px;padding:10px;background:${rowBg};border:1px solid ${rowBorder};border-radius:8px">
+      <div style="text-align:center">
+        ${statusTxt}
+        <input style="width:100px;padding:3px 6px;border:1px solid var(--border);border-radius:5px;font-size:12px;font-weight:700;text-align:center;font-family:inherit;margin-top:4px" value="${s.label||''}" placeholder="이름(예:7월)"
+          onchange="updBizSch(${id},'label',this.value)">
       </div>
       <div class="cfg-item" style="margin:0">
         <label style="font-size:10px">시작일</label>
-        <input class="cfg-inp" type="date" value="${s.start||''}" onchange="BIZ_SCHEDULE[${i}].start=this.value;renderBizSchedule()">
+        <input class="cfg-inp" type="date" value="${s.start||''}"
+          onchange="updBizSch(${id},'start',this.value)">
       </div>
       <div class="cfg-item" style="margin:0">
         <label style="font-size:10px">종료일</label>
-        <input class="cfg-inp" type="date" value="${s.end||''}" onchange="BIZ_SCHEDULE[${i}].end=this.value;renderBizSchedule()">
+        <input class="cfg-inp" type="date" value="${s.end||''}"
+          onchange="updBizSch(${id},'end',this.value)">
       </div>
-      <button class="btn btn-red btn-sm" onclick="BIZ_SCHEDULE.splice(${i},1);renderBizSchedule()">×</button>
+      <button class="btn btn-red btn-sm" onclick="delBizSch(${id})">삭제</button>
     </div>`;
   }).join('');
 }
 
 window.addBizSchedule = () => {
-  BIZ_SCHEDULE.push({label:'', start:'', end:''});
+  // 고유 ID 부여해서 정렬 후에도 참조 안 꼬이게
+  BIZ_SCHEDULE.push({_id: Date.now() + Math.random(), label:'', start:'', end:''});
   renderBizSchedule();
+};
+
+// ID 기반 필드 업데이트
+window.updBizSch = (id, field, val) => {
+  const item = BIZ_SCHEDULE.find(s => s._id == id);
+  if (item) item[field] = val;
+};
+window.delBizSch = (id) => {
+  const idx = BIZ_SCHEDULE.findIndex(s => s._id == id);
+  if (idx >= 0) { BIZ_SCHEDULE.splice(idx, 1); renderBizSchedule(); }
 };
 
 window.saveBizSchedule = async () => {
   if (!BIZ_SCHEDULE.length) { alert('영업일 일정을 먼저 추가해주세요'); return; }
   const invalid = BIZ_SCHEDULE.find(s => !s.start || !s.end);
   if (invalid) { alert('모든 영업일의 시작일/종료일을 입력해주세요'); return; }
-  // 날짜 기준 정렬 + 라벨 자동 생성
-  BIZ_SCHEDULE.sort((a,b) => a.start.localeCompare(b.start));
-  BIZ_SCHEDULE.forEach(s => {
-    if (!s.label) {
-      const d = new Date(s.start+'T00:00:00');
-      s.label = `${d.getMonth()+1}월`;
-    }
-  });
-  CFG.bizSchedule = BIZ_SCHEDULE;
-  // 현재 날짜에 해당하는 영업일 자동으로 bizStart/bizEnd 설정
+  // 저장용 사본 정렬, _id 필드 제거
+  const sorted = [...BIZ_SCHEDULE]
+    .sort((a,b) => a.start.localeCompare(b.start))
+    .map(({_id, ...rest}) => rest);
+  CFG.bizSchedule = sorted;
   const today = new Date().toISOString().slice(0,10);
-  const cur = BIZ_SCHEDULE.find(s => today >= s.start && today <= s.end);
+  const cur = sorted.find(s => today >= s.start && today <= s.end);
   if (cur) {
     CFG.bizStart = cur.start;
     CFG.bizEnd = cur.end;
     document.getElementById('cfg-bizStart').value = cur.start;
     document.getElementById('cfg-bizEnd').value = cur.end;
   }
-  set(cfgRef, CFG).then(() => {
+  try {
+    await set(cfgRef, CFG);
     const b = document.getElementById('saved-badge');
     b.classList.add('show');
     setTimeout(() => b.classList.remove('show'), 2500);
-    alert(`✅ 영업일 일정 ${BIZ_SCHEDULE.length}개 저장 완료!${cur ? '\n\n현재 영업일: '+cur.label+' ('+cur.start+' ~ '+cur.end+')' : ''}`);
-  });
+    alert('영업일 일정 ' + sorted.length + '개 저장 완료!' + (cur ? ('\n\n현재 영업일: ' + cur.label + ' (' + cur.start + ' ~ ' + cur.end + ')') : ''));
+  } catch(err) {
+    alert('저장 실패: ' + err.message);
+  }
 };
 
 async function loadBizArchiveList() {
