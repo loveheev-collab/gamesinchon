@@ -389,7 +389,10 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
   <hr class="sb-divider">
   <div class="sb-sec">
     <div class="sb-sec-lbl">아카이브</div>
+    <div style="font-size:10px;font-weight:700;color:#B0BEC5;padding:2px 8px 3px;letter-spacing:.5px">결산</div>
     <div id="sb-months"><div style="font-size:11px;color:#B0BEC5;padding:4px 8px">저장된 월 없음</div></div>
+    <div style="font-size:10px;font-weight:700;color:#B0BEC5;padding:6px 8px 3px;letter-spacing:.5px">영업</div>
+    <div id="sb-biz-arc"><div style="font-size:11px;color:#B0BEC5;padding:4px 8px">저장된 영업 없음</div></div>
   </div>
   <hr class="sb-divider">
   <div class="sb-sec">
@@ -522,6 +525,13 @@ let FEEDBACK = {};
 let staffTab = '업무량';
 let cCol = {};
 let tcBuilt = false, rvBuilt = false;
+// 초기 로드 완료 추적 (config + sales + daily + biz + consult 모두 수신 후 풀 렌더)
+const _loaded = {config:false, sales:false, daily:false, biz:false, consult:false};
+function _checkInitRender() {
+  if (Object.values(_loaded).every(Boolean) && cw === -1 && curMonth === 'current') {
+    tcBuilt = false; rvBuilt = false; renderMain();
+  }
+}
 
 // 초기화
 TEAMS.forEach(t => {
@@ -543,13 +553,15 @@ onValue(rConfig, snap => {
   if (v) applyConfig(v);
   const b = document.getElementById('goal-badge');
   if (b) b.textContent = '🎯 ' + MONTH_LABEL + ' 목표 ' + F(TG) + '원';
-  if (cw < 99) { tcBuilt=false; rvBuilt=false; renderMain(); }
+  if (!_loaded.config) { _loaded.config = true; _checkInitRender(); }
+  else if (cw < 99) { tcBuilt=false; rvBuilt=false; renderMain(); }
   else showBiz();
 });
 
 onValue(rArchive, snap => {
   ARCHIVE = snap.val() || {};
   renderSbMonths();
+  renderSbBizArc();
 });
 
 onValue(rSales, snap => {
@@ -561,11 +573,14 @@ onValue(rSales, snap => {
   });
   document.getElementById('sd').className = 'sdot live';
   document.getElementById('sl').textContent = '실시간 연결됨';
-  if (cw < 99) { if (tcBuilt) updTInp(); else buildTC(); renderKPI(); renderSum(); renderMsg(); }
+  if (!_loaded.sales) { _loaded.sales = true; _checkInitRender(); }
+  else if (cw < 99) { if (tcBuilt) updTInp(); else buildTC(); renderKPI(); renderSum(); renderMsg(); }
 });
 onValue(rDaily, snap => {
   const v = snap.val(); if (v) DAILY = {...DAILY, ...v};
-  updDailyInp(); updDailyCalc(); if (cw < 99) renderMsg();
+  updDailyInp(); updDailyCalc();
+  if (!_loaded.daily) { _loaded.daily = true; _checkInitRender(); }
+  else if (cw < 99) renderMsg();
 });
 onValue(rReview, snap => {
   const v = snap.val();
@@ -581,7 +596,8 @@ onValue(rBiz, snap => {
       });
     }
   });
-  if (cw === 99 && bst === '요약') {
+  if (!_loaded.biz) { _loaded.biz = true; _checkInitRender(); }
+  else if (cw === 99 && bst === '요약') {
     const f = document.activeElement;
     if (f && f.classList.contains('binp')) updBizKPI();
     else showBiz();
@@ -589,7 +605,8 @@ onValue(rBiz, snap => {
 });
 onValue(rConsult, snap => {
   CONSULT = snap.val() || {};
-  if (cw === 99) {
+  if (!_loaded.consult) { _loaded.consult = true; _checkInitRender(); }
+  else if (cw === 99) {
     const f = document.activeElement;
     if (f && (f.classList.contains('ci') || f.classList.contains('cn') || f.classList.contains('cs'))) updBizKPI();
     else showBiz();
@@ -663,7 +680,16 @@ function renderTabs() {
   else if (cw === 99) { document.getElementById('nav-biz')?.classList.add('on'); }
   const pt = document.getElementById('page-title');
   if (pt) {
-    if (curMonth !== 'current') pt.textContent = '📁 ' + curMonth.slice(0,4) + '년 ' + curMonth.slice(5,7) + '월 아카이브';
+    if (curMonth !== 'current') {
+      if (curMonth.startsWith('biz/')) {
+        const k = curMonth.slice(4);
+        const lbl = ((ARCHIVE.biz||{})[k]||{}).label || k.replace(/_/g,'-');
+        pt.textContent = '💼 ' + lbl + ' 아카이브';
+      } else {
+        const k = curMonth.startsWith('sales/') ? curMonth.slice(6) : curMonth;
+        pt.textContent = '📊 ' + k.replace(/_/g,'-') + ' 아카이브';
+      }
+    }
     else if (cw === -1) pt.textContent = '대시보드';
     else if (cw === 99) pt.textContent = '영업현황판';
     else pt.textContent = (WEEKS[cw]?.label||'') + ' 매출 현황';
@@ -672,12 +698,120 @@ function renderTabs() {
 
 function renderSbMonths() {
   const el = document.getElementById('sb-months'); if (!el) return;
-  const months = Object.keys(ARCHIVE).sort().reverse();
+  const salesArc = ARCHIVE.sales || {};
+  const months = Object.keys(salesArc).sort().reverse();
   if (!months.length) { el.innerHTML = '<div style="font-size:11px;color:#B0BEC5;padding:4px 8px">저장된 월 없음</div>'; return; }
   el.innerHTML = months.map(m => {
-    const lbl = m.slice(0,4) + '년 ' + m.slice(5,7) + '월';
-    return '<div class="sb-sub-item' + (curMonth===m?' on':'') + '" onclick="W._setMonth(\'' + m + '\')">' + '📁 ' + lbl + '</div>';
+    const lbl = m.replace(/_/g,'-');
+    return '<div class="sb-sub-item' + (curMonth==='sales/'+m?' on':'') + '" onclick="W._setMonth(\'sales/' + m + '\')">' + '📊 ' + lbl + '</div>';
   }).join('');
+}
+
+function renderSbBizArc() {
+  const el = document.getElementById('sb-biz-arc'); if (!el) return;
+  const bizArc = ARCHIVE.biz || {};
+  const keys = Object.keys(bizArc).sort().reverse();
+  if (!keys.length) { el.innerHTML = '<div style="font-size:11px;color:#B0BEC5;padding:4px 8px">저장된 영업 없음</div>'; return; }
+  el.innerHTML = keys.map(k => {
+    const d = bizArc[k];
+    const lbl = d.label || k.replace(/_/g,'-');
+    const arcKey = 'biz/' + k;
+    return '<div class="sb-sub-item' + (curMonth===arcKey?' on':'') + '" onclick="W._setMonth(\'' + arcKey + '\')">' + '💼 ' + lbl + '</div>';
+  }).join('');
+}
+// ── 아카이브 뷰 ──────────────────────────────────────
+function renderArchiveView(arcKey) {
+  // 모든 패널 숨기기
+  ['mc','bc','sc','dc'].forEach(id=>{ const e=document.getElementById(id); if(e) e.style.display='none'; });
+  const mc = document.getElementById('mc');
+  mc.style.display = '';
+
+  if (arcKey.startsWith('biz/')) {
+    // 영업 아카이브
+    const k = arcKey.slice(4);
+    const arcData = (ARCHIVE.biz || {})[k];
+    if (!arcData) { mc.innerHTML = '<div style="padding:24px;color:var(--text3);text-align:center">아카이브 데이터를 불러오는 중...</div>'; return; }
+
+    const bizData = arcData.biz || {};
+    const consultData = arcData.consult || {};
+    const cfg = arcData.config || {};
+    const teams = cfg.teams || TM_CFG;
+    const period = arcData.period || {};
+    const label = arcData.label || k.replace(/_/g,'-');
+
+    const F2 = n => Math.round(n||0).toLocaleString('ko-KR');
+    let totTM=0, totRef=0, totInq=0, tot상담=0, tot등록=0, tot취소=0, totWan=0, totMi=0;
+
+    // 상담 데이터 집계
+    const consultEntries = Object.values(consultData).flatMap(d=>Object.values(d||{}));
+    tot상담 = consultEntries.filter(e=>e.status==='상담'||e.status==='등록').length;
+    tot등록 = consultEntries.filter(e=>e.result==='완납'||e.result==='미납'||e.result==='COD').length;
+    tot취소 = consultEntries.filter(e=>e.result==='취소').length;
+
+    teams.forEach(t => {
+      t.members.forEach(m => {
+        const bd = (bizData[t.name]||{})[m] || {};
+        totTM += bd.totalSales||0; totRef += bd.refund||0; totInq += bd.inquiry||0;
+        totWan += bd.완납||0; totMi += bd.미납||0;
+      });
+    });
+    const totNet = totTM - totRef;
+
+    let h = `<div style="padding:16px 20px 0">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap">
+        <div style="font-size:18px;font-weight:900">💼 ${label} 영업 아카이브</div>
+        <div style="font-size:12px;color:var(--text3)">${period.s||''} ~ ${period.e||''}</div>
+        <div style="font-size:11px;color:var(--text3)">저장: ${arcData.archivedAt ? new Date(arcData.archivedAt).toLocaleString('ko-KR') : ''}</div>
+      </div>
+      <div class="kg" style="margin-bottom:16px">
+        <div class="kc a"><div class="klbl">총 매출 (환불제외)</div><div class="kval">${F2(totNet)}</div><div class="ksub">원</div></div>
+        <div class="kc g"><div class="klbl">총 매출 (세전)</div><div class="kval">${F2(totTM)}</div><div class="ksub">원</div></div>
+        <div class="kc r"><div class="klbl">총 환불</div><div class="kval">${F2(totRef)}</div><div class="ksub">원</div></div>
+        <div class="kc go"><div class="klbl">문의 / 등록 / 취소</div><div class="kval" style="font-size:14px">${totInq} / ${tot등록} / ${tot취소}</div><div class="ksub">건</div></div>
+      </div>`;
+
+    // 팀별 상세
+    h += '<div class="tg" style="margin-bottom:16px">';
+    teams.forEach(t => {
+      let tTM=0, tRef=0, tInq=0;
+      t.members.forEach(m => {
+        const bd = (bizData[t.name]||{})[m] || {};
+        tTM += bd.totalSales||0; tRef += bd.refund||0; tInq += bd.inquiry||0;
+      });
+      const tNet = tTM - tRef;
+      h += `<div class="tc">
+        <div class="tch" style="background:${t.color}">
+          <span class="tnm">${t.name}</span>
+          <span class="tmb">순 ${F2(tNet)}원</span>
+        </div>
+        <div class="tcb">
+          ${t.members.map(m => {
+            const bd = (bizData[t.name]||{})[m] || {};
+            const net = (bd.totalSales||0)-(bd.refund||0);
+            return `<div class="ir"><span class="il">${m}</span><span class="sv">${F2(net)}원</span></div>`;
+          }).join('')}
+        </div>
+      </div>`;
+    });
+    h += '</div>';
+    h += `<div style="font-size:11px;color:var(--text3);text-align:center;padding:8px 0 16px">📁 읽기 전용 아카이브 데이터입니다</div>`;
+    h += '</div>';
+    mc.innerHTML = h;
+
+  } else if (arcKey.startsWith('sales/')) {
+    // 결산 아카이브 (기존 로직 유지)
+    const k = arcKey.slice(6);
+    const arcData = (ARCHIVE.sales || {})[k] || ARCHIVE[k];
+    if (!arcData) { mc.innerHTML = '<div style="padding:24px;color:var(--text3);text-align:center">아카이브 데이터를 불러오는 중...</div>'; return; }
+    const cfg = arcData.config || {};
+    const sales = arcData.sales || {};
+    const label = arcData.label || k.replace(/_/g,'-');
+    mc.innerHTML = `<div style="padding:24px">
+      <div style="font-size:18px;font-weight:900;margin-bottom:8px">📊 ${label} 결산 아카이브</div>
+      <div style="font-size:12px;color:var(--text3)">저장: ${arcData.archivedAt ? new Date(arcData.archivedAt).toLocaleString('ko-KR') : ''}</div>
+      <div style="margin-top:16px;font-size:12px;color:var(--text2);background:var(--bg);border-radius:8px;padding:14px">결산 아카이브 데이터입니다.</div>
+    </div>`;
+  }
 }
 
 // ── 결산 메인 ─────────────────────────────────────────
@@ -950,7 +1084,7 @@ function renderMain() {
   document.getElementById('bc').style.display = 'none';
   document.getElementById('sc').style.display = 'none';
   document.getElementById('dc').style.display = 'none';
-  if (cw === -1) { renderAllDashboard(); return; }
+  if (cw === -1) { if (curMonth !== 'current') { renderArchiveView(curMonth); return; } renderAllDashboard(); return; }
   document.getElementById('mc').innerHTML = `
     ${renderNoticeBar()}
     <div class="stitle">오늘의 매출 현황</div>
@@ -1332,6 +1466,8 @@ function calcMS() {
   TM_CFG.forEach(t => t.members.forEach(m => {
     ms[m] = {상담:0, 등록:0, 미등록:0, 취소:0, 완납:0, 미납:0, COD:0};
   }));
+  // 예정 영업월이면 상담 데이터도 제로
+  if (window._bizIsFuture) return ms;
   Object.values(CONSULT).forEach(day => {
     Object.values(day||{}).forEach(r => {
       const m = r.mentor; if (!ms[m]) return;
@@ -1341,7 +1477,6 @@ function calcMS() {
       if (r.result === '미등록회수') { ms[m].완납 += N(r.paid); ms[m].등록++; }
       if (r.result === '취소') ms[m].취소++;
       if (r.result === 'COD') { ms[m].완납 += N(r.paid); ms[m].등록++; ms[m].COD++; }
-      // 추가 → 아무것도 반영 안함
     });
   });
   return ms;
@@ -1384,7 +1519,7 @@ function makeBizMonthNav() {
       <div style="font-size:15px;font-weight:900">${dispLbl} 영업</div>
       <div style="font-size:11px;color:var(--text3);margin-top:2px">${sch.start} ~ ${sch.end}</div>
     </div>
-    ${isCurrent?'<span style="padding:2px 8px;background:#DBEAFE;color:#2563EB;border-radius:20px;font-size:11px;font-weight:700">현재</span>':''}
+    ${isCurrent?'<span style="padding:2px 8px;background:#DBEAFE;color:#2563EB;border-radius:20px;font-size:11px;font-weight:700">현재</span>':(sch.start>today?'<span style="padding:2px 8px;background:#DCFCE7;color:#166534;border-radius:20px;font-size:11px;font-weight:700">예정</span>':'<span style="padding:2px 8px;background:#F1F5F9;color:#64748B;border-radius:20px;font-size:11px;font-weight:700">과거</span>')}
     <button onclick="W._bizMonthKey('${nextStart}')" style="width:28px;height:28px;border-radius:6px;border:1px solid var(--border);background:var(--bg);cursor:pointer;font-size:14px;${canNext?'':'opacity:.3;cursor:not-allowed'}" ${canNext?'':'disabled'}>▶</button>
     <div style="width:1px;height:24px;background:var(--border);margin:0 4px"></div>
     <button onclick="W._bizMonthCur()" style="padding:5px 12px;border-radius:6px;border:1px solid ${isCurrent?'var(--accent)':'var(--border)'};background:${isCurrent?'var(--accent)':'var(--bg)'};color:${isCurrent?'#fff':'var(--text2)'};font-size:12px;font-weight:700;cursor:pointer">현재 영업월</button>
@@ -1393,6 +1528,10 @@ function makeBizMonthNav() {
 
 function showBiz() {
   try {
+  // 예정 영업월: BIZ 데이터 제로 처리
+  const _emptyBd = {sales:0,inquiry:0,totalSales:0,refund:0,goal:0};
+  const getBd = (team, m) => window._bizIsFuture ? _emptyBd : (BIZ[team]?.[m] || _emptyBd);
+
   document.getElementById('mc').style.display = 'none';
   document.getElementById('bc').style.display = '';
   document.getElementById('sc').style.display = 'none';
@@ -1427,7 +1566,7 @@ function showBiz() {
 
   TM_CFG.forEach(t => {
     t.members.forEach(m => {
-      const bd = BIZ[t.name]?.[m] || {sales:0,inquiry:0,totalSales:0,refund:0};
+      const bd = getBd(t.name, m);
       totBiz += bd.sales||0; totTM += bd.totalSales||0; totRef += bd.refund||0;
       totInq += bd.inquiry||0; totWan += ms[m].완납; totMi += ms[m].미납;
       tot상담 += ms[m].상담; tot등록 += ms[m].등록; tot미등록 += ms[m].미등록; tot취소 += ms[m].취소;
@@ -1450,15 +1589,15 @@ function showBiz() {
     const t등록=t.members.reduce((s,m)=>s+ms[m].등록,0);
     const t미등록=t.members.reduce((s,m)=>s+ms[m].미등록,0);
     const t취소=t.members.reduce((s,m)=>s+ms[m].취소,0);
-    const tInq=t.members.reduce((s,m)=>s+(BIZ[t.name]?.[m]?.inquiry||0),0);
-    const tBiz=t.members.reduce((s,m)=>s+(BIZ[t.name]?.[m]?.sales||0),0);
-    const tTM=t.members.reduce((s,m)=>s+(BIZ[t.name]?.[m]?.totalSales||0),0);
-    const tRef=t.members.reduce((s,m)=>s+(BIZ[t.name]?.[m]?.refund||0),0);
-    const tGoal=t.members.reduce((s,m)=>s+(BIZ[t.name]?.[m]?.goal||0),0);
+    const tInq=t.members.reduce((s,m)=>s+(getBd(t.name, m).inquiry||0),0);
+    const tBiz=t.members.reduce((s,m)=>s+(getBd(t.name, m).sales||0),0);
+    const tTM=t.members.reduce((s,m)=>s+(getBd(t.name, m).totalSales||0),0);
+    const tRef=t.members.reduce((s,m)=>s+(getBd(t.name, m).refund||0),0);
+    const tGoal=t.members.reduce((s,m)=>s+(getBd(t.name, m).goal||0),0);
     const tMi=t.members.reduce((s,m)=>s+ms[m].미납,0);
     // 팀 완납률: 문의 있는 직원 평균
-    const tv=t.members.filter(m=>(BIZ[t.name]?.[m]?.inquiry||0)>0);
-    const tRate=tv.length>0?(tv.reduce((s,m)=>s+ms[m].등록/(BIZ[t.name][m].inquiry),0)/tv.length*100).toFixed(1)+'%':'0.0%';
+    const tv=t.members.filter(m=>(getBd(t.name, m).inquiry||0)>0);
+    const tRate=tv.length>0?(tv.reduce((s,m)=>s+ms[m].등록/(getBd(t.name,m).inquiry||1),0)/tv.length*100).toFixed(1)+'%':'0.0%';
 
     h += `<div class="btb">
       <div class="bth" style="background:${t.color}">
@@ -1482,7 +1621,7 @@ function showBiz() {
         <tbody>`;
 
     t.members.forEach(m => {
-      const bd = BIZ[t.name]?.[m] || {sales:0,inquiry:0,totalSales:0,refund:0};
+      const bd = getBd(t.name, m);
       const s = ms[m];
       const net = (bd.totalSales||0)-(bd.refund||0);
       const rate = (bd.inquiry||0)>0 ? (s.등록/bd.inquiry*100).toFixed(1)+'%' : '0.0%';
@@ -1537,8 +1676,10 @@ function updBizKPI() {
   const ms = calcMS();
   let totBiz=0,totTM=0,totRef=0,totInq=0,tot상담=0,tot등록=0,tot미등록=0,tot취소=0,totWan=0,totMi=0;
   let vc=0,sr=0;
+  const _eb={sales:0,inquiry:0,totalSales:0,refund:0,goal:0};
+  const _gb=(team,m)=>window._bizIsFuture?_eb:(BIZ[team]?.[m]||_eb);
   TM_CFG.forEach(t => t.members.forEach(m => {
-    const bd=BIZ[t.name]?.[m]||{};
+    const bd=_gb(t.name,m);
     totBiz+=(bd.sales||0);totTM+=(bd.totalSales||0);totRef+=(bd.refund||0);
     totInq+=(bd.inquiry||0);totWan+=ms[m].완납;totMi+=ms[m].미납;
     tot상담+=ms[m].상담;tot등록+=ms[m].등록;tot미등록+=ms[m].미등록;tot취소+=ms[m].취소;
@@ -2259,9 +2400,11 @@ window.W = {
   _bizMonthKey(startKey) {
     if (!startKey) return;
     window._bizSelMonth = startKey;
-    // 선택된 영업월의 BIZ_PERIOD 임시 변경
     const sch = BIZ_SCHEDULE_ALL.find(s => s.start === startKey);
     if (sch) { BIZ_PERIOD.s = sch.start; BIZ_PERIOD.e = sch.end; }
+    // 예정 영업월이면 데이터 제로 표시 플래그
+    const today = todayStr();
+    window._bizIsFuture = sch ? sch.start > today : false;
     showBiz();
   },
   _bizMonth(idx, monthsJson) {
@@ -2271,6 +2414,7 @@ window.W = {
   },
   _bizMonthCur() {
     window._bizSelMonth = 'current';
+    window._bizIsFuture = false;
     const today = todayStr();
     const cur = BIZ_SCHEDULE_ALL.find(s => today >= s.start && today <= s.end);
     if (cur) { BIZ_PERIOD.s = cur.start; BIZ_PERIOD.e = cur.end; }
@@ -2755,7 +2899,11 @@ window.W = {
     curMonth=month; cw=-1;
     if(month.startsWith('sales/')) arcSubTab='결산';
     else arcSubTab='영업';
-    renderTabs(); renderSbMonths(); renderArchiveView(month);
+    // 사이드바 서브메뉴 닫기
+    document.getElementById('nav-biz-sub').style.display='none';
+    document.getElementById('nav-dash-sub').style.display='none';
+    ['nav-dash','nav-biz','nav-staff','nav-dep'].forEach(id=>document.getElementById(id)?.classList.remove('on'));
+    renderTabs(); renderSbMonths(); renderSbBizArc(); renderArchiveView(month);
   },
   _arcTab(month, tab) {
     arcSubTab=tab; renderArchiveView(month);
