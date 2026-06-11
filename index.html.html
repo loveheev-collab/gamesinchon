@@ -2547,13 +2547,9 @@ window.W = {
     });
   },
   _depReset(date) {
-    if(!confirm(`${date} 입금파악 데이터를 초기화할까요?\n(예정건 행도 함께 초기화됩니다)`)) return;
-    // DEPOSIT 초기화
+    if(!confirm(`${date} 일별 입금파악 데이터를 초기화할까요?\n(금일예정건·익일예정건은 유지됩니다)`)) return;
     if(DEPOSIT[date]) delete DEPOSIT[date];
     set(rDeposit, DEPOSIT);
-    // SCHEDULE 초기화
-    if(SCHEDULE[date]) delete SCHEDULE[date];
-    set(rSchedule, SCHEDULE);
     showDep();
   },
   _wlWeek(key) {
