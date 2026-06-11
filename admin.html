@@ -172,7 +172,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
         </div>
       </div>
       <div style="margin-top:10px;font-size:12px;color:var(--text3);line-height:1.8;background:#F8FAFF;padding:10px 14px;border-radius:8px;border:1px solid #BFCFFF">
-        💡 <b>마감할 영업일 기간</b>을 입력하고 저장하면 해당 기간의 영업현황·상담내역·주차실적이 아카이브에 백업돼요.<br>
+        💡 <b>마감할 영업일 기간</b>을 입력하고 저장하면 해당 기간의 영업현황·상담내역·미납리스트가 아카이브에 백업돼요.<br>
         ℹ️ 현재 진행 중인 영업일은 <b>기본 설정</b>에서 따로 관리해요. 두 칸은 독립적이에요.
       </div>
       <div id="biz-archive-list" style="margin-top:14px"></div>
@@ -457,25 +457,30 @@ window.doBizArchive = async () => {
   const label = s.slice(0,7); // YYYY-MM
   const key = s.slice(0,7).replace('-','_'); // YYYY_MM
 
-  if (!confirm(`${s} ~ ${e} 영업 데이터를 아카이브에 저장할까요?\n\n저장 항목:\n• 영업현황 (BIZ)\n• 상담내역 (CONSULT)\n• 주차별 실적 (SALES)\n• 영업일 기간`)) return;
+  if (!confirm(`${s} ~ ${e} 영업 데이터를 아카이브에 저장할까요?\n\n저장 항목:\n• 영업현황 (BIZ)\n• 상담내역 (CONSULT)\n• 미납리스트\n• 영업일 기간`)) return;
 
   try {
     const { ref: dbRef, get, set: dbSet } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js");
 
-    // 현재 데이터 수집
-    const [bizSnap, consultSnap, salesSnap] = await Promise.all([
+    // 현재 데이터 수집 (영업현황 + 상담내역만, 주차별 실적 제외)
+    const [bizSnap, consultSnap] = await Promise.all([
       get(dbRef(db, 'biz2025')),
       get(dbRef(db, 'consult2025')),
-      get(dbRef(db, 'sales2025')),
     ]);
+
+    // 기간 내 상담내역 + 미납리스트만 필터링
+    const allConsult = consultSnap.val() || {};
+    const filteredConsult = {};
+    Object.entries(allConsult).forEach(([date, rows]) => {
+      if (date >= s && date <= e) filteredConsult[date] = rows;
+    });
 
     const archiveData = {
       label: `${s} ~ ${e}`,
       period: { s, e },
-      biz:     bizSnap.val()     || {},
-      consult: consultSnap.val() || {},
-      sales:   salesSnap.val()   || {},
-      config:  CFG,
+      biz:     bizSnap.val() || {},
+      consult: filteredConsult,
+      config:  { teams: CFG.teams || [], tmCfg: CFG.tmCfg || [] },
       archivedAt: new Date().toISOString(),
     };
 
@@ -531,23 +536,37 @@ function renderBizSchedule() {
     if (isCur)         { statusTxt = '<span style="padding:2px 8px;background:#2563EB;color:#fff;border-radius:6px;font-size:10px;font-weight:700">현재</span>'; rowBg='#EFF4FF'; rowBorder='#2563EB'; }
     else if (isFuture) { statusTxt = '<span style="padding:2px 8px;background:#DCFCE7;color:#166534;border-radius:6px;font-size:10px;font-weight:700">예정</span>'; rowBg='#F0FDF4'; rowBorder='#86EFAC'; }
     else if (isPast)   { statusTxt = '<span style="padding:2px 8px;background:#F1F5F9;color:#64748B;border-radius:6px;font-size:10px;font-weight:700">과거</span>'; }
-    return `<div style="display:grid;grid-template-columns:110px 1fr 1fr auto;gap:8px;align-items:center;margin-bottom:8px;padding:10px;background:${rowBg};border:1px solid ${rowBorder};border-radius:8px">
-      <div style="text-align:center">
-        ${statusTxt}
-        <input style="width:100px;padding:3px 6px;border:1px solid var(--border);border-radius:5px;font-size:12px;font-weight:700;text-align:center;font-family:inherit;margin-top:4px" value="${s.label||''}" placeholder="이름(예:7월)"
-          onchange="updBizSch(${id},'label',this.value)">
+    const hasCustomTeam = s.teams && s.teams.length > 0;
+    const teamBadge = hasCustomTeam
+      ? `<span style="font-size:10px;background:#DCFCE7;color:#166534;padding:1px 7px;border-radius:10px;font-weight:700">${s.teams.length}팀 지정됨</span>`
+      : `<span style="font-size:10px;color:var(--text3)">기본 팀 구성</span>`;
+    return `<div style="margin-bottom:8px;border:1px solid ${rowBorder};border-radius:8px;overflow:hidden">
+      <div style="display:grid;grid-template-columns:110px 1fr 1fr auto;gap:8px;align-items:center;padding:10px;background:${rowBg}">
+        <div style="text-align:center">
+          ${statusTxt}
+          <input style="width:100px;padding:3px 6px;border:1px solid var(--border);border-radius:5px;font-size:12px;font-weight:700;text-align:center;font-family:inherit;margin-top:4px" value="${s.label||''}" placeholder="이름(예:7월)"
+            onchange="updBizSch(${id},'label',this.value)">
+        </div>
+        <div class="cfg-item" style="margin:0">
+          <label style="font-size:10px">시작일</label>
+          <input class="cfg-inp" type="date" value="${s.start||''}"
+            onchange="updBizSch(${id},'start',this.value)">
+        </div>
+        <div class="cfg-item" style="margin:0">
+          <label style="font-size:10px">종료일</label>
+          <input class="cfg-inp" type="date" value="${s.end||''}"
+            onchange="updBizSch(${id},'end',this.value)">
+        </div>
+        <button class="btn btn-red btn-sm" onclick="delBizSch(${id})">삭제</button>
       </div>
-      <div class="cfg-item" style="margin:0">
-        <label style="font-size:10px">시작일</label>
-        <input class="cfg-inp" type="date" value="${s.start||''}"
-          onchange="updBizSch(${id},'start',this.value)">
+      <div style="padding:8px 12px;background:#F8FAFC;border-top:1px solid var(--border);display:flex;align-items:center;gap:10px">
+        <span style="font-size:11px;color:var(--text2);font-weight:600">팀 구성:</span>
+        ${teamBadge}
+        <button class="btn btn-outline btn-sm" onclick="openBizSchTeam(${id})" style="margin-left:4px">
+          ${hasCustomTeam ? '팀 구성 수정' : '팀 구성 지정'}
+        </button>
+        ${hasCustomTeam ? `<button class="btn btn-sm" style="background:#FEE2E2;color:#DC2626" onclick="updBizSch(${id},'teams',null);renderBizSchedule()">초기화</button>` : ''}
       </div>
-      <div class="cfg-item" style="margin:0">
-        <label style="font-size:10px">종료일</label>
-        <input class="cfg-inp" type="date" value="${s.end||''}"
-          onchange="updBizSch(${id},'end',this.value)">
-      </div>
-      <button class="btn btn-red btn-sm" onclick="delBizSch(${id})">삭제</button>
     </div>`;
   }).join('');
 }
@@ -561,11 +580,128 @@ window.addBizSchedule = () => {
 // ID 기반 필드 업데이트
 window.updBizSch = (id, field, val) => {
   const item = BIZ_SCHEDULE.find(s => s._id == id);
-  if (item) item[field] = val;
+  if (!item) return;
+  if (val === null) delete item[field];
+  else item[field] = val;
+  if (field === 'teams') renderBizSchedule();
 };
 window.delBizSch = (id) => {
   const idx = BIZ_SCHEDULE.findIndex(s => s._id == id);
   if (idx >= 0) { BIZ_SCHEDULE.splice(idx, 1); renderBizSchedule(); }
+};
+
+// 영업일별 팀 구성 편집 모달 - 전역 상태로 관리 (onclick에서 클로저 접근 불가 문제 해결)
+let _modalTeams = [];
+let _modalSchedId = null;
+
+window._mTeamName = (ti, val) => { if(_modalTeams[ti]) _modalTeams[ti].name = val; };
+window._mTeamColor = (ti, val, el) => {
+  if(_modalTeams[ti]) { _modalTeams[ti].color = val; el.closest('.m-team-hdr').style.background = val; }
+};
+window._mTeamDel = (ti) => { _modalTeams.splice(ti,1); _renderBizTeamModal(); };
+window._mTeamAdd = () => {
+  const colors = ['#2563EB','#16A34A','#7C3AED','#EA580C','#0891B2','#DB2777'];
+  _modalTeams.push({name:_modalTeams.length+1+'팀', color:colors[_modalTeams.length%colors.length], members:[]});
+  _renderBizTeamModal();
+};
+window._mMemberName = (ti, mi, val) => { if(_modalTeams[ti]?.members) _modalTeams[ti].members[mi] = val; };
+window._mMemberDel = (ti, mi) => { _modalTeams[ti].members.splice(mi,1); _renderBizTeamModal(); };
+window._mMemberAdd = (ti) => { _modalTeams[ti].members.push(''); _renderBizTeamModal(); };
+window._mSave = async () => {
+  const cleaned = _modalTeams
+    .map(t => ({...t, members:(t.members||[]).filter(m=>m.trim())}))
+    .filter(t => t.name.trim());
+
+  // BIZ_SCHEDULE 메모리 업데이트
+  updBizSch(_modalSchedId, 'teams', cleaned);
+
+  // CFG.bizSchedule 즉시 동기화 후 Firebase 저장
+  const sorted = [...BIZ_SCHEDULE]
+    .sort((a,b) => a.start.localeCompare(b.start))
+    .map(({_id, ...rest}) => rest);
+  CFG.bizSchedule = sorted;
+
+  try {
+    await set(cfgRef, CFG);
+    document.getElementById('biz-team-modal')?.remove();
+    // 렌더 갱신
+    renderBizSchedule();
+    alert('팀 구성이 저장됐어요.\n현황판에 즉시 반영됩니다.');
+  } catch(err) {
+    alert('저장 실패: ' + err.message);
+  }
+};
+window._mClose = () => { document.getElementById('biz-team-modal')?.remove(); };
+
+function _renderBizTeamModal() {
+  const modal = document.getElementById('biz-team-modal');
+  if (!modal) return;
+  const item = BIZ_SCHEDULE.find(s => s._id == _modalSchedId) || {};
+  const teamColors = ['#2563EB','#16A34A','#7C3AED','#EA580C','#0891B2','#DB2777'];
+  modal.querySelector('.m-body').innerHTML = `
+    <div style="font-size:12px;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;padding:10px 14px;margin-bottom:14px;color:var(--text2)">
+      현재 기본 팀 구성을 바탕으로 편집하세요. 저장하면 이 영업일이 [현재]가 될 때 자동 적용됩니다.
+    </div>
+    ${_modalTeams.map((t, ti) => `
+      <div style="border:1px solid var(--border);border-radius:8px;margin-bottom:10px;overflow:hidden">
+        <div class="m-team-hdr" style="background:${t.color};padding:8px 12px;display:flex;align-items:center;gap:8px">
+          <input value="${t.name.replace(/"/g,'&quot;')}" placeholder="팀 이름"
+            oninput="_mTeamName(${ti},this.value)"
+            style="flex:1;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);border-radius:5px;padding:3px 8px;color:#fff;font-weight:700;font-size:13px;font-family:inherit">
+          <input type="color" value="${t.color}"
+            oninput="_mTeamColor(${ti},this.value,this)"
+            style="width:28px;height:28px;border:none;border-radius:4px;cursor:pointer;padding:0">
+          <button onclick="_mTeamDel(${ti})"
+            style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);border-radius:5px;color:#fff;padding:2px 8px;cursor:pointer;font-size:12px">삭제</button>
+        </div>
+        <div style="padding:8px 12px">
+          ${(t.members||[]).map((m, mi) => `
+            <div style="display:flex;gap:6px;margin-bottom:4px;align-items:center">
+              <input value="${m.replace(/"/g,'&quot;')}" placeholder="직원 이름"
+                oninput="_mMemberName(${ti},${mi},this.value)"
+                style="flex:1;padding:5px 8px;border:1px solid var(--border);border-radius:5px;font-size:12px;font-family:inherit">
+              <button onclick="_mMemberDel(${ti},${mi})"
+                style="background:#FEE2E2;color:#DC2626;border:none;border-radius:5px;padding:4px 8px;cursor:pointer;font-size:11px">✕</button>
+            </div>`).join('')}
+          <button onclick="_mMemberAdd(${ti})"
+            style="width:100%;padding:5px;border:1px dashed var(--border);border-radius:5px;background:none;color:var(--text3);font-size:11px;cursor:pointer;margin-top:2px">+ 직원 추가</button>
+        </div>
+      </div>`).join('')}
+    <button onclick="_mTeamAdd()"
+      style="width:100%;padding:8px;border:1px dashed var(--border);border-radius:8px;background:none;color:var(--text2);font-size:12px;cursor:pointer;margin-bottom:14px">+ 팀 추가</button>
+    <div style="display:flex;gap:8px">
+      <button onclick="_mClose()" class="btn btn-outline" style="flex:1">취소</button>
+      <button onclick="_mSave()" class="btn btn-primary" style="flex:2">이 영업일 팀 구성 저장</button>
+    </div>`;
+}
+
+window.openBizSchTeam = (id) => {
+  const item = BIZ_SCHEDULE.find(s => s._id == id);
+  if (!item) return;
+  _modalSchedId = id;
+  _modalTeams = (item.teams && item.teams.length)
+    ? JSON.parse(JSON.stringify(item.teams))
+    : JSON.parse(JSON.stringify(CFG.teams || []));
+
+  const old = document.getElementById('biz-team-modal');
+  if (old) old.remove();
+
+  const modal = document.createElement('div');
+  modal.id = 'biz-team-modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:9999;display:flex;align-items:center;justify-content:center';
+  modal.innerHTML = `
+    <div style="background:#fff;border-radius:14px;width:540px;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.2)">
+      <div style="padding:18px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
+        <div>
+          <div style="font-size:15px;font-weight:900">${item.label || item.start} 팀 구성 설정</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px">${item.start} ~ ${item.end} 영업일에 적용될 팀/직원 구성</div>
+        </div>
+        <button onclick="_mClose()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text3)">✕</button>
+      </div>
+      <div class="m-body" style="padding:16px 20px;overflow-y:auto"></div>
+    </div>`;
+  document.body.appendChild(modal);
+  _renderBizTeamModal();
 };
 
 window.saveBizSchedule = async () => {
