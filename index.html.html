@@ -483,21 +483,46 @@ function applyConfig(cfg) {
   if (cfg.totalGoal) TG = cfg.totalGoal;
   if (cfg.monthLabel) MONTH_LABEL = cfg.monthLabel;
   if (cfg.bizSchedule && Array.isArray(cfg.bizSchedule) && cfg.bizSchedule.length) {
+    BIZ_SCHEDULE_ALL = cfg.bizSchedule;
     // 현재 날짜에 맞는 영업일 자동 감지
     const today = todayStr();
-    const curSch = cfg.bizSchedule.find(s => today >= s.start && today <= s.end);
+    const curSch = cfg.bizSchedule.find(s => s.start && s.end && today >= s.start && today <= s.end);
     if (curSch) {
       BIZ_PERIOD.s = curSch.start;
       BIZ_PERIOD.e = curSch.end;
-    } else if (cfg.bizStart) {
-      BIZ_PERIOD.s = cfg.bizStart;
-      BIZ_PERIOD.e = cfg.bizEnd || BIZ_PERIOD.e;
+      // 현재 영업일에 커스텀 팀 구성이 지정되어 있으면 기본 팀 구성 위에 덮어씀
+      if (curSch.teams && curSch.teams.length) {
+        const validTeams = curSch.teams.filter(t => t.name && (t.members||[]).length > 0);
+        if (validTeams.length) {
+          TM_CFG = validTeams;
+          TEAMS = validTeams.map(t => ({name:t.name, members:(t.members||[]).length, color:t.color}));
+          TM = validTeams.reduce((s,t) => s + (t.members||[]).length, 0);
+        }
+      }
+    } else {
+      // 오늘이 어느 영업일에도 안 속할 때: 가장 가까운 미래 영업일 사용
+      const futureSch = cfg.bizSchedule.filter(s=>s.start&&s.end).sort((a,b)=>a.start.localeCompare(b.start)).find(s => s.start > today);
+      if (futureSch) {
+        BIZ_PERIOD.s = futureSch.start;
+        BIZ_PERIOD.e = futureSch.end;
+        // 커스텀 팀 구성도 적용
+        if (futureSch.teams && futureSch.teams.length) {
+          const validTeams = futureSch.teams.filter(t => t.name && (t.members||[]).length > 0);
+          if (validTeams.length) {
+            TM_CFG = validTeams;
+            TEAMS = validTeams.map(t => ({name:t.name, members:(t.members||[]).length, color:t.color}));
+            TM = validTeams.reduce((s,t) => s + (t.members||[]).length, 0);
+          }
+        }
+      } else if (cfg.bizStart) {
+        BIZ_PERIOD.s = cfg.bizStart;
+        BIZ_PERIOD.e = cfg.bizEnd || BIZ_PERIOD.e;
+      }
     }
-    BIZ_SCHEDULE_ALL = cfg.bizSchedule;
   } else {
+    BIZ_SCHEDULE_ALL = [];
     if (cfg.bizStart) BIZ_PERIOD.s = cfg.bizStart;
     if (cfg.bizEnd) BIZ_PERIOD.e = cfg.bizEnd;
-    BIZ_SCHEDULE_ALL = [];
   }
   TEAMS.forEach(t => {
     if (!DATA[t.name]) DATA[t.name] = {};
@@ -507,6 +532,7 @@ function applyConfig(cfg) {
     if (!BIZ[t.name]) BIZ[t.name] = {};
     t.members.forEach(m => { if (!BIZ[t.name][m]) BIZ[t.name][m] = {sales:0,inquiry:0,totalSales:0,refund:0,goal:0}; });
   });
+  console.log('[applyConfig] TM_CFG:', TM_CFG.map(t=>t.name+'('+t.members.join(',')+')'), 'BIZ_PERIOD:', BIZ_PERIOD);
 }
 
 // ── 상태 ─────────────────────────────────────────────
@@ -684,7 +710,7 @@ function renderTabs() {
       if (curMonth.startsWith('biz/')) {
         const k = curMonth.slice(4);
         const lbl = ((ARCHIVE.biz||{})[k]||{}).label || k.replace(/_/g,'-');
-        pt.textContent = '💼 ' + lbl + ' 아카이브';
+        pt.textContent = lbl + ' 아카이브';
       } else {
         const k = curMonth.startsWith('sales/') ? curMonth.slice(6) : curMonth;
         pt.textContent = '📊 ' + k.replace(/_/g,'-') + ' 아카이브';
@@ -703,7 +729,7 @@ function renderSbMonths() {
   if (!months.length) { el.innerHTML = '<div style="font-size:11px;color:#B0BEC5;padding:4px 8px">저장된 월 없음</div>'; return; }
   el.innerHTML = months.map(m => {
     const lbl = m.replace(/_/g,'-');
-    return '<div class="sb-sub-item' + (curMonth==='sales/'+m?' on':'') + '" onclick="W._setMonth(\'sales/' + m + '\')">' + '📊 ' + lbl + '</div>';
+    return '<div class="sb-sub-item' + (curMonth==='sales/'+m?' on':'') + '" onclick="W._setMonth(\'sales/' + m + '\')">' + lbl + '</div>';
   }).join('');
 }
 
@@ -716,7 +742,7 @@ function renderSbBizArc() {
     const d = bizArc[k];
     const lbl = d.label || k.replace(/_/g,'-');
     const arcKey = 'biz/' + k;
-    return '<div class="sb-sub-item' + (curMonth===arcKey?' on':'') + '" onclick="W._setMonth(\'' + arcKey + '\')">' + '💼 ' + lbl + '</div>';
+    return '<div class="sb-sub-item' + (curMonth===arcKey?' on':'') + '" onclick="W._setMonth(\'' + arcKey + '\')">' + lbl + '</div>';
   }).join('');
 }
 // ── 아카이브 뷰 ──────────────────────────────────────
@@ -727,7 +753,6 @@ function renderArchiveView(arcKey) {
   mc.style.display = '';
 
   if (arcKey.startsWith('biz/')) {
-    // 영업 아카이브
     const k = arcKey.slice(4);
     const arcData = (ARCHIVE.biz || {})[k];
     if (!arcData) { mc.innerHTML = '<div style="padding:24px;color:var(--text3);text-align:center">아카이브 데이터를 불러오는 중...</div>'; return; }
@@ -735,67 +760,173 @@ function renderArchiveView(arcKey) {
     const bizData = arcData.biz || {};
     const consultData = arcData.consult || {};
     const cfg = arcData.config || {};
-    const teams = cfg.teams || TM_CFG;
+    const teams = (cfg.tmCfg || cfg.teams || TM_CFG);
     const period = arcData.period || {};
     const label = arcData.label || k.replace(/_/g,'-');
+    if (!window._arcBizTab) window._arcBizTab = '영업데이터';
+    const curTab = window._arcBizTab;
 
     const F2 = n => Math.round(n||0).toLocaleString('ko-KR');
-    let totTM=0, totRef=0, totInq=0, tot상담=0, tot등록=0, tot취소=0, totWan=0, totMi=0;
+    const pct = (a,b) => b ? Math.round(a/b*100) : 0;
+    const pctClr = p => p>=100?'#16A34A':p>=70?'#2563EB':p>=50?'#D97706':'#DC2626';
+    const fmtDate = d => { const dt=new Date(d); return `${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`; };
 
-    // 상담 데이터 집계
+    // KPI 집계
     const consultEntries = Object.values(consultData).flatMap(d=>Object.values(d||{}));
-    tot상담 = consultEntries.filter(e=>e.status==='상담'||e.status==='등록').length;
-    tot등록 = consultEntries.filter(e=>e.result==='완납'||e.result==='미납'||e.result==='COD').length;
-    tot취소 = consultEntries.filter(e=>e.result==='취소').length;
-
-    teams.forEach(t => {
-      t.members.forEach(m => {
-        const bd = (bizData[t.name]||{})[m] || {};
-        totTM += bd.totalSales||0; totRef += bd.refund||0; totInq += bd.inquiry||0;
-        totWan += bd.완납||0; totMi += bd.미납||0;
-      });
-    });
+    const tot등록 = consultEntries.filter(e=>['완납','COD','미등록회수'].includes(e.result)).length;
+    const tot취소 = consultEntries.filter(e=>e.result==='취소').length;
+    const tot미납 = consultEntries.filter(e=>e.result==='미납').length;
+    let totTM=0, totRef=0, totInq=0, totGoal=0;
+    teams.forEach(t => (t.members||[]).forEach(m => {
+      const bd=(bizData[t.name]||{})[m]||{};
+      totTM+=bd.totalSales||0; totRef+=bd.refund||0; totInq+=bd.inquiry||0; totGoal+=bd.goal||0;
+    }));
     const totNet = totTM - totRef;
+    const totP = pct(totNet, totGoal);
+
+    const tabBtn = (tab, lbl) => `<button onclick="W._arcView('${tab}','${arcKey}')"
+      style="padding:8px 20px;border:none;border-bottom:2px solid ${curTab===tab?'var(--accent)':'transparent'};background:transparent;font-size:13px;font-weight:${curTab===tab?'700':'400'};color:${curTab===tab?'var(--accent)':'var(--text2)'};cursor:pointer">${lbl}</button>`;
 
     let h = `<div style="padding:16px 20px 0">
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap">
-        <div style="font-size:18px;font-weight:900">💼 ${label} 영업 아카이브</div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap">
+        <div style="font-size:18px;font-weight:900">${label} 영업 아카이브</div>
         <div style="font-size:12px;color:var(--text3)">${period.s||''} ~ ${period.e||''}</div>
-        <div style="font-size:11px;color:var(--text3)">저장: ${arcData.archivedAt ? new Date(arcData.archivedAt).toLocaleString('ko-KR') : ''}</div>
+        <div style="font-size:11px;color:var(--text3)">저장: ${arcData.archivedAt?new Date(arcData.archivedAt).toLocaleString('ko-KR'):''}</div>
+      </div>
+      <div style="border-bottom:1px solid var(--border);margin-bottom:16px;display:flex">
+        ${tabBtn('영업데이터','영업 데이터')}${tabBtn('미납리스트','미납 리스트')}
       </div>
       <div class="kg" style="margin-bottom:16px">
-        <div class="kc a"><div class="klbl">총 매출 (환불제외)</div><div class="kval">${F2(totNet)}</div><div class="ksub">원</div></div>
-        <div class="kc g"><div class="klbl">총 매출 (세전)</div><div class="kval">${F2(totTM)}</div><div class="ksub">원</div></div>
+        <div class="kc a"><div class="klbl">순매출 / 목표</div><div class="kval">${F2(totNet)}</div><div class="ksub">${totGoal?'/ '+F2(totGoal)+'원':''}</div></div>
+        <div class="kc g"><div class="klbl">총 매출(세전)</div><div class="kval">${F2(totTM)}</div><div class="ksub">원</div></div>
         <div class="kc r"><div class="klbl">총 환불</div><div class="kval">${F2(totRef)}</div><div class="ksub">원</div></div>
-        <div class="kc go"><div class="klbl">문의 / 등록 / 취소</div><div class="kval" style="font-size:14px">${totInq} / ${tot등록} / ${tot취소}</div><div class="ksub">건</div></div>
+        <div class="kc go"><div class="klbl">팀 도달율</div><div class="kval" style="color:${pctClr(totP)}">${totP}%</div><div class="ksub">등록 ${tot등록} / 미납 ${tot미납} / 취소 ${tot취소}</div></div>
       </div>`;
 
-    // 팀별 상세
-    h += '<div class="tg" style="margin-bottom:16px">';
-    teams.forEach(t => {
-      let tTM=0, tRef=0, tInq=0;
-      t.members.forEach(m => {
-        const bd = (bizData[t.name]||{})[m] || {};
-        tTM += bd.totalSales||0; tRef += bd.refund||0; tInq += bd.inquiry||0;
+    if (curTab === '영업데이터') {
+      // 직원별 상담/등록 집계
+      const mConsult = {}, mReg = {};
+      Object.values(consultData).forEach(day => Object.values(day||{}).forEach(r => {
+        const m = r.mentor; if (!m) return;
+        if (!mConsult[m]) mConsult[m] = 0;
+        if (!mReg[m]) mReg[m] = 0;
+        if (r.status === '상담' || r.result) mConsult[m]++;
+        if (['완납','COD','미등록회수'].includes(r.result)) mReg[m]++;
+      }));
+
+      // 팀별 상세 테이블
+      teams.forEach(t => {
+        let tTM=0,tRef=0,tGoal=0,tInq=0,tConsult=0,tReg=0;
+        (t.members||[]).forEach(m=>{const bd=(bizData[t.name]||{})[m]||{};tTM+=bd.totalSales||0;tRef+=bd.refund||0;tGoal+=bd.goal||0;tInq+=bd.inquiry||0;tConsult+=mConsult[m]||0;tReg+=mReg[m]||0;});
+        const tNet=tTM-tRef; const tP=pct(tNet,tGoal);
+        h += `<div style="margin-bottom:20px;border:1px solid var(--border);border-radius:10px;overflow:hidden">
+          <div style="background:${t.color};padding:10px 16px;display:flex;justify-content:space-between;align-items:center">
+            <span style="color:#fff;font-weight:800;font-size:14px">${t.name}</span>
+            <span style="color:rgba(255,255,255,.9);font-size:12px">순 ${F2(tNet)}원 / 목표 ${F2(tGoal)}원 · 도달율 <b>${tP}%</b> · 문의 ${tInq} / 상담 ${tConsult} / 등록 ${tReg}</span>
+          </div>
+          <table style="width:100%;border-collapse:collapse;font-size:12px">
+            <thead><tr style="background:var(--bg);color:var(--text2);font-size:11px">
+              <th style="padding:7px 12px;text-align:left;font-weight:600">직원</th>
+              <th style="padding:7px 8px;text-align:right;font-weight:600">목표매출</th>
+              <th style="padding:7px 8px;text-align:right;font-weight:600">영업총매출</th>
+              <th style="padding:7px 8px;text-align:right;font-weight:600">환불</th>
+              <th style="padding:7px 8px;text-align:right;font-weight:600">순매출</th>
+              <th style="padding:7px 8px;text-align:right;font-weight:600">도달율</th>
+              <th style="padding:7px 8px;text-align:right;font-weight:600">문의</th>
+              <th style="padding:7px 8px;text-align:right;font-weight:600">상담</th>
+              <th style="padding:7px 8px;text-align:right;font-weight:600">등록</th>
+              <th style="padding:7px 8px;text-align:right;font-weight:600">문의대비<br>상담율</th>
+              <th style="padding:7px 8px;text-align:right;font-weight:600">문의대비<br>등록율</th>
+            </tr></thead><tbody>`;
+        (t.members||[]).forEach((m,mi) => {
+          const bd=(bizData[t.name]||{})[m]||{};
+          const net=(bd.totalSales||0)-(bd.refund||0);
+          const p=pct(net,bd.goal||0);
+          const mc2=mConsult[m]||0, mr=mReg[m]||0, inq=bd.inquiry||0;
+          const cRate=inq?Math.round(mc2/inq*100):0;
+          const rRate=inq?Math.round(mr/inq*100):0;
+          const bg = mi%2===0?'var(--bg2, #FAFAFA)':'#fff';
+          h += `<tr style="border-top:1px solid var(--border);background:${bg}">
+            <td style="padding:9px 12px;font-weight:700;color:${t.color}">${m}</td>
+            <td style="padding:9px 8px;text-align:right;color:var(--text2)">${bd.goal?F2(bd.goal):'-'}</td>
+            <td style="padding:9px 8px;text-align:right;color:#16A34A;font-weight:600">${F2(bd.totalSales||0)}</td>
+            <td style="padding:9px 8px;text-align:right;color:#DC2626">${bd.refund?F2(bd.refund):'-'}</td>
+            <td style="padding:9px 8px;text-align:right;font-weight:700">${F2(net)}</td>
+            <td style="padding:9px 8px;text-align:right;font-weight:700;color:${pctClr(p)}">${bd.goal?p+'%':'-'}</td>
+            <td style="padding:9px 8px;text-align:right">${inq}</td>
+            <td style="padding:9px 8px;text-align:right">${mc2}</td>
+            <td style="padding:9px 8px;text-align:right">${mr}</td>
+            <td style="padding:9px 8px;text-align:right;color:${pctClr(cRate)};font-weight:600">${inq?cRate+'%':'-'}</td>
+            <td style="padding:9px 8px;text-align:right;color:${pctClr(rRate)};font-weight:600">${inq?rRate+'%':'-'}</td>
+          </tr>`;
+        });
+        // 팀 합계 행
+        const tCRate=tInq?Math.round(tConsult/tInq*100):0;
+        const tRRate=tInq?Math.round(tReg/tInq*100):0;
+        h += `<tr style="border-top:2px solid ${t.color};background:var(--bg);font-weight:700">
+          <td style="padding:9px 12px;color:${t.color}">팀 합계</td>
+          <td style="padding:9px 8px;text-align:right">${F2(tGoal)}</td>
+          <td style="padding:9px 8px;text-align:right;color:#16A34A">${F2(tTM)}</td>
+          <td style="padding:9px 8px;text-align:right;color:#DC2626">${F2(tRef)}</td>
+          <td style="padding:9px 8px;text-align:right">${F2(tNet)}</td>
+          <td style="padding:9px 8px;text-align:right;color:${pctClr(tP)}">${tP}%</td>
+          <td style="padding:9px 8px;text-align:right">${tInq}</td>
+          <td style="padding:9px 8px;text-align:right">${tConsult}</td>
+          <td style="padding:9px 8px;text-align:right">${tReg}</td>
+          <td style="padding:9px 8px;text-align:right;color:${pctClr(tCRate)}">${tInq?tCRate+'%':'-'}</td>
+          <td style="padding:9px 8px;text-align:right;color:${pctClr(tRRate)}">${tInq?tRRate+'%':'-'}</td>
+        </tr></tbody></table></div>`;
       });
-      const tNet = tTM - tRef;
-      h += `<div class="tc">
-        <div class="tch" style="background:${t.color}">
-          <span class="tnm">${t.name}</span>
-          <span class="tmb">순 ${F2(tNet)}원</span>
+
+    } else {
+      // 미납 리스트
+      const unpaidByTeam = {};
+      teams.forEach(t => { unpaidByTeam[t.name]={}; (t.members||[]).forEach(m=>{unpaidByTeam[t.name][m]=[];}); });
+      Object.entries(consultData).forEach(([date,rows]) => {
+        Object.entries(rows||{}).forEach(([rid,r]) => {
+          if (r.result==='미납') {
+            const tm=teams.find(t=>(t.members||[]).includes(r.mentor));
+            if (tm&&r.mentor) {
+              if (!unpaidByTeam[tm.name][r.mentor]) unpaidByTeam[tm.name][r.mentor]=[];
+              unpaidByTeam[tm.name][r.mentor].push({date,r});
+            }
+          }
+        });
+      });
+      let hasAny=false;
+      h += '<div class="addlist-wrap">';
+      teams.forEach(t => {
+        const teamItems=(t.members||[]).flatMap(m=>unpaidByTeam[t.name][m]||[]);
+        if (!teamItems.length) return;
+        hasAny=true;
+        h += `<div class="unpaid-team-block"><div class="unpaid-team-hdr" style="background:${t.color}">
+          <span>${t.name} <span style="font-size:12px;font-weight:400;opacity:.9;margin-left:8px">${teamItems.length}건 · 예정 ${F2(teamItems.reduce((s,{r})=>s+(Number(r.expected)||0),0))}원</span></span>
         </div>
-        <div class="tcb">
-          ${t.members.map(m => {
-            const bd = (bizData[t.name]||{})[m] || {};
-            const net = (bd.totalSales||0)-(bd.refund||0);
-            return `<div class="ir"><span class="il">${m}</span><span class="sv">${F2(net)}원</span></div>`;
-          }).join('')}
-        </div>
-      </div>`;
-    });
-    h += '</div>';
-    h += `<div style="font-size:11px;color:var(--text3);text-align:center;padding:8px 0 16px">📁 읽기 전용 아카이브 데이터입니다</div>`;
-    h += '</div>';
+        <table class="unpaid-tbl"><thead><tr>
+          <th style="width:64px">직원</th><th style="width:64px">학생</th><th style="width:72px">과목</th>
+          <th style="width:56px">날짜</th><th style="width:84px">예정금액</th><th>비고</th>
+        </tr></thead><tbody>`;
+        (t.members||[]).forEach(m => {
+          const items=unpaidByTeam[t.name][m]||[];
+          if (!items.length) return;
+          h += `<tr class="member-row"><td colspan="6">${m} (${items.length}건)</td></tr>`;
+          items.forEach(({date,r}) => {
+            h += `<tr>
+              <td style="color:${t.color};font-weight:600">${m}</td>
+              <td>${r.student||'-'}</td><td>${r.subject||'-'}</td>
+              <td style="font-family:'Roboto',monospace;font-size:11px">${fmtDate(date)}</td>
+              <td style="text-align:right;color:var(--gold);font-weight:700">${r.expected?F2(Number(r.expected)):'-'}</td>
+              <td style="color:var(--text2);font-size:11px;line-height:1.5">${r.note||''}</td>
+            </tr>`;
+          });
+        });
+        h += '</tbody></table></div>';
+      });
+      if (!hasAny) h += '<div style="text-align:center;padding:32px;color:var(--text3);font-size:13px">미납 항목이 없습니다</div>';
+      h += '</div>';
+    }
+
+    h += `<div style="font-size:11px;color:var(--text3);text-align:center;padding:8px 0 16px">읽기 전용 아카이브 데이터입니다</div></div>`;
     mc.innerHTML = h;
 
   } else if (arcKey.startsWith('sales/')) {
@@ -1497,7 +1628,14 @@ function makeBizMonthNav() {
 
   // 현재 영업월 인덱스 (오늘 날짜 기준)
   const curIdx = schedules.findIndex(s => today >= s.start && today <= s.end);
-  const curActualIdx = curIdx >= 0 ? curIdx : schedules.length - 1;
+  // 오늘이 어느 영업일에도 속하지 않으면: 가장 가까운 미래 영업일 → 없으면 마지막
+  let curActualIdx;
+  if (curIdx >= 0) {
+    curActualIdx = curIdx;
+  } else {
+    const futureIdx = schedules.findIndex(s => s.start > today);
+    curActualIdx = futureIdx >= 0 ? futureIdx : schedules.length - 1;
+  }
 
   const selMonth = window._bizSelMonth;
   let selIdx = selMonth === undefined || selMonth === 'current'
@@ -1631,10 +1769,10 @@ function showBiz() {
         <td style="font-weight:700;color:${t.color}">${m}</td>
         <td><input class="binp" type="text" inputmode="numeric" value="${bd.inquiry||''}" placeholder="0"
           oninput="W._bm('${t.name}','${m}','inquiry',this.value)" style="border-color:${t.color}44;color:var(--purple);width:100%"></td>
-        <td class="nr" style="color:var(--text2)">${s.상담}</td>
-        <td class="nr" style="color:var(--green);font-weight:700">${s.등록}</td>
-        <td class="nr" style="color:var(--gold);font-weight:700">${s.미등록}</td>
-        <td class="nr" style="color:var(--red);font-weight:700">${s.취소}</td>
+        <td class="nr">${s.상담}</td>
+        <td class="nr">${s.등록}</td>
+        <td class="nr">${s.미등록}</td>
+        <td class="nr">${s.취소}</td>
         <td><input class="binp" type="text" inputmode="numeric" value="${bd.goal?F(bd.goal):''}" placeholder="0"
           oninput="W._bm('${t.name}','${m}','goal',this.value);formatBizInp(this)"
           style="border-color:${t.color}44;color:var(--text);width:100%"></td>
@@ -1653,9 +1791,9 @@ function showBiz() {
       <td style="color:${t.color};font-weight:700">팀 합계</td>
       <td class="nr" style="color:var(--purple);font-weight:700">${tInq}</td>
       <td class="nr">${t상담}</td>
-      <td class="nr" style="color:var(--green);font-weight:700">${t등록}</td>
-      <td class="nr" style="color:var(--gold);font-weight:700">${t미등록}</td>
-      <td class="nr" style="color:var(--red);font-weight:700">${t취소}</td>
+      <td class="nr">${t등록}</td>
+      <td class="nr">${t미등록}</td>
+      <td class="nr">${t취소}</td>
       <td class="nr" style="color:var(--text);font-weight:700" id="${"biz-goal-"+t.name}">${F(tGoal)}</td>
       <td class="nr" style="color:var(--green);font-weight:700" id="${"biz-tm-"+t.name}">${F(tTM)}</td>
       <td class="nr" style="color:var(--red)" id="${"biz-ref-"+t.name}">${F(tRef)}</td>
@@ -1697,21 +1835,29 @@ function updBizKPI() {
 
 // ── 상담 내역 탭 ─────────────────────────────────────
 function renderConsult(searchKw='') {
-  const dates = Object.keys(CONSULT).sort((a,b)=>b.localeCompare(a));
+  // 예정 영업월이면 빈 화면
+  if (window._bizIsFuture) {
+    return '<div style="text-align:center;padding:48px;color:var(--text3);font-size:13px">예정된 영업월입니다.<br>아직 상담 내역이 없어요.</div>';
+  }
+  const dates = Object.keys(CONSULT).filter(d => d >= BIZ_PERIOD.s && d <= BIZ_PERIOD.e).sort((a,b)=>b.localeCompare(a));
   let tPaid=0,tExp=0,tRows=0,cWan=0,cSang=0;
   const ts = {};
   TM_CFG.forEach(t => ts[t.name]={paid:0,exp:0,em:0,cnt:0,wan:0});
 
-  dates.forEach(date => Object.values(CONSULT[date]||{}).forEach(r => {
-    tPaid+=N(r.paid); tExp+=N(r.expected); tRows++;
-    if(r.result==='완납'||r.result==='추가') cWan++;
-    if(r.status==='상담') cSang++;
-    const t=getTeam(r.mentor);
-    if(t){ts[t.name].paid+=N(r.paid);ts[t.name].exp+=N(r.expected);ts[t.name].cnt++;if(r.result==='완납'||r.result==='추가'||r.result==='미등록회수')ts[t.name].wan++;}
-  }));
+  dates.forEach(date => {
+    if (date < BIZ_PERIOD.s || date > BIZ_PERIOD.e) return;
+    Object.values(CONSULT[date]||{}).forEach(r => {
+      tPaid+=N(r.paid); tExp+=N(r.expected); tRows++;
+      if(r.result==='완납'||r.result==='추가') cWan++;
+      if(r.status==='상담') cSang++;
+      const t=getTeam(r.mentor);
+      if(t){ts[t.name].paid+=N(r.paid);ts[t.name].exp+=N(r.expected);ts[t.name].cnt++;if(r.result==='완납'||r.result==='추가'||r.result==='미등록회수')ts[t.name].wan++;}
+    });
+  });
 
   let allRows = [];
   Object.entries(CONSULT).forEach(([date, rows]) => {
+    if (date < BIZ_PERIOD.s || date > BIZ_PERIOD.e) return;
     Object.entries(rows||{}).forEach(([rid, r]) => allRows.push({date,rid,r}));
   });
   const kw = searchKw.trim().toLowerCase();
@@ -2897,11 +3043,13 @@ window.W = {
     curMonth=month; cw=-1;
     if(month.startsWith('sales/')) arcSubTab='결산';
     else arcSubTab='영업';
-    // 사이드바 서브메뉴 닫기
-    document.getElementById('nav-biz-sub').style.display='none';
-    document.getElementById('nav-dash-sub').style.display='none';
+    // 사이드바 서브메뉴 닫기 (null safe)
+    const nbSub = document.getElementById('nav-biz-sub');
+    const ndSub = document.getElementById('nav-dash-sub');
+    if(nbSub) nbSub.style.display='none';
+    if(ndSub) ndSub.style.display='none';
     ['nav-dash','nav-biz','nav-staff','nav-dep'].forEach(id=>document.getElementById(id)?.classList.remove('on'));
-    renderTabs(); renderSbMonths(); renderSbBizArc(); renderArchiveView(month);
+    window._arcBizTab = '영업데이터'; renderTabs(); renderSbMonths(); renderSbBizArc(); renderArchiveView(month);
   },
   _arcTab(month, tab) {
     arcSubTab=tab; renderArchiveView(month);
@@ -3084,6 +3232,8 @@ window.W = {
   },
 };
 
+// 아카이브 탭 전환 전역 노출
+W._arcView = (tab, arcKey) => { window._arcBizTab = tab; renderArchiveView(arcKey); };
 window.W = W;
 
 // 전역 에러 캐치
