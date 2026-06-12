@@ -1151,17 +1151,24 @@ function renderAllDashboard() {
 
   // ── 팀별 성과 (영업현황 BIZ 데이터 기준) ──
   const ms = calcMS();
+  // 팀 이름 변경 대응: 멤버 이름으로 BIZ 전체 탐색
+  const _dashGetBd = (m) => {
+    for (const tKey of Object.keys(BIZ)) {
+      if (BIZ[tKey]?.[m]) return BIZ[tKey][m];
+    }
+    return {sales:0,inquiry:0,totalSales:0,refund:0,goal:0};
+  };
   h += `<div class="kg-highlight-label" style="margin-top:8px">팀별 성과 (당월 누계)</div>
     <div class="tp-grid">`;
 
   TM_CFG.forEach(t => {
     const mList = t.members;
 
-    // BIZ 영업현황 집계
-    const tBizSales  = mList.reduce((s,m)=>s+(BIZ[t.name]?.[m]?.totalSales||0),0);   // 영업총매출 (입력값)
-    const tRefund    = mList.reduce((s,m)=>s+(BIZ[t.name]?.[m]?.refund||0),0);        // 환불
-    const tGoalBiz   = mList.reduce((s,m)=>s+(BIZ[t.name]?.[m]?.goal||0),0);         // 목표매출
-    const tInq       = mList.reduce((s,m)=>s+(BIZ[t.name]?.[m]?.inquiry||0),0);      // 문의
+    // BIZ 영업현황 집계 (팀 이름 무관하게 멤버 이름으로 탐색)
+    const tBizSales  = mList.reduce((s,m)=>s+(_dashGetBd(m).totalSales||0),0);   // 영업총매출
+    const tRefund    = mList.reduce((s,m)=>s+(_dashGetBd(m).refund||0),0);        // 환불
+    const tGoalBiz   = mList.reduce((s,m)=>s+(_dashGetBd(m).goal||0),0);         // 목표매출
+    const tInq       = mList.reduce((s,m)=>s+(_dashGetBd(m).inquiry||0),0);      // 문의
     const tNetSales  = tBizSales - tRefund;                                             // 순매출
 
     // 상담내역(calcMS) 집계
