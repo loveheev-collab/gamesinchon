@@ -787,7 +787,13 @@ function renderArchiveView(arcKey) {
     const tabBtn = (tab, lbl) => `<button onclick="W._arcView('${tab}','${arcKey}')"
       style="padding:8px 20px;border:none;border-bottom:2px solid ${curTab===tab?'var(--accent)':'transparent'};background:transparent;font-size:13px;font-weight:${curTab===tab?'700':'400'};color:${curTab===tab?'var(--accent)':'var(--text2)'};cursor:pointer">${lbl}</button>`;
 
-    let h = `<div style="padding:16px 20px 0">
+    // 영업현황에서 온 경우 월 네비게이터 표시
+    const _isFromBiz = window._bizSelMonth && BIZ_SCHEDULE_ALL.length > 0;
+    const _bizNav = _isFromBiz ? makeBizMonthNav() : '';
+
+    let h = `<div style="padding:${_isFromBiz?'0':'16px 20px 0'}">
+      ${_bizNav}
+      <div style="padding:16px 20px 0">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap">
         <div style="font-size:18px;font-weight:900">${label} 영업 아카이브</div>
         <div style="font-size:12px;color:var(--text3)">${period.s||''} ~ ${period.e||''}</div>
@@ -926,7 +932,7 @@ function renderArchiveView(arcKey) {
       h += '</div>';
     }
 
-    h += `<div style="font-size:11px;color:var(--text3);text-align:center;padding:8px 0 16px">읽기 전용 아카이브 데이터입니다</div></div>`;
+    h += `<div style="font-size:11px;color:var(--text3);text-align:center;padding:8px 0 16px">읽기 전용 아카이브 데이터입니다</div></div></div>`;
     mc.innerHTML = h;
 
   } else if (arcKey.startsWith('sales/')) {
@@ -1437,8 +1443,17 @@ function renderUnpaidList() {
   const unpaidByTeam = {};
   TM_CFG.forEach(t => { unpaidByTeam[t.name] = {}; t.members.forEach(m => { unpaidByTeam[t.name][m] = []; }); });
 
-  // 현재 선택된 영업일 기간 안의 날짜만 필터
-  Object.entries(CONSULT).forEach(([date, rows]) => {
+  // 과거 영업월이면 아카이브 데이터, 아니면 라이브 CONSULT 사용
+  const today = todayStr();
+  const isPast = BIZ_PERIOD.e < today;
+  let consultSrc = CONSULT;
+  if (isPast) {
+    const bizArc = ARCHIVE.biz || {};
+    const arcEntry = Object.values(bizArc).find(v => v.period && v.period.s === BIZ_PERIOD.s && v.period.e === BIZ_PERIOD.e);
+    if (arcEntry && arcEntry.consult) consultSrc = arcEntry.consult;
+  }
+
+  Object.entries(consultSrc).forEach(([date, rows]) => {
     if (date < BIZ_PERIOD.s || date > BIZ_PERIOD.e) return;
     Object.entries(rows||{}).forEach(([rid, r]) => {
       if (r.result === '미납') {
@@ -1601,7 +1616,9 @@ function calcMS() {
   }));
   // 예정 영업월이면 상담 데이터도 제로
   if (window._bizIsFuture) return ms;
-  Object.values(CONSULT).forEach(day => {
+  // BIZ_PERIOD 범위 안의 날짜만 집계
+  Object.entries(CONSULT).forEach(([date, day]) => {
+    if (date < BIZ_PERIOD.s || date > BIZ_PERIOD.e) return;
     Object.values(day||{}).forEach(r => {
       const m = r.mentor; if (!ms[m]) return;
       if (r.status === '상담') ms[m].상담++;
@@ -1668,9 +1685,36 @@ function makeBizMonthNav() {
 
 function showBiz() {
   try {
+  // 과거 영업월인데 아카이브 없는 경우
+  const today = todayStr();
+  const selSch = BIZ_SCHEDULE_ALL.find(s => s.start === window._bizSelMonth);
+  if (selSch && selSch.end < today && !window._bizIsFuture) {
+    const bizArc = ARCHIVE.biz || {};
+    const hasArc = Object.values(bizArc).some(v => v.period && v.period.s === selSch.start);
+    if (!hasArc) {
+      // 아카이브 없는 과거 → 안내 메시지
+      ['mc','sc','dc'].forEach(id=>{ const e=document.getElementById(id); if(e) e.style.display='none'; });
+      document.getElementById('bc').style.display='';
+      const nav = `<div class="biz-tab-bar"><button class="bst on">📊 영업 데이터</button></div>`;
+      const monthNav = makeBizMonthNav();
+      document.getElementById('bc').innerHTML = nav + monthNav +
+        '<div style="text-align:center;padding:48px;color:var(--text3);font-size:13px">이 영업월의 아카이브가 없어요.<br>관리자에서 마감 & 아카이브 저장을 해주세요.</div>';
+      return;
+    }
+  }
+
   // 예정 영업월: BIZ 데이터 제로 처리
   const _emptyBd = {sales:0,inquiry:0,totalSales:0,refund:0,goal:0};
-  const getBd = (team, m) => window._bizIsFuture ? _emptyBd : (BIZ[team]?.[m] || _emptyBd);
+  // 팀 이름이 바뀌었을 수 있으므로 멤버 이름으로 BIZ 전체 탐색
+  const getBd = (team, m) => {
+    if (window._bizIsFuture) return _emptyBd;
+    if (BIZ[team]?.[m]) return BIZ[team][m];
+    // 팀 이름이 달라진 경우 전체 팀에서 멤버 탐색
+    for (const tKey of Object.keys(BIZ)) {
+      if (BIZ[tKey]?.[m]) return BIZ[tKey][m];
+    }
+    return _emptyBd;
+  };
 
   document.getElementById('mc').style.display = 'none';
   document.getElementById('bc').style.display = '';
@@ -1700,7 +1744,8 @@ function showBiz() {
   }
 
   // 영업 데이터
-  const ms = calcMS();
+  const _rawMs = calcMS();
+  const ms = new Proxy(_rawMs, { get(t,k){ return t[k] || {상담:0,등록:0,미등록:0,취소:0,완납:0,미납:0,COD:0}; } });
   let totBiz=0, totTM=0, totRef=0, totInq=0, tot상담=0, tot등록=0, tot미등록=0, tot취소=0, totWan=0, totMi=0;
   let validCnt=0, sumRate=0;
 
@@ -1817,13 +1862,20 @@ function updBizKPI() {
   let totBiz=0,totTM=0,totRef=0,totInq=0,tot상담=0,tot등록=0,tot미등록=0,tot취소=0,totWan=0,totMi=0;
   let vc=0,sr=0;
   const _eb={sales:0,inquiry:0,totalSales:0,refund:0,goal:0};
-  const _gb=(team,m)=>window._bizIsFuture?_eb:(BIZ[team]?.[m]||_eb);
+  const _gb=(team,m)=>{
+    if(window._bizIsFuture) return _eb;
+    if(BIZ[team]?.[m]) return BIZ[team][m];
+    for(const k of Object.keys(BIZ)){ if(BIZ[k]?.[m]) return BIZ[k][m]; }
+    return _eb;
+  };
+  const _emptyMs={상담:0,등록:0,미등록:0,취소:0,완납:0,미납:0,COD:0};
   TM_CFG.forEach(t => t.members.forEach(m => {
     const bd=_gb(t.name,m);
+    const sm=ms[m]||_emptyMs;
     totBiz+=(bd.sales||0);totTM+=(bd.totalSales||0);totRef+=(bd.refund||0);
-    totInq+=(bd.inquiry||0);totWan+=ms[m].완납;totMi+=ms[m].미납;
-    tot상담+=ms[m].상담;tot등록+=ms[m].등록;tot미등록+=ms[m].미등록;tot취소+=ms[m].취소;
-    if((bd.inquiry||0)>0){sr+=ms[m].등록/bd.inquiry;vc++;}
+    totInq+=(bd.inquiry||0);totWan+=sm.완납;totMi+=sm.미납;
+    tot상담+=sm.상담;tot등록+=sm.등록;tot미등록+=sm.미등록;tot취소+=sm.취소;
+    if((bd.inquiry||0)>0){sr+=sm.등록/bd.inquiry;vc++;}
   }));
   const cards = document.querySelectorAll('#bc .kval');
   if (cards.length >= 8) {
@@ -1839,14 +1891,24 @@ function renderConsult(searchKw='') {
   if (window._bizIsFuture) {
     return '<div style="text-align:center;padding:48px;color:var(--text3);font-size:13px">예정된 영업월입니다.<br>아직 상담 내역이 없어요.</div>';
   }
-  const dates = Object.keys(CONSULT).filter(d => d >= BIZ_PERIOD.s && d <= BIZ_PERIOD.e).sort((a,b)=>b.localeCompare(a));
+
+  // 과거 영업월이면 아카이브 데이터, 아니면 라이브 CONSULT 사용
+  const today = todayStr();
+  const isPast = BIZ_PERIOD.e < today;
+  let consultSrc = CONSULT;
+  if (isPast) {
+    const bizArc = ARCHIVE.biz || {};
+    const arcEntry = Object.values(bizArc).find(v => v.period && v.period.s === BIZ_PERIOD.s && v.period.e === BIZ_PERIOD.e);
+    if (arcEntry && arcEntry.consult) consultSrc = arcEntry.consult;
+  }
+
+  const dates = Object.keys(consultSrc).filter(d => d >= BIZ_PERIOD.s && d <= BIZ_PERIOD.e).sort((a,b)=>b.localeCompare(a));
   let tPaid=0,tExp=0,tRows=0,cWan=0,cSang=0;
   const ts = {};
   TM_CFG.forEach(t => ts[t.name]={paid:0,exp:0,em:0,cnt:0,wan:0});
 
   dates.forEach(date => {
-    if (date < BIZ_PERIOD.s || date > BIZ_PERIOD.e) return;
-    Object.values(CONSULT[date]||{}).forEach(r => {
+    Object.values(consultSrc[date]||{}).forEach(r => {
       tPaid+=N(r.paid); tExp+=N(r.expected); tRows++;
       if(r.result==='완납'||r.result==='추가') cWan++;
       if(r.status==='상담') cSang++;
@@ -1856,7 +1918,7 @@ function renderConsult(searchKw='') {
   });
 
   let allRows = [];
-  Object.entries(CONSULT).forEach(([date, rows]) => {
+  Object.entries(consultSrc).forEach(([date, rows]) => {
     if (date < BIZ_PERIOD.s || date > BIZ_PERIOD.e) return;
     Object.entries(rows||{}).forEach(([rid, r]) => allRows.push({date,rid,r}));
   });
@@ -1871,7 +1933,7 @@ function renderConsult(searchKw='') {
     <div style="display:flex;gap:8px;align-items:center;flex-shrink:0">
       <input type="date" id="cdi" value="${todayStr()}"
         style="padding:6px 10px;border:1px solid var(--border);border-radius:7px;font-size:12px;color:var(--text);background:var(--bg2)">
-      <button onclick="W._cad()" style="padding:6px 14px;border-radius:7px;font-size:12px;font-weight:700;background:var(--accent);color:#fff;border:none;cursor:pointer;white-space:nowrap">+ 날짜 추가</button>
+      ${isPast ? '<span style="font-size:11px;padding:4px 10px;background:#F1F5F9;color:#64748B;border-radius:6px;font-weight:600">읽기 전용</span>' : '<button onclick="W._cad()" style="padding:6px 14px;border-radius:7px;font-size:12px;font-weight:700;background:var(--accent);color:#fff;border:none;cursor:pointer;white-space:nowrap">+ 날짜 추가</button>'}
     </div>
     <input class="search-inp" type="text" placeholder="🔍 학생이름 / 과목 / 멘토 검색..."
       value="${searchKw}" oninput="W._csearchDebounce(this.value)" id="consult-search">
@@ -2550,9 +2612,30 @@ window.W = {
     window._bizSelMonth = startKey;
     const sch = BIZ_SCHEDULE_ALL.find(s => s.start === startKey);
     if (sch) { BIZ_PERIOD.s = sch.start; BIZ_PERIOD.e = sch.end; }
-    // 예정 영업월이면 데이터 제로 표시 플래그
     const today = todayStr();
     window._bizIsFuture = sch ? sch.start > today : false;
+
+    // 상담내역/미납리스트/추가리스트 탭은 탭 안에서만 전환 (페이지 이탈 없음)
+    if (bst === '상담내역' || bst === '미납리스트' || bst === '추가리스트') {
+      showBiz();
+      return;
+    }
+
+    // 영업데이터 탭: 과거 영업월이면 아카이브로 전환
+    if (sch && sch.end < today) {
+      const bizArc = ARCHIVE.biz || {};
+      const arcEntry = Object.entries(bizArc).find(([k, v]) =>
+        v.period && v.period.s === sch.start && v.period.e === sch.end
+      );
+      if (arcEntry) {
+        window._arcBizTab = '영업데이터';
+        curMonth = 'biz/' + arcEntry[0];
+        cw = -1;
+        renderTabs(); renderSbMonths(); renderSbBizArc();
+        renderArchiveView('biz/' + arcEntry[0]);
+        return;
+      }
+    }
     showBiz();
   },
   _bizMonth(idx, monthsJson) {
@@ -2563,10 +2646,11 @@ window.W = {
   _bizMonthCur() {
     window._bizSelMonth = 'current';
     window._bizIsFuture = false;
+    curMonth = 'current';  // 아카이브 모드에서 복귀
     const today = todayStr();
     const cur = BIZ_SCHEDULE_ALL.find(s => today >= s.start && today <= s.end);
     if (cur) { BIZ_PERIOD.s = cur.start; BIZ_PERIOD.e = cur.end; }
-    showBiz();
+    cw = 99; renderTabs(); showBiz();
   },
   _bizMonthAll() {
     window._bizSelMonth = 'all';
