@@ -203,12 +203,8 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
     <!-- 주차 설정 -->
     <div class="stitle">주차별 목표 설정</div>
     <div class="section">
-      <div style="display:grid;grid-template-columns:80px 1fr 1fr 1fr 36px;gap:8px;margin-bottom:8px">
-        <div style="font-size:11px;font-weight:700;color:var(--text3)">주차</div>
-        <div style="font-size:11px;font-weight:700;color:var(--text3)">기간 (예: 6/1~6/8)</div>
-        <div style="font-size:11px;font-weight:700;color:var(--text3)">목표 매출 (원)</div>
-        <div style="font-size:11px;font-weight:700;color:var(--text3)">라벨</div>
-        <div></div>
+      <div style="font-size:12px;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;padding:10px 14px;margin-bottom:12px;color:var(--text2)">
+        영업일 기간 안에서 주차별 시작일/종료일을 지정하세요. 대시보드 주차별 매출계획에 즉시 반영됩니다.
       </div>
       <div id="weeks-container"></div>
       <button class="btn btn-outline" style="margin-top:8px;width:100%" onclick="addWeek()">+ 주차 추가</button>
@@ -332,15 +328,42 @@ function renderAll() {
 function renderWeeks() {
   const con = document.getElementById('weeks-container');
   con.innerHTML = (CFG.weeks||[]).map((w,i) => `
-    <div class="week-row" id="week-${i}">
-      <span class="week-lbl">${w.label}</span>
-      <input class="cfg-inp" value="${w.period||''}" placeholder="6/1~6/8"
-        oninput="updWeek(${i},'period',this.value)">
-      <input class="cfg-inp" value="${w.total?F(w.total):''}" placeholder="110000000"
-        oninput="updWeek(${i},'total',this.value)" style="font-family:'Roboto Mono',monospace">
-      <input class="cfg-inp" value="${w.label||''}" placeholder="1주차"
-        oninput="updWeek(${i},'label',this.value)">
-      <button class="btn btn-red btn-sm" onclick="delWeek(${i})">✕</button>
+    <div style="margin-bottom:10px;border:1px solid var(--border);border-radius:10px;overflow:hidden">
+      <div style="display:grid;grid-template-columns:70px 1fr 1fr 1fr auto;gap:6px;align-items:center;padding:10px 12px;background:var(--bg)">
+        <input class="cfg-inp" value="${w.label||''}" placeholder="1주차"
+          oninput="updWeek(${i},'label',this.value)" style="font-weight:700;text-align:center">
+        <div class="cfg-item" style="margin:0">
+          <label style="font-size:10px">시작일</label>
+          <input class="cfg-inp" type="date" value="${w.startDate||''}"
+            onchange="updWeek(${i},'startDate',this.value);autoSetPeriod(${i})">
+        </div>
+        <div class="cfg-item" style="margin:0">
+          <label style="font-size:10px">종료일</label>
+          <input class="cfg-inp" type="date" value="${w.endDate||''}"
+            onchange="updWeek(${i},'endDate',this.value);autoSetPeriod(${i})">
+        </div>
+        <div class="cfg-item" style="margin:0">
+          <label style="font-size:10px">전체 목표 (합산)</label>
+          <input class="cfg-inp" id="week-total-inp-${i}" value="${w.total?F(w.total):''}" placeholder="자동합산"
+            oninput="updWeek(${i},'total',this.value)"
+            style="font-family:'Roboto Mono',monospace">
+        </div>
+        <button class="btn btn-red btn-sm" onclick="delWeek(${i})">✕</button>
+      </div>
+      <div style="padding:8px 12px;background:#F8FAFC;border-top:1px solid var(--border)">
+        <div style="font-size:10px;font-weight:700;color:var(--text3);margin-bottom:6px">팀별 목표 (비워두면 전체 목표에서 인원 비례 자동 배분)</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:6px">
+          ${(CFG.teams||[]).map(t => `
+            <div style="display:flex;align-items:center;gap:6px">
+              <span style="font-size:11px;font-weight:700;color:${t.color};white-space:nowrap;min-width:36px">${t.name}</span>
+              <input class="cfg-inp" value="${(w.teamGoals||{})[t.name]?F((w.teamGoals||{})[t.name]):''}"
+                placeholder="자동"
+                oninput="updWeekTeamGoal(${i},'${t.name}',this.value)"
+                onblur="syncWeekTotal(${i})"
+                style="flex:1;font-family:'Roboto Mono',monospace;font-size:11px">
+            </div>`).join('')}
+        </div>
+      </div>
     </div>`).join('');
 }
 
@@ -361,9 +384,12 @@ function renderTeams() {
       <div class="team-card-body">
         <div id="members-${ti}">
           ${(t.members||[]).map((m,mi) => `
-          <div class="member-row">
+          <div class="member-row" style="gap:4px">
             <input class="member-inp" value="${m}" placeholder="직원 이름"
-              oninput="updMember(${ti},${mi},this.value)">
+              oninput="updMember(${ti},${mi},this.value)" style="flex:2;min-width:80px">
+            <input class="member-inp" value="${(CFG.memberRoles||{})[m]||''}" placeholder="직급(예:팀장)"
+              oninput="updMemberRole('${m}',this.value)"
+              style="flex:1;min-width:52px;font-size:11px;color:var(--text2)">
             <button class="btn btn-red btn-sm" onclick="delMember(${ti},${mi})">✕</button>
           </div>`).join('')}
         </div>
@@ -378,9 +404,36 @@ window.updWeek = (i,field,val) => {
   if (!CFG.weeks[i]) return;
   CFG.weeks[i][field] = field==='total' ? N(val) : val;
 };
+window.updWeekTeamGoal = (i, teamName, val) => {
+  if (!CFG.weeks[i]) return;
+  if (!CFG.weeks[i].teamGoals) CFG.weeks[i].teamGoals = {};
+  if (val.trim()) CFG.weeks[i].teamGoals[teamName] = N(val);
+  else delete CFG.weeks[i].teamGoals[teamName];
+};
+// 팀별 목표 입력 포커스 잃을 때 합산 → 전체 목표 표시 업데이트
+window.syncWeekTotal = (i) => {
+  if (!CFG.weeks[i]) return;
+  const goals = CFG.weeks[i].teamGoals || {};
+  const sum = Object.values(goals).reduce((s,v)=>s+N(v),0);
+  if (sum > 0) {
+    CFG.weeks[i].total = sum;
+    // 전체 목표 입력란만 업데이트 (DOM 재렌더 없이)
+    const inp = document.getElementById('week-total-inp-' + i);
+    if (inp) inp.value = sum.toLocaleString('ko-KR');
+  }
+};
+window.autoSetPeriod = (i) => {
+  const w = CFG.weeks[i]; if (!w) return;
+  if (w.startDate && w.endDate) {
+    const s = w.startDate.slice(5).replace('-','/').replace(/^0/,'');
+    const e = w.endDate.slice(5).replace('-','/').replace(/^0/,'');
+    w.period = s + '~' + e;
+  }
+  renderWeeks();
+};
 window.delWeek = i => { CFG.weeks.splice(i,1); renderWeeks(); };
 window.addWeek = () => {
-  CFG.weeks.push({label:`${CFG.weeks.length+1}주차`, period:'', total:0});
+  CFG.weeks.push({label:`${CFG.weeks.length+1}주차`, period:'', startDate:'', endDate:'', total:0});
   renderWeeks();
 };
 
@@ -400,6 +453,12 @@ window.addTeam = () => {
 };
 
 window.updMember = (ti,mi,val) => { if(CFG.teams[ti]?.members) CFG.teams[ti].members[mi]=val; };
+window.updMemberRole = (name, val) => {
+  if (!name || !name.trim()) return; // 빈 이름 키 방지
+  if (!CFG.memberRoles) CFG.memberRoles = {};
+  if (val.trim()) CFG.memberRoles[name] = val.trim();
+  else delete CFG.memberRoles[name];
+};
 window.delMember = (ti,mi) => { CFG.teams[ti].members.splice(mi,1); renderTeams(); };
 window.addMember = ti => { CFG.teams[ti].members.push(''); renderTeams(); };
 
@@ -772,19 +831,60 @@ window.delArchive = async (month) => {
 };
 
 window.saveAll = () => {
-  // 기본 설정값 수집
-  CFG.totalGoal = N(document.getElementById('cfg-totalGoal').value);
-  CFG.monthLabel = document.getElementById('cfg-monthLabel').value;
-  CFG.bizStart = document.getElementById('cfg-bizStart').value;
-  CFG.bizEnd = document.getElementById('cfg-bizEnd').value;
-  // 빈 직원명 제거
-  CFG.teams.forEach(t => { t.members = t.members.filter(m=>m.trim()); });
+  try {
+    // 기본 설정값 수집
+    const totalGoalEl = document.getElementById('cfg-totalGoal');
+    const monthLabelEl = document.getElementById('cfg-monthLabel');
+    const bizStartEl = document.getElementById('cfg-bizStart');
+    const bizEndEl = document.getElementById('cfg-bizEnd');
 
-  set(cfgRef, CFG).then(() => {
-    const b = document.getElementById('saved-badge');
-    b.classList.add('show');
-    setTimeout(() => b.classList.remove('show'), 2500);
-  });
+    if (totalGoalEl) CFG.totalGoal = N(totalGoalEl.value);
+    if (monthLabelEl) CFG.monthLabel = monthLabelEl.value;
+    if (bizStartEl) CFG.bizStart = bizStartEl.value;
+    if (bizEndEl) CFG.bizEnd = bizEndEl.value;
+
+    // 빈 직원명 제거
+    (CFG.teams||[]).forEach(function(t) {
+      t.members = t.members.filter(function(m){ return m.trim(); });
+    });
+
+    // BIZ_SCHEDULE → CFG 동기화 (_id 제거)
+    CFG.bizSchedule = BIZ_SCHEDULE.map(function(s) {
+      const obj = {};
+      Object.keys(s).forEach(function(k){ if(k !== '_id') obj[k] = s[k]; });
+      return obj;
+    }).sort(function(a,b){ return (a.start||'').localeCompare(b.start||''); });
+
+    // 팀별 목표 합산 → 전체 total
+    (CFG.weeks||[]).forEach(function(w) {
+      const goals = w.teamGoals || {};
+      const sum = Object.values(goals).reduce(function(s,v){ return s+N(v); }, 0);
+      if (sum > 0) w.total = sum;
+    });
+
+    // memberRoles 빈 키/빈 값 제거 (Firebase는 빈 문자열 키 허용 안 함)
+    if (CFG.memberRoles) {
+      Object.keys(CFG.memberRoles).forEach(function(k) {
+        if (!k || !k.trim() || !CFG.memberRoles[k] || !CFG.memberRoles[k].trim()) {
+          delete CFG.memberRoles[k];
+        }
+      });
+    }
+
+    // 현황판 호환 필드
+    CFG.goals = { monthly: CFG.totalGoal, monthLabel: CFG.monthLabel };
+
+    set(cfgRef, CFG).then(function() {
+      const b = document.getElementById('saved-badge');
+      if (b) { b.classList.add('show'); setTimeout(function(){ b.classList.remove('show'); }, 2500); }
+      renderWeeks();
+    }).catch(function(err) {
+      alert('Firebase 저장 실패: ' + err.message);
+    });
+
+  } catch(e) {
+    alert('저장 중 오류: ' + e.message);
+  }
 };
 </script>
 </body>
