@@ -431,7 +431,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 </div>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { getDatabase, ref, set, get, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
 const app = initializeApp({
   apiKey:"AIzaSyDvYouAWDL-KYTegBOie6P_teOtX3ubBlI",
@@ -461,11 +461,11 @@ const rFeedback = ref(db,'feedback2025'); // 미납 피드백
 const STS = ['상담','추가'];
 const RES = ['완납','미납','추가','미등록회수','취소','COD'];
 let WEEKS = [
-  {label:'1주차',period:'6/1~6/8',  startDate:'2026-06-01',endDate:'2026-06-08', total:110000000},
-  {label:'2주차',period:'6/9~6/14', startDate:'2026-06-09',endDate:'2026-06-14', total:111000000},
-  {label:'3주차',period:'6/15~6/20',startDate:'2026-06-15',endDate:'2026-06-20', total:60000000},
-  {label:'4주차',period:'6/21~6/30',startDate:'2026-06-21',endDate:'2026-06-30', total:150000000}
-];
+  {label:'1주차',period:'',startDate:'',endDate:'',total:0},
+  {label:'2주차',period:'',startDate:'',endDate:'',total:0},
+  {label:'3주차',period:'',startDate:'',endDate:'',total:0},
+  {label:'4주차',period:'',startDate:'',endDate:'',total:0}
+]; // Firebase cfg.weeks로 덮어씀
 let TEAMS = [{name:'1팀',members:4,color:'#2563EB'},{name:'2팀',members:3,color:'#16A34A'},{name:'3팀',members:3,color:'#7C3AED'},{name:'4팀',members:3,color:'#EA580C'}];
 let TM_CFG = [{name:'1팀',color:'#2563EB',members:['정충만','박효선','강채원','송평강']},{name:'2팀',color:'#16A34A',members:['이재운','김태정','한대희']},{name:'3팀',color:'#7C3AED',members:['백영광','이상천','안현우']},{name:'4팀',color:'#EA580C',members:['서승표','송준수','한가흔']}];
 let BIZ_PERIOD = {s:'2026-05-14', e:'2026-06-11'};
@@ -480,8 +480,11 @@ function applyConfig(cfg) {
     TEAMS = cfg.teams.map(t => ({name:t.name, members:t.members.length, color:t.color}));
     TM = cfg.teams.reduce((s,t) => s + t.members.length, 0);
   }
+  window._MR = cfg.memberRoles || {};
   if (cfg.totalGoal) TG = cfg.totalGoal;
+  else if (cfg.goals?.monthly) TG = cfg.goals.monthly;
   if (cfg.monthLabel) MONTH_LABEL = cfg.monthLabel;
+  else if (cfg.goals?.monthLabel) MONTH_LABEL = cfg.goals.monthLabel;
   if (cfg.bizSchedule && Array.isArray(cfg.bizSchedule) && cfg.bizSchedule.length) {
     BIZ_SCHEDULE_ALL = cfg.bizSchedule;
     // 현재 날짜에 맞는 영업일 자동 감지
@@ -672,7 +675,15 @@ onValue(rFeedback, snap => {
 const F = n => Math.round(n||0).toLocaleString('ko-KR');
 const P = (a,b) => b===0 ? '0.0%' : (Math.round(a/b*1000)/10).toFixed(1)+'%';
 const N = v => parseInt((v+'').replace(/[^0-9]/g,''))||0;
-const WG = (t,wi) => Math.round(WEEKS[wi].total*(t.members/TM)/10000)*10000;
+const WG = (t,wi) => {
+  const w = WEEKS[wi];
+  // 1) 주차에 팀별 목표 지정돼 있으면 우선 사용
+  if (w?.teamGoals?.[t.name]) return N(w.teamGoals[t.name]);
+  // 2) DATA에 teamGoal 저장돼 있으면 사용
+  if (DATA[t.name]?.[wi]?.teamGoal) return N(DATA[t.name][wi].teamGoal);
+  // 3) 전체 목표에서 인원 비례 자동 계산
+  return Math.round((w?.total||0)*(t.members/TM)/10000)*10000;
+};
 function ST(r) {
   if (r>=1)  return {cl:'bs', b:'🟢', m:'목표 달성! 💪'};
   if (r>=.8) return {cl:'gs', b:'🟢', m:'순항 중!'};
@@ -685,6 +696,13 @@ const TC = r => r>=.8?'#15803D':r>=.5?'#B45309':'#DC2626';
 function todayStr() { const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
 function dlbl(s) { const d=new Date(s); const wd=['일','월','화','수','목','금','토']; return `${s} (${wd[d.getDay()]})`; }
 function getTeam(m) { return TM_CFG.find(t => t.members.includes(m)); }
+// 이름 + 직급 표시 (직급 없으면 이름만)
+function MR(m) {
+  const role = window._MR && window._MR[m];
+  return role ? `${m} <span style="font-size:10px;color:var(--text3);font-weight:400">${role}</span>` : m;
+}
+// 직급 텍스트만 (순수 텍스트 필요한 곳용)
+function MRT(m) { return (window._MR && window._MR[m]) ? m + ' ' + window._MR[m] : m; }
 
 // 날짜
 (function(){
@@ -853,7 +871,7 @@ function renderArchiveView(arcKey) {
           const rRate=inq?Math.round(mr/inq*100):0;
           const bg = mi%2===0?'var(--bg2, #FAFAFA)':'#fff';
           h += `<tr style="border-top:1px solid var(--border);background:${bg}">
-            <td style="padding:9px 12px;font-weight:700;color:${t.color}">${m}</td>
+            <td style="padding:9px 12px;font-weight:700;color:${t.color}">${MR(m)}</td>
             <td style="padding:9px 8px;text-align:right;color:var(--text2)">${bd.goal?F2(bd.goal):'-'}</td>
             <td style="padding:9px 8px;text-align:right;color:#16A34A;font-weight:600">${F2(bd.totalSales||0)}</td>
             <td style="padding:9px 8px;text-align:right;color:#DC2626">${bd.refund?F2(bd.refund):'-'}</td>
@@ -915,10 +933,10 @@ function renderArchiveView(arcKey) {
         (t.members||[]).forEach(m => {
           const items=unpaidByTeam[t.name][m]||[];
           if (!items.length) return;
-          h += `<tr class="member-row"><td colspan="6">${m} (${items.length}건)</td></tr>`;
+          h += `<tr class="member-row"><td colspan="6">${MRT(m)} (${items.length}건)</td></tr>`;
           items.forEach(({date,r}) => {
             h += `<tr>
-              <td style="color:${t.color};font-weight:600">${m}</td>
+              <td style="color:${t.color};font-weight:600">${MR(m)}</td>
               <td>${r.student||'-'}</td><td>${r.subject||'-'}</td>
               <td style="font-family:'Roboto',monospace;font-size:11px">${fmtDate(date)}</td>
               <td style="text-align:right;color:var(--gold);font-weight:700">${r.expected?F2(Number(r.expected)):'-'}</td>
@@ -1078,28 +1096,50 @@ function renderAllDashboard() {
       </div>
       <table class="wp-tbl" style="border-radius:0;margin:0;border:none;table-layout:fixed">
         <thead><tr>
-          <th style="width:100px;text-align:left">팀</th>
-          <th style="width:130px">목표</th>
-          <th style="width:130px">실적 (직접입력)</th>
-          <th style="width:80px">달성률</th>
-          <th style="width:130px">잔여</th>
-          <th style="width:80px">상담</th>
-          <th style="width:80px">등록</th>
-          <th style="width:80px">전환율</th>
+          <th style="width:260px;text-align:left">팀</th>
+          <th style="width:110px">목표</th>
+          <th style="width:110px">실적 (직접입력)</th>
+          <th style="width:70px">달성률</th>
+          <th style="width:110px">잔여</th>
+          <th style="width:60px">상담</th>
+          <th style="width:60px">등록</th>
+          <th style="width:70px">전환율</th>
         </tr></thead>
         <tbody>`;
+
+  // 주차 기간으로 CONSULT 자동 집계
+  const wk = WEEKS[selWeek];
+  const wkS = wk?.startDate || '';
+  const wkE = wk?.endDate || '';
+  // 팀별 상담/등록 집계
+  const wkConsult = {}, wkReg = {};
+  TM_CFG.forEach(t => { wkConsult[t.name]=0; wkReg[t.name]=0; });
+  Object.entries(CONSULT).forEach(([date, rows]) => {
+    if (!wkS || !wkE || date < wkS || date > wkE) return;
+    Object.values(rows||{}).forEach(r => {
+      const tm = getTeam(r.mentor);
+      if (!tm) return;
+      if (r.status==='상담' || r.result) wkConsult[tm.name]++;
+      if (['완납','COD','미등록회수'].includes(r.result)) wkReg[tm.name]++;
+    });
+  });
 
   TEAMS.forEach(t => {
     const d = DATA[t.name]?.[selWeek]||{};
     const ts = N(d.sales);
-    const tc2 = N(d.consult);
-    const tk2 = N(d.contract);
+    const tc2 = wkConsult[t.name] || 0;  // 상담내역 자동 집계
+    const tk2 = wkReg[t.name] || 0;      // 상담내역 자동 집계
     // 저장된 팀 목표가 있으면 사용, 없으면 자동계산
     const autoTg = Math.round((goal||0)*(t.members/TM)/10000)*10000;
     const tg = d.teamGoal ? N(d.teamGoal) : autoTg;
     const tr2 = tg>0?ts/tg:0;
     h += `<tr style="background:${t.color}08">
-      <td style="font-size:12px;color:${t.color};font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.name} (${t.members}명)</td>
+      <td style="font-size:12px;color:${t.color};font-weight:700">
+        ${t.name}
+        <div style="font-size:10px;font-weight:400;color:var(--text3);margin-top:1px;white-space:nowrap">
+          ${TM_CFG.find(tc=>tc.name===t.name)?.members.map(m=>MRT(m)).join(' · ')||''}
+        </div>
+      </td>
       <td style="text-align:right;padding:3px 6px">
         <input class="wp-inp" value="${F(tg)}" style="width:100%;text-align:right;font-size:12px;color:var(--text2)"
           title="자동계산: ${F(autoTg)} | 직접 수정 가능"
@@ -1111,29 +1151,23 @@ function renderAllDashboard() {
       </td>
       <td style="text-align:center;font-size:12px"><span style="color:${TC(tr2)};font-weight:700">${(tr2*100).toFixed(1)}%</span></td>
       <td style="text-align:right;font-family:'Roboto',monospace;font-size:12px;color:var(--gold);padding:3px 6px">${tg>ts?F(tg-ts):'—'}</td>
-      <td style="text-align:right;padding:3px 6px">
-        <input class="wp-inp" value="${tc2||''}" placeholder="0" style="width:100%;text-align:right;font-size:12px"
-          onblur="W._weekField(${selWeek},'${t.name}','consult',this.value)">
-      </td>
-      <td style="text-align:right;padding:3px 6px">
-        <input class="wp-inp" value="${tk2||''}" placeholder="0" style="width:100%;text-align:right;font-size:12px"
-          onblur="W._weekField(${selWeek},'${t.name}','contract',this.value)">
-      </td>
+      <td style="text-align:center;font-size:12px;font-weight:600">${tc2||'—'}</td>
+      <td style="text-align:center;font-size:12px;font-weight:600">${tk2||'—'}</td>
       <td style="text-align:center;font-size:12px;color:var(--text2)">${tc2>0?P(tk2,tc2):'—'}</td>
     </tr>`;
   });
 
-  // 주차 합계
-  const totalC_w = TEAMS.reduce((s,t)=>s+N(DATA[t.name]?.[selWeek]?.consult||0),0);
-  const totalK_w = TEAMS.reduce((s,t)=>s+N(DATA[t.name]?.[selWeek]?.contract||0),0);
+  // 주차 합계 - 상담/등록은 자동 집계값 사용
+  const totalC_w = Object.values(wkConsult).reduce((s,v)=>s+v,0);
+  const totalK_w = Object.values(wkReg).reduce((s,v)=>s+v,0);
   h += `<tr style="background:#1A2340;color:#fff;font-weight:700">
     <td style="text-align:left">합계</td>
     <td style="text-align:right;font-family:'Roboto',monospace;color:#FCD34D">${F(goal)}</td>
     <td style="text-align:right;font-family:'Roboto',monospace;color:#6EE7B7">${F(ws)}</td>
     <td style="text-align:center"><span style="color:${TC(rate)}">${(rate*100).toFixed(1)}%</span></td>
     <td style="text-align:right;font-family:'Roboto',monospace;color:#FCD34D">${remain>0?F(remain):'—'}</td>
-    <td style="text-align:right;font-family:'Roboto',monospace">${totalC_w}</td>
-    <td style="text-align:right;font-family:'Roboto',monospace">${totalK_w}</td>
+    <td style="text-align:center;font-family:'Roboto',monospace">${totalC_w||'—'}</td>
+    <td style="text-align:center;font-family:'Roboto',monospace">${totalK_w||'—'}</td>
     <td style="text-align:center">${totalC_w>0?P(totalK_w,totalC_w):'—'}</td>
   </tr>`;
   h += `</tbody></table></div>`;
@@ -1507,7 +1541,7 @@ function renderUnpaidList() {
         const fbKey = `${date}_${rid}`;
         const fb = FEEDBACK[fbKey] || '';
         h += `<tr>
-          <td style="color:${t.color};font-weight:600">${m}</td>
+          <td style="color:${t.color};font-weight:600">${MR(m)}</td>
           <td>${r.student||'-'}</td>
           <td>${r.subject||'-'}</td>
           <td style="font-family:'Roboto',monospace;font-size:11px">${fmtDate(date)}</td>
@@ -1692,33 +1726,36 @@ function makeBizMonthNav() {
 
 function showBiz() {
   try {
-  // 과거 영업월인데 아카이브 없는 경우
-  const today = todayStr();
-  const selSch = BIZ_SCHEDULE_ALL.find(s => s.start === window._bizSelMonth);
-  if (selSch && selSch.end < today && !window._bizIsFuture) {
-    const bizArc = ARCHIVE.biz || {};
-    const hasArc = Object.values(bizArc).some(v => v.period && v.period.s === selSch.start);
-    if (!hasArc) {
-      // 아카이브 없는 과거 → 안내 메시지
-      ['mc','sc','dc'].forEach(id=>{ const e=document.getElementById(id); if(e) e.style.display='none'; });
-      document.getElementById('bc').style.display='';
-      const nav = `<div class="biz-tab-bar"><button class="bst on">📊 영업 데이터</button></div>`;
-      const monthNav = makeBizMonthNav();
-      document.getElementById('bc').innerHTML = nav + monthNav +
-        '<div style="text-align:center;padding:48px;color:var(--text3);font-size:13px">이 영업월의 아카이브가 없어요.<br>관리자에서 마감 & 아카이브 저장을 해주세요.</div>';
-      return;
-    }
-  }
-
   // 예정 영업월: BIZ 데이터 제로 처리
   const _emptyBd = {sales:0,inquiry:0,totalSales:0,refund:0,goal:0};
-  // 팀 이름이 바뀌었을 수 있으므로 멤버 이름으로 BIZ 전체 탐색
+
+  // 과거 영업월이면 아카이브 BIZ 데이터 임시 병합
+  const _isPastBizView = BIZ_PERIOD.e < todayStr();
+  let _arcBizData = null;
+  if (_isPastBizView) {
+    const bizArc = ARCHIVE.biz || {};
+    console.log('[BIZ Archive] 찾는 기간:', BIZ_PERIOD.s, '~', BIZ_PERIOD.e);
+    console.log('[BIZ Archive] 저장된 아카이브 목록:', Object.entries(bizArc).map(([k,v])=>k+': period='+JSON.stringify(v.period)));
+    const arcEntry = Object.values(bizArc).find(v => v.period && v.period.s === BIZ_PERIOD.s && v.period.e === BIZ_PERIOD.e);
+    console.log('[BIZ Archive] 매칭된 항목:', arcEntry ? '있음, biz키:' + Object.keys(arcEntry.biz||{}) : '없음');
+    if (arcEntry && arcEntry.biz) _arcBizData = arcEntry.biz;
+  }
+
+  // 팀 이름이 바뀌었을 수 있으므로 멤버 이름으로 전체 탐색
   const getBd = (team, m) => {
     if (window._bizIsFuture) return _emptyBd;
+    // 1) 라이브 BIZ에서 팀+멤버 직접 조회
     if (BIZ[team]?.[m]) return BIZ[team][m];
-    // 팀 이름이 달라진 경우 전체 팀에서 멤버 탐색
+    // 2) 라이브 BIZ 전체에서 멤버 탐색
     for (const tKey of Object.keys(BIZ)) {
       if (BIZ[tKey]?.[m]) return BIZ[tKey][m];
+    }
+    // 3) 과거: 아카이브 BIZ에서 탐색
+    if (_arcBizData) {
+      if (_arcBizData[team]?.[m]) return _arcBizData[team][m];
+      for (const tKey of Object.keys(_arcBizData)) {
+        if (_arcBizData[tKey]?.[m]) return _arcBizData[tKey][m];
+      }
     }
     return _emptyBd;
   };
@@ -1818,7 +1855,7 @@ function showBiz() {
       const net = (bd.totalSales||0)-(bd.refund||0);
       const rate = (bd.inquiry||0)>0 ? (s.등록/bd.inquiry*100).toFixed(1)+'%' : '0.0%';
       h += `<tr>
-        <td style="font-weight:700;color:${t.color}">${m}</td>
+        <td style="font-weight:700;color:${t.color}">${MR(m)}</td>
         <td><input class="binp" type="text" inputmode="numeric" value="${bd.inquiry||''}" placeholder="0"
           oninput="W._bm('${t.name}','${m}','inquiry',this.value)" style="border-color:${t.color}44;color:var(--purple);width:100%"></td>
         <td class="nr">${s.상담}</td>
@@ -1854,7 +1891,12 @@ function showBiz() {
     </tr></tbody></table></div>`;
   });
 
-  h += `<div class="rtn">🟢 영업 실적 실시간 저장 · 상담/등록/미등록은 상담내역에서 자동 집계</div>`;
+  const _isPastBiz = BIZ_PERIOD.e < todayStr();
+  if (_isPastBiz) {
+    h += `<div class="rtn" style="background:#FEF9C3;color:#92400E;border:1px solid #FDE68A">⚠ 지난 영업월 데이터입니다. 수정 후 저장됩니다.</div>`;
+  } else {
+    h += `<div class="rtn">🟢 영업 실적 실시간 저장 · 상담/등록/미등록은 상담내역에서 자동 집계</div>`;
+  }
   document.getElementById('bc').innerHTML = h;
   } catch(e) {
     document.getElementById('bc').style.display='';
@@ -1869,10 +1911,20 @@ function updBizKPI() {
   let totBiz=0,totTM=0,totRef=0,totInq=0,tot상담=0,tot등록=0,tot미등록=0,tot취소=0,totWan=0,totMi=0;
   let vc=0,sr=0;
   const _eb={sales:0,inquiry:0,totalSales:0,refund:0,goal:0};
+  // 과거 영업월이면 아카이브 BIZ 참조
+  const _kpiArcBiz = (() => {
+    if (BIZ_PERIOD.e >= todayStr()) return null;
+    const ae = Object.values(ARCHIVE.biz||{}).find(v=>v.period&&v.period.s===BIZ_PERIOD.s&&v.period.e===BIZ_PERIOD.e);
+    return ae?.biz || null;
+  })();
   const _gb=(team,m)=>{
     if(window._bizIsFuture) return _eb;
     if(BIZ[team]?.[m]) return BIZ[team][m];
     for(const k of Object.keys(BIZ)){ if(BIZ[k]?.[m]) return BIZ[k][m]; }
+    if(_kpiArcBiz){
+      if(_kpiArcBiz[team]?.[m]) return _kpiArcBiz[team][m];
+      for(const k of Object.keys(_kpiArcBiz)){ if(_kpiArcBiz[k]?.[m]) return _kpiArcBiz[k][m]; }
+    }
     return _eb;
   };
   const _emptyMs={상담:0,등록:0,미등록:0,취소:0,완납:0,미납:0,COD:0};
@@ -2189,7 +2241,7 @@ function renderDepLeft(today) {
       const mk = `if(!DEPOSIT['${today}'])DEPOSIT['${today}']={};if(!DEPOSIT['${today}']['${t.name}'])DEPOSIT['${today}']['${t.name}']={};if(!DEPOSIT['${today}']['${t.name}']['${m}'])DEPOSIT['${today}']['${t.name}']['${m}']={}`;
       h += `<tr>
         ${first?'<td rowspan="' + t.members.length + '" style="background:' + t.color + '18;color:' + t.color + ';font-weight:900;font-size:11px;text-align:center;border-right:3px solid ' + t.color + ';vertical-align:middle">' + t.name + '</td>':''}
-        <td style="font-size:11px;font-weight:600;padding-left:6px;white-space:nowrap">${m}</td>
+        <td style="font-size:11px;font-weight:600;padding-left:6px;white-space:nowrap">${MR(m)}</td>
         <td style="background:#F8FBFF"><input class="dep-inp dep-focus" style="width:64px" value="${d.완료금액?F(N(d.완료금액)):''}" placeholder="0"
           oninput="${mk};DEPOSIT['${today}']['${t.name}']['${m}'].완료금액=this.value"
           onblur="W._dep('${today}','${t.name}','${m}','완료금액',this.value);this.value=this.value?F(N(this.value)):''"
@@ -2495,7 +2547,7 @@ function renderDeposit() {
       const mk = `if(!DEPOSIT['${today}'])DEPOSIT['${today}']={};if(!DEPOSIT['${today}']['${t.name}'])DEPOSIT['${today}']['${t.name}']={};if(!DEPOSIT['${today}']['${t.name}']['${m}'])DEPOSIT['${today}']['${t.name}']['${m}']={}`;
       h += `<tr>
         ${firstMember ? '<td rowspan="' + t.members.length + '" style="background:' + t.color + '18;color:' + t.color + ';font-weight:900;font-size:12px;text-align:center;border-right:3px solid ' + t.color + ';vertical-align:middle">' + t.name + '</td>' : ''}
-        <td class="dep-name">${m}</td>
+        <td class="dep-name">${MR(m)}</td>
         <td><input class="dep-inp dep-focus" value="${d.완료금액?F(N(d.완료금액)):''}" placeholder="0"
           oninput="${mk};DEPOSIT['${today}']['${t.name}']['${m}'].완료금액=this.value"
           onblur="W._dep('${today}','${t.name}','${m}','완료금액',this.value);this.value=this.value?F(N(this.value)):''"
@@ -2601,7 +2653,7 @@ function renderWorkload() {
       const mData = wlData[m] || {};
       h += `<tr>
         <td style="background:var(--bg);text-align:center;font-size:11px;color:${t.color};font-weight:700;white-space:nowrap">${t.name}</td>
-        <td class="wl-name" style="color:${t.color};background:var(--bg)">${m}</td>
+        <td class="wl-name" style="color:${t.color};background:var(--bg)">${MR(m)}</td>
         ${dayKeys.map(dk=>`<td><textarea class="wl-cell" placeholder="입력..."
           oninput="if(!WORKLOAD['${wlWeek}'])WORKLOAD['${wlWeek}']={};if(!WORKLOAD['${wlWeek}']['${m}'])WORKLOAD['${wlWeek}']['${m}']={};WORKLOAD['${wlWeek}']['${m}']['${dk}']=this.value"
           onblur="W._wlSave('${wlWeek}','${m}','${dk}',this.value)">${mData[dk]||''}</textarea></td>`).join('')}
@@ -2628,21 +2680,6 @@ window.W = {
       return;
     }
 
-    // 영업데이터 탭: 과거 영업월이면 아카이브로 전환
-    if (sch && sch.end < today) {
-      const bizArc = ARCHIVE.biz || {};
-      const arcEntry = Object.entries(bizArc).find(([k, v]) =>
-        v.period && v.period.s === sch.start && v.period.e === sch.end
-      );
-      if (arcEntry) {
-        window._arcBizTab = '영업데이터';
-        curMonth = 'biz/' + arcEntry[0];
-        cw = -1;
-        renderTabs(); renderSbMonths(); renderSbBizArc();
-        renderArchiveView('biz/' + arcEntry[0]);
-        return;
-      }
-    }
     showBiz();
   },
   _bizMonth(idx, monthsJson) {
@@ -3066,12 +3103,27 @@ window.W = {
   },
   _weekDate(idx, field, val) {
     WEEKS[idx][field] = val;
-    set(ref(db,'config'), {teams:TM_CFG, weeks:WEEKS, goals:{monthly:TG,monthLabel:MONTH_LABEL}});
+    // startDate/endDate → period 텍스트 자동 생성
+    const w = WEEKS[idx];
+    if (w.startDate && w.endDate) {
+      const s = w.startDate.slice(5).replace('-','/').replace(/^0/,'');
+      const e = w.endDate.slice(5).replace('-','/').replace(/^0/,'');
+      w.period = s + '~' + e;
+    }
+    // config 저장 시 bizSchedule 등 기존 필드 보존
+    get(ref(db,'config')).then(snap => {
+      const cur = snap.val() || {};
+      set(ref(db,'config'), {...cur, teams:TM_CFG, weeks:WEEKS, totalGoal:TG, monthLabel:MONTH_LABEL, goals:{monthly:TG,monthLabel:MONTH_LABEL}});
+    });
     renderAllDashboard();
   },
   _weekGoal(idx, val) {
     WEEKS[idx].total = N(val);
-    set(ref(db,'config'), {teams:TM_CFG, weeks:WEEKS, goals:{monthly:TG,monthLabel:MONTH_LABEL}});
+    // config 저장 시 bizSchedule 등 기존 필드 보존
+    get(ref(db,'config')).then(snap => {
+      const cur = snap.val() || {};
+      set(ref(db,'config'), {...cur, teams:TM_CFG, weeks:WEEKS, totalGoal:TG, monthLabel:MONTH_LABEL, goals:{monthly:TG,monthLabel:MONTH_LABEL}});
+    });
     renderAllDashboard();
   },
   _weekSales(weekIdx, teamName, val) {
