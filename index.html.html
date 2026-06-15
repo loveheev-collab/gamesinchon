@@ -380,11 +380,8 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
       <div class="sb-sub-item" id="nav-biz-unp" onclick="W._swBiz('미납리스트')">💰 미납 리스트</div>
       <div class="sb-sub-item" id="nav-biz-add" onclick="W._swBiz('추가리스트')">📋 추가 리스트</div>
     </div>
-    <div class="sb-item" id="nav-staff" onclick="W._toggleStaff()"><span class="ico">👥</span> 직원관리 <span id="nav-staff-arrow" style="margin-left:auto;font-size:10px;transition:transform .2s">▼</span></div>
-    <div class="sb-sub" id="nav-staff-sub" style="display:none">
-      <div class="sb-sub-item" id="nav-staff-wl" onclick="W._swStaff('업무량')">📝 업무량</div>
-      <div class="sb-sub-item" id="nav-staff-alt" onclick="W._swStaff('대체휴무')">🗓 대체휴무</div>
-    </div>
+    <div class="sb-item" id="nav-blog" onclick="W._swBlog()"><span class="ico">📝</span> 업무량</div>
+    <div class="sb-item" id="nav-staff-alt" onclick="W._swStaff('대체휴무')"><span class="ico">🗓</span> 대체휴무</div>
   </div>
   <hr class="sb-divider">
   <div class="sb-sec">
@@ -445,6 +442,7 @@ const app = initializeApp({
 const db = getDatabase(app);
 const rConfig  = ref(db,'config');
 const rArchive = ref(db,'archive');
+const rBlog = ref(db,'blog2025');
 const rSales   = ref(db,'sales2025');
 const rReview  = ref(db,'review2025');
 const rDaily   = ref(db,'daily2025');
@@ -549,6 +547,7 @@ let NOTICE = {text:'', editing:false};
 let ADDLIST = {};
 let DEPOSIT = {};
 let WORKLOAD = {};
+let BLOG = {}; // {week_mon: {member: {mon:{url,time}, tue:{url,time},...}, memberRoles:{m:'팀부장'/'경력'}}}
 let SCHEDULE = {};
 let FEEDBACK = {};
 let staffTab = '업무량';
@@ -585,6 +584,11 @@ onValue(rConfig, snap => {
   if (!_loaded.config) { _loaded.config = true; _checkInitRender(); }
   else if (cw < 99) { tcBuilt=false; rvBuilt=false; renderMain(); }
   else showBiz();
+});
+
+onValue(rBlog, snap => {
+  BLOG = snap.val() || {};
+  if (cw === 150) showBlog();
 });
 
 onValue(rArchive, snap => {
@@ -735,6 +739,7 @@ function renderTabs() {
       }
     }
     else if (cw === -1) pt.textContent = '대시보드';
+    else if (cw === 150) pt.textContent = '업무량 (블로그)';
     else if (cw === 99) pt.textContent = '영업현황판';
     else pt.textContent = (WEEKS[cw]?.label||'') + ' 매출 현황';
   }
@@ -933,10 +938,10 @@ function renderArchiveView(arcKey) {
         (t.members||[]).forEach(m => {
           const items=unpaidByTeam[t.name][m]||[];
           if (!items.length) return;
-          h += `<tr class="member-row"><td colspan="6">${MRT(m)} (${items.length}건)</td></tr>`;
+          h += `<tr class="member-row"><td colspan="6">${m} (${items.length}건)</td></tr>`;
           items.forEach(({date,r}) => {
             h += `<tr>
-              <td style="color:${t.color};font-weight:600">${MR(m)}</td>
+              <td style="color:${t.color};font-weight:600">${m}</td>
               <td>${r.student||'-'}</td><td>${r.subject||'-'}</td>
               <td style="font-family:'Roboto',monospace;font-size:11px">${fmtDate(date)}</td>
               <td style="text-align:right;color:var(--gold);font-weight:700">${r.expected?F2(Number(r.expected)):'-'}</td>
@@ -1258,6 +1263,7 @@ function renderAllDashboard() {
 }
 
 function renderMain() {
+  if (cw === 150) { showBlog(); return; }
   document.getElementById('mc').style.display = '';
   document.getElementById('bc').style.display = 'none';
   document.getElementById('sc').style.display = 'none';
@@ -1541,7 +1547,7 @@ function renderUnpaidList() {
         const fbKey = `${date}_${rid}`;
         const fb = FEEDBACK[fbKey] || '';
         h += `<tr>
-          <td style="color:${t.color};font-weight:600">${MR(m)}</td>
+          <td style="color:${t.color};font-weight:600">${m}</td>
           <td>${r.student||'-'}</td>
           <td>${r.subject||'-'}</td>
           <td style="font-family:'Roboto',monospace;font-size:11px">${fmtDate(date)}</td>
@@ -2665,6 +2671,176 @@ function renderWorkload() {
   return h;
 }
 
+
+// ── 업무량 (블로그) ────────────────────────────────────
+window.showBlog = function showBlog() {
+  ['mc','bc','sc','dc'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display='none';});
+  const sc = document.getElementById('sc');
+  sc.style.display = '';
+  // nav 활성화
+  ['nav-dash','nav-biz','nav-staff','nav-dep','nav-blog'].forEach(id=>document.getElementById(id)?.classList.remove('on'));
+  document.getElementById('nav-blog')?.classList.add('on');
+
+  try {
+    // 이번 주 월요일 자동 계산
+    const today = todayStr();
+    const _getTodayMon = () => {
+      const nd = new Date(); const day = nd.getDay();
+      const mon = new Date(nd); mon.setDate(nd.getDate()-(day===0?6:day-1));
+      return mon.toISOString().slice(0,10);
+    };
+    // 월요일 보정: 입력한 날이 속한 주의 월요일 (일요일은 -6일)
+    const _toMon = (dateStr) => {
+      const d = new Date(dateStr+'T00:00:00');
+      const day = d.getDay(); // 0=일, 1=월, ..., 6=토
+      const offset = day === 0 ? -6 : -(day - 1); // 월요일로 당기기
+      d.setDate(d.getDate() + offset);
+      return d.toISOString().slice(0,10);
+    };
+    // 현재 선택된 월요일 (없으면 이번 주 월요일, 있어도 월요일로 보정)
+    if (!window._blogMonday) window._blogMonday = _getTodayMon();
+    else window._blogMonday = _toMon(window._blogMonday);
+    const wKey = window._blogMonday;
+
+    // 월~일 7일 생성 (wKey는 반드시 월요일)
+    const days = [];
+    const startBase = new Date(wKey+'T00:00:00');
+    for (let i=0;i<7;i++) {
+      const d = new Date(startBase); d.setDate(startBase.getDate()+i);
+      const ds = d.toISOString().slice(0,10);
+      const wd = ['일','월','화','수','목','금','토'][d.getDay()];
+      days.push({ds, label: wd+' '+(d.getMonth()+1)+'/'+(d.getDate())});
+    }
+    const sundayStr = days[6].ds;
+    // 다음 월요일 마감
+
+
+    // 직원별 팀부장/경력 구분 데이터
+    const blogRoles = (BLOG.__roles) || {};
+    const isValidUrl = v => v && v.trim().startsWith('http');
+    const fmtTime = t => {
+      if (!t) return '';
+      const d = new Date(t);
+      return (d.getMonth()+1)+'/'+d.getDate()+' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+    };
+
+    // 이전/다음 주 이동
+    const prevMon = (() => { const d=new Date(startBase); d.setDate(d.getDate()-7); return _toMon(d.toISOString().slice(0,10)); })();
+    const nextMonNav = (() => { const d=new Date(startBase); d.setDate(d.getDate()+7); return _toMon(d.toISOString().slice(0,10)); })();
+    const isThisWeek = wKey === _getTodayMon();
+
+    let h = `<div style="padding:16px 20px">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap">
+        <div style="font-size:18px;font-weight:900">블로그 업무량</div>
+
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;flex-wrap:wrap">
+        <button onclick="window._blogMonday='${prevMon}';showBlog()"
+          style="padding:6px 12px;border-radius:8px;font-size:13px;border:1px solid var(--border);background:var(--bg);cursor:pointer">◀</button>
+        <div style="display:flex;align-items:center;gap:6px">
+          <span style="font-size:12px;color:var(--text3)">월요일 날짜</span>
+          <input type="date" value="${wKey}"
+            onchange="window._blogMonday=this.value;showBlog()"
+            style="padding:5px 8px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-weight:700">
+        </div>
+        <button onclick="window._blogMonday='${nextMonNav}';showBlog()"
+          style="padding:6px 12px;border-radius:8px;font-size:13px;border:1px solid var(--border);background:var(--bg);cursor:pointer">▶</button>
+        <span style="font-size:12px;color:var(--text3)">${wKey} ~ ${sundayStr}</span>
+        ${isThisWeek?'<span style="font-size:11px;padding:2px 10px;border-radius:20px;background:#DBEAFE;color:#2563EB;font-weight:700">이번 주</span>':''}
+        <button onclick="window._blogMonday='${_getTodayMon()}';showBlog()"
+          style="padding:5px 14px;border-radius:8px;font-size:12px;font-weight:700;border:1px solid var(--border);background:var(--bg);cursor:pointer;color:var(--text2)">이번 주로</button>
+      </div>`;
+
+    // 팀부장 / 경력 섹션
+    ['팀부장','경력'].forEach(roleType => {
+      const members = [];
+      TM_CFG.forEach(t => {
+        t.members.forEach(m => {
+          const r = blogRoles[m] || '경력'; // 기본값 경력
+          if (r === roleType) members.push({m, t});
+        });
+      });
+
+      const reqCount = roleType==='경력' ? 3 : null; // 경력: 주3회 필수
+
+      h += `<div style="margin-bottom:24px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+          <div style="font-size:14px;font-weight:900;padding:4px 16px;border-radius:20px;
+            background:${roleType==='팀부장'?'#1E293B':'#0F766E'};color:#fff">${roleType}</div>
+          ${reqCount?`<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:2px">
+            <span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:6px;background:#EFF4FF;color:#2563EB;border:1px solid #BFDBFE">주 ${reqCount}회 필수</span>
+            <span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:6px;background:#F0FDF4;color:#166534;border:1px solid #BBF7D0">매주 월 09:30:59 마감</span>
+            <span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:6px;background:#FEF2F2;color:#DC2626;border:1px solid #FECACA">URL 미기입 시 미인정 : 공식 1턴 제한</span>
+          </div>`:''}
+        </div>
+        <div style="overflow-x:auto">
+        <table style="border-collapse:collapse;min-width:900px;width:100%;font-size:12px">
+          <thead>
+            <tr style="background:var(--bg)">
+              <th style="padding:8px 10px;border:1px solid var(--border);width:60px;white-space:nowrap">팀</th>
+              <th style="padding:8px 10px;border:1px solid var(--border);width:80px">직원</th>
+              <th style="padding:8px 10px;border:1px solid var(--border);width:72px;white-space:nowrap">구분 변경</th>
+              ${days.map(d=>`<th style="padding:6px 8px;border:1px solid var(--border);text-align:center;min-width:110px;background:var(--bg)">${d.label}</th>`).join('')}
+              <th style="padding:8px 10px;border:1px solid var(--border);width:80px;text-align:center">달성</th>
+            </tr>
+          </thead><tbody>`;
+
+      members.forEach(({m, t}) => {
+        const mData = (BLOG[wKey]||{})[m] || {};
+        let validCount = 0;
+        days.forEach(d => { if (isValidUrl((mData[d.ds]||{}).url)) validCount++; });
+        const achieved = reqCount ? validCount >= reqCount : true;
+
+        h += `<tr style="background:${achieved?'':'#FFF7F7'}">
+          <td style="padding:6px 8px;border:1px solid var(--border);text-align:center;color:${t.color};font-weight:700;background:var(--bg)">${t.name}</td>
+          <td style="padding:6px 8px;border:1px solid var(--border);font-weight:700;color:${t.color};background:var(--bg);white-space:nowrap">${MRT(m)}</td>
+          <td style="padding:4px;border:1px solid var(--border);text-align:center;background:var(--bg);white-space:nowrap">
+            <select onchange="W._blogRole('${m}',this.value)"
+              style="font-size:10px;padding:2px 4px;border:1px solid var(--border);border-radius:4px;background:var(--bg);width:52px">
+              <option value="팀부장" ${roleType==='팀부장'?'selected':''}>팀부장</option>
+              <option value="경력" ${roleType==='경력'?'selected':''}>경력</option>
+            </select>
+          </td>
+          ${days.map(d => {
+            const cell = mData[d.ds] || {};
+            const url = cell.url || '';
+            const time = cell.time || '';
+            const valid = isValidUrl(url);
+            return `<td style="padding:4px 6px;border:1px solid var(--border);vertical-align:top;background:${valid?'#F0FDF4':''}">
+              <input type="url" value="${url.replace(/"/g,'&quot;')}" placeholder="https://..."
+                style="width:100%;font-size:10px;padding:4px 6px;border:1px solid ${valid?'#86EFAC':'var(--border)'};border-radius:5px;background:${valid?'#F0FDF4':'#fff'}"
+                onchange="W._blogUrl('${wKey}','${m}','${d.ds}',this.value,this)">
+              <div data-timedisp="1" style="font-size:9px;margin-top:2px;line-height:1.6">${time?`<span style="color:${valid?'#16A34A':'var(--text3)'}">입력 ${fmtTime(time)}</span>${(cell.history||[]).map(h=>`<span style="color:#94A3B8;text-decoration:line-through"> → ${fmtTime(h.time)}</span>`).join('')}`:''}
+              </div>
+            </td>`;
+          }).join('')}
+          <td data-achieve="1" data-req="${reqCount||''}" style="padding:6px;border:1px solid var(--border);text-align:center;font-weight:700;
+            color:${achieved?'#16A34A':'#DC2626'}">
+            ${reqCount?`${validCount}/${reqCount}<br><span style="font-size:10px">${achieved?'✓ 달성':'✗ 미달'}</span>`:'—'}
+          </td>
+        </tr>`;
+      });
+
+      if (!members.length) {
+        h += `<tr><td colspan="${days.length+4}" style="padding:20px;text-align:center;color:var(--text3);border:1px solid var(--border)">
+          ${roleType} 직원이 없어요. 구분 변경으로 지정해주세요.
+        </td></tr>`;
+      }
+
+      h += `</tbody></table></div></div>`;
+    });
+
+    h += `<div style="font-size:11px;color:var(--text3);text-align:center;padding:8px 0">
+      URL이 http/https로 시작해야 인정됩니다 · 입력 시각 자동 기록
+    </div></div>`;
+
+    sc.innerHTML = h;
+  } catch(e) {
+    sc.innerHTML = `<div style="color:red;padding:20px;font-weight:700;background:#FEF2F2;border-radius:8px;margin:20px">업무량 오류: ${e.message}<br><pre style="font-size:11px;font-weight:400;white-space:pre-wrap">${e.stack}</pre></div>`;
+    console.error('showBlog error:', e);
+  }
+}
+
 window.W = {
   _bizMonthKey(startKey) {
     if (!startKey) return;
@@ -2707,25 +2883,23 @@ window.W = {
     document.getElementById('sc').style.display='';
     ['nav-dash','nav-biz','nav-staff'].forEach(id=>document.getElementById(id)?.classList.remove('on'));
     document.getElementById('nav-staff')?.classList.add('on');
-    document.getElementById('nav-staff-sub').style.display='';
+    document.getElementById('nav-staff-sub')?.style && (document.getElementById('nav-staff-sub').style.display='');
     const sa2 = document.getElementById('nav-staff-arrow');
     if (sa2) sa2.style.transform = 'rotate(180deg)';
     document.getElementById('nav-biz-sub').style.display='none';
     const ba2 = document.getElementById('nav-biz-arrow');
     if (ba2) ba2.style.transform = 'rotate(0deg)';
     document.getElementById('nav-dash-sub').style.display='none';
-    ['nav-staff-wl','nav-staff-alt'].forEach(id=>document.getElementById(id)?.classList.remove('on'));
-    if(tab==='업무량') document.getElementById('nav-staff-wl')?.classList.add('on');
-    else if(tab==='대체휴무') document.getElementById('nav-staff-alt')?.classList.add('on');
+    document.getElementById('nav-staff-alt')?.classList.remove('on');
+    if(tab==='대체휴무') document.getElementById('nav-staff-alt')?.classList.add('on');
     const pt=document.getElementById('page-title');
     if(pt) pt.textContent = tab==='업무량'?'업무량':'대체휴무';
     showStaff();
   },
   _stab(tab) {
     staffTab=tab;
-    ['nav-staff-wl','nav-staff-alt'].forEach(id=>document.getElementById(id)?.classList.remove('on'));
-    if(tab==='업무량') document.getElementById('nav-staff-wl')?.classList.add('on');
-    else if(tab==='대체휴무') document.getElementById('nav-staff-alt')?.classList.add('on');
+    document.getElementById('nav-staff-alt')?.classList.remove('on');
+    if(tab==='대체휴무') document.getElementById('nav-staff-alt')?.classList.add('on');
     const pt=document.getElementById('page-title');
     if(pt) pt.textContent = tab==='업무량'?'업무량':'대체휴무';
     showStaff();
@@ -2845,7 +3019,7 @@ window.W = {
     ['nav-dash','nav-biz','nav-staff','nav-dep'].forEach(id=>document.getElementById(id)?.classList.remove('on'));
     document.getElementById('nav-dep')?.classList.add('on');
     document.getElementById('nav-biz-sub').style.display='none';
-    document.getElementById('nav-staff-sub').style.display='none';
+    document.getElementById('nav-staff-sub')?.style && (document.getElementById('nav-staff-sub').style.display='none');
     const navDashSub = document.getElementById('nav-dash-sub');
     if(navDashSub) navDashSub.style.display='none';
     const pt=document.getElementById('page-title');
@@ -2868,7 +3042,7 @@ window.W = {
     } else {
       sub.style.display = '';
       if (arrow) arrow.style.transform = 'rotate(180deg)';
-      document.getElementById('nav-staff-sub').style.display = 'none';
+      document.getElementById('nav-staff-sub')?.style && (document.getElementById('nav-staff-sub').style.display = 'none');
       const sa = document.getElementById('nav-staff-arrow');
       if (sa) sa.style.transform = 'rotate(0deg)';
       if (cw !== 99) W._swBiz('요약');
@@ -3138,7 +3312,7 @@ window.W = {
     document.getElementById('nav-biz-sub').style.display='none';
     const ba = document.getElementById('nav-biz-arrow');
     if(ba) ba.style.transform='rotate(0deg)';
-    document.getElementById('nav-staff-sub').style.display='none';
+    document.getElementById('nav-staff-sub')?.style && (document.getElementById('nav-staff-sub').style.display='none');
     const sa = document.getElementById('nav-staff-arrow');
     if(sa) sa.style.transform='rotate(0deg)';
     ['nav-dash','nav-w0','nav-w1','nav-w2','nav-w3','nav-biz','nav-biz-sum','nav-biz-con','nav-staff','nav-dep'].forEach(id=>document.getElementById(id)?.classList.remove('on'));
@@ -3152,7 +3326,7 @@ window.W = {
     document.getElementById('nav-biz-sub').style.display='';
     const ba = document.getElementById('nav-biz-arrow');
     if (ba) ba.style.transform = 'rotate(180deg)';
-    document.getElementById('nav-staff-sub').style.display='none';
+    document.getElementById('nav-staff-sub')?.style && (document.getElementById('nav-staff-sub').style.display='none');
     const sa = document.getElementById('nav-staff-arrow');
     if (sa) sa.style.transform = 'rotate(0deg)';
     document.getElementById('nav-staff')?.classList.remove('on');
@@ -3377,6 +3551,87 @@ window.W = {
 
 // 아카이브 탭 전환 전역 노출
 W._arcView = (tab, arcKey) => { window._arcBizTab = tab; renderArchiveView(arcKey); };
+
+// 업무량 핸들러
+W._swBlog = () => {
+  cw = 150; curMonth = 'current';
+  ['nav-dash','nav-biz','nav-staff','nav-dep','nav-blog','nav-staff-alt'].forEach(id=>document.getElementById(id)?.classList.remove('on'));
+  document.getElementById('nav-staff-sub')?.style && (document.getElementById('nav-staff-sub').style.display='none');
+  document.getElementById('nav-biz-sub')?.style && (document.getElementById('nav-biz-sub').style.display='none');
+  document.getElementById('nav-blog')?.classList.add('on');
+  renderTabs();
+  showBlog();
+};
+W._blogUrl = (wKey, member, dateStr, url, inputEl) => {
+  if (!BLOG[wKey]) BLOG[wKey] = {};
+  if (!BLOG[wKey][member]) BLOG[wKey][member] = {};
+  const now = new Date().toISOString();
+  const prev = BLOG[wKey][member][dateStr] || {};
+  // 수정 이력 누적 (최대 5개)
+  const history = prev.history ? [...prev.history] : [];
+  if (prev.url && prev.url !== url.trim()) {
+    history.push({ url: prev.url, time: prev.time });
+    if (history.length > 5) history.shift();
+  }
+  const time = url.trim() ? now : '';
+  BLOG[wKey][member][dateStr] = { url: url.trim(), time, history };
+  set(rBlog, BLOG);
+  // 전체 재렌더 없이 해당 셀 스타일만 업데이트
+  if (inputEl) {
+    const valid = url.trim().startsWith('http');
+    inputEl.style.borderColor = valid ? '#86EFAC' : 'var(--border)';
+    inputEl.style.background = valid ? '#F0FDF4' : '#fff';
+    inputEl.closest('td').style.background = valid ? '#F0FDF4' : '';
+    // 시각 표시 업데이트 - 기존 div 찾거나 생성
+    let timeDiv = inputEl.parentElement.querySelector('div[data-timedisp]');
+    if (!timeDiv) {
+      // 기존 렌더된 div가 있으면 재활용, 없으면 생성
+      const existingDiv = inputEl.nextElementSibling;
+      if (existingDiv && existingDiv.tagName === 'DIV') {
+        timeDiv = existingDiv;
+        timeDiv.dataset.timedisp = '1';
+      } else {
+        timeDiv = document.createElement('div');
+        timeDiv.dataset.timedisp = '1';
+        inputEl.after(timeDiv);
+      }
+    }
+    if (time) {
+      const d = new Date(time);
+      const fmt = t => { const dt=new Date(t); return (dt.getMonth()+1)+'/'+dt.getDate()+' '+String(dt.getHours()).padStart(2,'0')+':'+String(dt.getMinutes()).padStart(2,'0'); };
+      const hist = BLOG[wKey]?.[member]?.[dateStr]?.history || [];
+      let html = `<span style="color:${valid?'#16A34A':'var(--text3)'}">입력 ${fmt(time)}</span>`;
+      if (hist.length > 0) {
+        html += hist.map(h=>`<span style="color:#94A3B8;text-decoration:line-through"> → ${fmt(h.time)}</span>`).join('');
+      }
+      timeDiv.style.cssText = 'font-size:9px;margin-top:2px;line-height:1.6';
+      timeDiv.innerHTML = html;
+    } else { timeDiv.innerHTML = ''; }
+    // 달성 셀 업데이트
+    const row = inputEl.closest('tr');
+    if (row) {
+      const achieveTd = row.querySelector('td[data-achieve]');
+      if (achieveTd) {
+        const mData = BLOG[wKey]?.[member] || {};
+        const validCnt = Object.values(mData).filter(c=>c.url&&c.url.startsWith('http')).length;
+        const req = achieveTd.dataset.req ? parseInt(achieveTd.dataset.req) : null;
+        if (req) {
+          const ok = validCnt >= req;
+          achieveTd.innerHTML = `${validCnt}/${req}<br><span style="font-size:10px">${ok?'✓ 달성':'✗ 미달'}</span>`;
+          achieveTd.style.color = ok ? '#16A34A' : '#DC2626';
+          row.style.background = ok ? '' : '#FFF7F7';
+        }
+      }
+    }
+  }
+};
+W._blogRole = (member, role) => {
+  if (!BLOG.__roles) BLOG.__roles = {};
+  BLOG.__roles[member] = role;
+  set(rBlog, BLOG);
+  showBlog();
+};
+
 window.W = W;
 
 // 전역 에러 캐치
