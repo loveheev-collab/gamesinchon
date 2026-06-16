@@ -2839,9 +2839,25 @@ window.showBlog = function showBlog() {
         });
         const achieved = reqCount ? validCount >= reqCount : true;
 
+        // 팀이 바뀌는 첫 번째 멤버 앞에 팀 구분 행 삽입 (경력 섹션만)
+        const _memberIdx = members.findIndex(x => x.m === m);
+        const _prevMember = members[_memberIdx - 1];
+        if (roleType === '경력' && (!_prevMember || _prevMember.t.name !== t.name)) {
+          h += `<tr>
+            <td colspan="${days.length + 4}" style="
+              padding:5px 12px;
+              background:${t.color}10;
+              border:1px solid var(--border);
+              border-left:4px solid ${t.color};
+              font-size:11px;font-weight:900;color:${t.color};
+              letter-spacing:.4px">
+              ${t.name}
+            </td>
+          </tr>`;
+        }
         h += `<tr style="background:${achieved?'':'#FFF7F7'}">
-          <td style="padding:6px 8px;border:1px solid var(--border);text-align:center;color:${t.color};font-weight:700;background:var(--bg)">${t.name}</td>
-          <td style="padding:6px 8px;border:1px solid var(--border);font-weight:700;color:${t.color};background:var(--bg);white-space:nowrap">${MRT(m)}</td>
+          <td style="padding:6px 8px;border:1px solid var(--border);border-left:4px solid ${roleType==='경력'?t.color:'var(--border)'};text-align:center;color:var(--text2);font-weight:700;background:var(--bg)">${t.name}</td>
+          <td style="padding:6px 8px;border:1px solid var(--border);font-weight:700;color:var(--text);background:var(--bg);white-space:nowrap">${MRT(m)}</td>
           <td style="padding:4px;border:1px solid var(--border);text-align:center;background:var(--bg);white-space:nowrap">
             <select onchange="W._blogRole('${m}',this.value)"
               style="font-size:10px;padding:2px 4px;border:1px solid var(--border);border-radius:4px;background:var(--bg);width:52px">
