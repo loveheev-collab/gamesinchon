@@ -1249,23 +1249,28 @@ function renderAllDashboard() {
     h += `<div class="tp-card">
       <div class="tp-card-hdr" style="background:${t.color}">${t.name} (${mList.length}명)</div>
       <div class="tp-card-body">
-        <div class="tp-row"><span class="lbl">영업 총매출</span><span class="val g">${F(tBizSales)}원</span></div>
-        <div class="tp-row"><span class="lbl">순매출</span><span class="val" style="color:var(--accent)">${F(tNetSales)}원</span></div>
-        <div class="tp-row"><span class="lbl">목표 매출</span><span class="val o">${tGoalBiz>0?F(tGoalBiz)+'원':'미설정'}</span></div>
-        <div class="tp-row"><span class="lbl">달성률</span><span class="val" style="color:${TC(tRate)}">${ST(tRate).b} ${(tRate*100).toFixed(1)}%</span></div>
+        <div class="tp-row"><span class="lbl">영업 총매출</span><span class="val" style="color:var(--text);font-weight:900">${F(tBizSales)}원</span></div>
+        <div class="tp-row"><span class="lbl">순매출</span><span class="val" style="color:var(--text);font-weight:400;font-size:12px">${F(tNetSales)}원</span></div>
+        <div class="tp-row"><span class="lbl">목표 매출</span><span class="val" style="color:var(--text);font-weight:400;font-size:12px">${tGoalBiz>0?F(tGoalBiz)+'원':'미설정'}</span></div>
+        <div class="tp-row"><span class="lbl">달성률</span>
+          <span class="val" style="display:flex;align-items:center;gap:4px;color:${TC(tRate)}">
+            <span style="width:7px;height:7px;border-radius:50%;background:${TC(tRate)};display:inline-block;flex-shrink:0"></span>
+            ${(tRate*100).toFixed(1)}%
+          </span>
+        </div>
         <div class="tp-divider"></div>
         <div class="tp-badges">
-          <span class="tp-badge" style="background:#FEF08A;color:#854D0E">완납 ${F(tWan)}</span>
-          <span class="tp-badge" style="background:#E5E7EB;color:#374151">미납 ${F(tMiNap)}</span>
-          <span class="tp-badge" style="background:#FEE2E2;color:#991B1B">취소 ${tCancel}</span>
-          ${tCOD>0?`<span class="tp-badge" style="background:#EFF4FF;color:#2563EB">COD ${tCOD}</span>`:''}
+          <span class="tp-badge" style="background:#F0FDF4;color:#15803D">완납 ${F(tWan)}</span>
+          <span class="tp-badge" style="background:#F3F4F6;color:#4B5563">미납 ${F(tMiNap)}</span>
+          <span class="tp-badge" style="background:#F3F4F6;color:#4B5563">취소 ${tCancel}</span>
+          ${tCOD>0?`<span class="tp-badge" style="background:#F3F4F6;color:#4B5563">COD ${tCOD}</span>`:''}
         </div>
         <div class="tp-divider"></div>
         <div class="tp-rate-row">
-          <div class="tp-rate-item"><div class="r-lbl">상담률</div><div class="r-val" style="color:${t.color}">${consultRate}</div></div>
-          <div class="tp-rate-item"><div class="r-lbl">등록률</div><div class="r-val" style="color:${t.color}">${regRate}</div></div>
-          <div class="tp-rate-item"><div class="r-lbl">문의</div><div class="r-val" style="color:${t.color}">${tInq}</div></div>
-          <div class="tp-rate-item"><div class="r-lbl">등록수</div><div class="r-val" style="color:${t.color}">${tReg}</div></div>
+          <div class="tp-rate-item"><div class="r-lbl">상담률</div><div class="r-val" style="color:var(--text)">${consultRate}</div></div>
+          <div class="tp-rate-item"><div class="r-lbl">등록률</div><div class="r-val" style="color:var(--text)">${regRate}</div></div>
+          <div class="tp-rate-item"><div class="r-lbl">문의</div><div class="r-val" style="color:var(--text)">${tInq}</div></div>
+          <div class="tp-rate-item"><div class="r-lbl">등록수</div><div class="r-val" style="color:var(--text)">${tReg}</div></div>
         </div>
       </div>
     </div>`;
