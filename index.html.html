@@ -2874,7 +2874,7 @@ window.showBlog = function showBlog() {
             const dayCnt = urlList.filter(u => isValidUrl(u.url)).length;
             const tdBg = dayCnt > 0 ? '#F0FDF4' : '';
 
-            // 각 URL 행 렌더
+            // 각 URL 행 렌더 — URL 있으면 링크, 없으면 input
             const urlRows = urlList.map((entry, idx) => {
               const uv = entry.url || '';
               const valid = isValidUrl(uv);
@@ -2884,12 +2884,30 @@ window.showBlog = function showBlog() {
                 tHtml = `<span style="color:#6B7280">입력 ${fmtTime(entry.firstTime||entry.time)}</span>`;
                 if (hasEdit) tHtml += `<span style="color:${valid?'#D97706':'#9CA3AF'}"> · 수정 ${fmtTime(entry.time)}</span>`;
               }
+              // URL 있으면 링크 + 수정 아이콘, 없으면 input
+              const safeUrl = uv.replace(/"/g, '&quot;');
+              const domain = uv.replace(/https?:\/\/(www\.)?/, '').split('/')[0];
+              const urlField = valid
+                ? `<div style="display:flex;align-items:center;gap:3px">
+                    <a href="${safeUrl}" target="_blank" rel="noopener" title="${safeUrl}"
+                      style="flex:1;min-width:0;font-size:10px;color:#2563EB;text-decoration:none;
+                             white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;
+                             padding:3px 6px;border:1px solid #86EFAC;border-radius:4px;background:#F0FDF4;line-height:1.5">
+                      🔗 ${domain}
+                    </a>
+                    <button onclick="W._blogUrlEdit('${wKey}','${m}','${d.ds}',${idx},this)"
+                      title="수정"
+                      style="flex-shrink:0;width:22px;height:22px;border:1px solid var(--border);border-radius:4px;
+                             background:var(--bg);color:var(--text3);cursor:pointer;font-size:11px;padding:0;line-height:1">✏️</button>
+                  </div>`
+                : `<input type="url" value="${safeUrl}" placeholder="https://..."
+                    data-idx="${idx}"
+                    style="width:100%;font-size:10px;padding:3px 5px;border:1px solid var(--border);border-radius:4px;background:#fff"
+                    onchange="W._blogUrl('${wKey}','${m}','${d.ds}',this.value,this,${idx})"
+                    onblur="if(this.value.trim().startsWith('http'))showBlog()">`;
               return `<div style="display:flex;align-items:flex-start;gap:3px;margin-bottom:3px">
                 <div style="flex:1;min-width:0">
-                  <input type="url" value="${uv.replace(/"/g,'&quot;')}" placeholder="https://..."
-                    data-idx="${idx}"
-                    style="width:100%;font-size:10px;padding:3px 5px;border:1px solid ${valid?'#86EFAC':'var(--border)'};border-radius:4px;background:${valid?'#F0FDF4':'#fff'}"
-                    onchange="W._blogUrl('${wKey}','${m}','${d.ds}',this.value,this,${idx})">
+                  ${urlField}
                   <div data-timedisp="1" style="font-size:9px;margin-top:1px;line-height:1.5">${tHtml}</div>
                 </div>
                 <button onclick="W._blogUrlDel('${wKey}','${m}','${d.ds}',${idx})"
@@ -3731,6 +3749,25 @@ W._blogUrl = (wKey, member, dateStr, url, inputEl, idx=0) => {
       }
     }
   }
+};
+// URL 수정 버튼 — 링크를 input으로 전환
+W._blogUrlEdit = (wKey, member, dateStr, idx, btn) => {
+  const linkEl = btn.previousElementSibling; // <a>
+  if (!linkEl) return;
+  const currentUrl = linkEl.href || '';
+  const input = document.createElement('input');
+  input.type = 'url';
+  input.value = currentUrl;
+  input.dataset.idx = idx;
+  input.style.cssText = 'width:100%;font-size:10px;padding:3px 5px;border:1px solid #86EFAC;border-radius:4px;background:#fff';
+  input.onchange = function() { W._blogUrl(wKey, member, dateStr, this.value, this, idx); };
+  input.onblur = function() { if (this.value.trim().startsWith('http')) showBlog(); };
+  // a + btn → input 으로 교체
+  const wrap = linkEl.parentElement;
+  wrap.innerHTML = '';
+  wrap.appendChild(input);
+  input.focus();
+  input.select();
 };
 // URL 추가 버튼
 W._blogUrlAdd = (wKey, member, dateStr) => {
