@@ -2826,8 +2826,17 @@ window.showBlog = function showBlog() {
 
       members.forEach(({m, t}) => {
         const mData = (BLOG[wKey]||{})[m] || {};
+        // 방향3: 하루 여러 URL — 유효 URL 총 개수로 카운트
         let validCount = 0;
-        days.forEach(d => { if (isValidUrl((mData[d.ds]||{}).url)) validCount++; });
+        days.forEach(d => {
+          const raw = mData[d.ds];
+          if (!raw) return;
+          if (Array.isArray(raw.urls)) {
+            validCount += raw.urls.filter(u => isValidUrl(u.url)).length;
+          } else if (isValidUrl(raw.url)) {
+            validCount++; // 구형 단일 객체 호환
+          }
+        });
         const achieved = reqCount ? validCount >= reqCount : true;
 
         h += `<tr style="background:${achieved?'':'#FFF7F7'}">
@@ -2841,26 +2850,42 @@ window.showBlog = function showBlog() {
             </select>
           </td>
           ${days.map(d => {
-            const cell = mData[d.ds] || {};
-            const url = cell.url || '';
-            const time = cell.time || '';
-            const firstTime = cell.firstTime || time;
-            const hist = cell.history || [];
-            const hasEdit = hist.length > 0 || (firstTime && time && firstTime !== time);
-            const valid = isValidUrl(url);
-            // 입력/수정 시각 표시 (초기 렌더)
-            let timeHtml = '';
-            if (time) {
-              timeHtml = `<span style="color:#6B7280">입력 ${fmtTime(firstTime)}</span>`;
-              if (hasEdit) {
-                timeHtml += `<span style="color:${valid?'#D97706':'#9CA3AF'}"> · 수정 ${fmtTime(time)}</span>`;
+            // urls: 배열 구조 (방향3: 하루 여러 URL)
+            // 구형 단일 객체도 호환 처리
+            const raw = mData[d.ds];
+            const urlList = Array.isArray(raw?.urls) ? raw.urls
+                          : (raw?.url ? [{ url: raw.url, firstTime: raw.firstTime||raw.time, time: raw.time }] : []);
+            const dayCnt = urlList.filter(u => isValidUrl(u.url)).length;
+            const tdBg = dayCnt > 0 ? '#F0FDF4' : '';
+
+            // 각 URL 행 렌더
+            const urlRows = urlList.map((entry, idx) => {
+              const uv = entry.url || '';
+              const valid = isValidUrl(uv);
+              const hasEdit = entry.firstTime && entry.time && entry.firstTime !== entry.time;
+              let tHtml = '';
+              if (entry.firstTime || entry.time) {
+                tHtml = `<span style="color:#6B7280">입력 ${fmtTime(entry.firstTime||entry.time)}</span>`;
+                if (hasEdit) tHtml += `<span style="color:${valid?'#D97706':'#9CA3AF'}"> · 수정 ${fmtTime(entry.time)}</span>`;
               }
-            }
-            return `<td style="padding:4px 6px;border:1px solid var(--border);vertical-align:top;background:${valid?'#F0FDF4':''}">
-              <input type="url" value="${url.replace(/"/g,'&quot;')}" placeholder="https://..."
-                style="width:100%;font-size:10px;padding:4px 6px;border:1px solid ${valid?'#86EFAC':'var(--border)'};border-radius:5px;background:${valid?'#F0FDF4':'#fff'}"
-                onchange="W._blogUrl('${wKey}','${m}','${d.ds}',this.value,this)">
-              <div data-timedisp="1" style="font-size:9px;margin-top:2px;line-height:1.6">${timeHtml}</div>
+              return `<div style="display:flex;align-items:flex-start;gap:3px;margin-bottom:3px">
+                <div style="flex:1;min-width:0">
+                  <input type="url" value="${uv.replace(/"/g,'&quot;')}" placeholder="https://..."
+                    data-idx="${idx}"
+                    style="width:100%;font-size:10px;padding:3px 5px;border:1px solid ${valid?'#86EFAC':'var(--border)'};border-radius:4px;background:${valid?'#F0FDF4':'#fff'}"
+                    onchange="W._blogUrl('${wKey}','${m}','${d.ds}',this.value,this,${idx})">
+                  <div data-timedisp="1" style="font-size:9px;margin-top:1px;line-height:1.5">${tHtml}</div>
+                </div>
+                <button onclick="W._blogUrlDel('${wKey}','${m}','${d.ds}',${idx})"
+                  style="flex-shrink:0;width:16px;height:16px;border:none;background:transparent;color:#9CA3AF;cursor:pointer;font-size:11px;line-height:1;padding:0;margin-top:2px"
+                  title="삭제">×</button>
+              </div>`;
+            }).join('');
+
+            return `<td style="padding:4px 6px;border:1px solid var(--border);vertical-align:top;background:${tdBg}">
+              ${urlRows}
+              <button onclick="W._blogUrlAdd('${wKey}','${m}','${d.ds}')"
+                style="width:100%;margin-top:2px;padding:2px;font-size:10px;color:var(--text3);background:transparent;border:1px dashed var(--border);border-radius:4px;cursor:pointer">+ 추가</button>
             </td>`;
           }).join('')}
           <td data-achieve="1" data-req="${reqCount||''}" style="padding:6px;border:1px solid var(--border);text-align:center;font-weight:700;
@@ -3613,63 +3638,73 @@ W._swBlog = () => {
   renderTabs();
   showBlog();
 };
-W._blogUrl = (wKey, member, dateStr, url, inputEl) => {
+W._blogUrl = (wKey, member, dateStr, url, inputEl, idx=0) => {
   if (!BLOG[wKey]) BLOG[wKey] = {};
   if (!BLOG[wKey][member]) BLOG[wKey][member] = {};
   const now = new Date().toISOString();
-  const prev = BLOG[wKey][member][dateStr] || {};
-  // 수정 이력 누적 (최대 5개)
-  const history = prev.history ? [...prev.history] : [];
-  const isEdit = !!(prev.url && prev.url !== url.trim()); // 수정 여부
-  if (isEdit) {
-    history.push({ url: prev.url, time: prev.time, label: prev.firstTime ? '수정' : '입력' });
-    if (history.length > 5) history.shift();
-  }
-  const time = url.trim() ? now : '';
-  // 최초 입력 시각은 한 번 기록 후 유지
-  const firstTime = url.trim() ? (prev.firstTime || now) : '';
-  BLOG[wKey][member][dateStr] = { url: url.trim(), time, firstTime, history };
+  const dayData = BLOG[wKey][member][dateStr] || {};
+
+  // urls 배열 확보 (구형 단일 객체 호환)
+  let urls = Array.isArray(dayData.urls) ? [...dayData.urls]
+           : (dayData.url ? [{ url: dayData.url, firstTime: dayData.firstTime||dayData.time, time: dayData.time }]
+           : []);
+
+  // 해당 idx 엔트리 업데이트 — prev를 먼저 복사해두고 isEdit 판단
+  const prevEntry = urls[idx] ? { ...urls[idx] } : { url: '', firstTime: '', time: '' };
+  if (!urls[idx]) urls[idx] = { url: '', firstTime: '', time: '' };
+  const trimmed = url.trim();
+  // 수정 여부: 이전에 저장된 url이 있고, 지금 입력값과 다를 때
+  const isEdit = !!(prevEntry.url && prevEntry.url !== trimmed);
+
+  // firstTime: 최초 저장 시각 — 한 번 기록되면 이후 덮어쓰지 않음
+  const firstTime = trimmed ? (prevEntry.firstTime || now) : '';
+  // time: 이번 저장 시각 (매번 갱신)
+  const time = trimmed ? now : '';
+
+  urls[idx] = { url: trimmed, firstTime, time };
+  BLOG[wKey][member][dateStr] = { urls };
   set(rBlog, BLOG);
-  // 전체 재렌더 없이 해당 셀 스타일만 업데이트
+
+  // DOM 업데이트 (재렌더 없이)
   if (inputEl) {
-    const valid = url.trim().startsWith('http');
+    const valid = trimmed.startsWith('http');
+    const fmt = t => { const dt=new Date(t); return (dt.getMonth()+1)+'/'+dt.getDate()+' '+String(dt.getHours()).padStart(2,'0')+':'+String(dt.getMinutes()).padStart(2,'0'); };
+
     inputEl.style.borderColor = valid ? '#86EFAC' : 'var(--border)';
     inputEl.style.background = valid ? '#F0FDF4' : '#fff';
-    inputEl.closest('td').style.background = valid ? '#F0FDF4' : '';
-    // 시각 표시 업데이트 - 기존 div 찾거나 생성
-    let timeDiv = inputEl.parentElement.querySelector('div[data-timedisp]');
-    if (!timeDiv) {
-      const existingDiv = inputEl.nextElementSibling;
-      if (existingDiv && existingDiv.tagName === 'DIV') {
-        timeDiv = existingDiv;
-        timeDiv.dataset.timedisp = '1';
-      } else {
-        timeDiv = document.createElement('div');
-        timeDiv.dataset.timedisp = '1';
-        inputEl.after(timeDiv);
-      }
+
+    // 시간 표시 업데이트
+    const wrap = inputEl.parentElement;
+    const timeDiv = wrap.querySelector('div[data-timedisp]');
+    if (timeDiv) {
+      if (time) {
+        // isEdit: 실제 기존 값이 있고 바뀐 경우만 수정으로 표시
+        const hasEdit = isEdit;
+        let html = `<span style="color:#6B7280">입력 ${fmt(firstTime||time)}</span>`;
+        if (hasEdit) html += `<span style="color:${valid?'#D97706':'#9CA3AF'}"> · 수정 ${fmt(time)}</span>`;
+        timeDiv.innerHTML = html;
+      } else { timeDiv.innerHTML = ''; }
     }
-    if (time) {
-      const fmt = t => { const dt=new Date(t); return (dt.getMonth()+1)+'/'+dt.getDate()+' '+String(dt.getHours()).padStart(2,'0')+':'+String(dt.getMinutes()).padStart(2,'0'); };
-      const cell = BLOG[wKey]?.[member]?.[dateStr] || {};
-      const hist = cell.history || [];
-      const hasEdit = isEdit || hist.length > 0;
-      // 최초 입력 시각 표시
-      let html = `<span style="color:#6B7280">입력 ${fmt(cell.firstTime||time)}</span>`;
-      // 수정한 경우 마지막 수정 시각 추가
-      if (hasEdit) {
-        html += `<span style="color:${valid?'#D97706':'#9CA3AF'}"> · 수정 ${fmt(time)}</span>`;
-      }
-      timeDiv.style.cssText = 'font-size:9px;margin-top:2px;line-height:1.6';
-      timeDiv.innerHTML = html;
-    } else { timeDiv.innerHTML = ''; }
-    // 달성 셀 업데이트
+
+    // td 배경
+    const td = inputEl.closest('td');
+    if (td) {
+      const allUrls = (BLOG[wKey]?.[member]?.[dateStr]?.urls || []);
+      const tdValid = allUrls.some(u => u.url && u.url.startsWith('http'));
+      td.style.background = tdValid ? '#F0FDF4' : '';
+    }
+
+    // 달성 셀 업데이트 — 방향3: 전체 유효 URL 총합
     const row = inputEl.closest('tr');
     if (row) {
       const achieveTd = row.querySelector('td[data-achieve]');
       if (achieveTd) {
         const mData = BLOG[wKey]?.[member] || {};
-        const validCnt = Object.values(mData).filter(c=>c.url&&c.url.startsWith('http')).length;
+        let validCnt = 0;
+        Object.values(mData).forEach(dv => {
+          if (Array.isArray(dv.urls)) validCnt += dv.urls.filter(u=>u.url&&u.url.startsWith('http')).length;
+          else if (dv.url && dv.url.startsWith('http')) validCnt++;
+        });
         const req = achieveTd.dataset.req ? parseInt(achieveTd.dataset.req) : null;
         if (req) {
           const ok = validCnt >= req;
@@ -3680,6 +3715,31 @@ W._blogUrl = (wKey, member, dateStr, url, inputEl) => {
       }
     }
   }
+};
+// URL 추가 버튼
+W._blogUrlAdd = (wKey, member, dateStr) => {
+  if (!BLOG[wKey]) BLOG[wKey] = {};
+  if (!BLOG[wKey][member]) BLOG[wKey][member] = {};
+  const dayData = BLOG[wKey][member][dateStr] || {};
+  let urls = Array.isArray(dayData.urls) ? [...dayData.urls]
+           : (dayData.url ? [{ url: dayData.url, firstTime: dayData.firstTime||dayData.time, time: dayData.time }]
+           : []);
+  urls.push({ url: '', firstTime: '', time: '' });
+  BLOG[wKey][member][dateStr] = { urls };
+  set(rBlog, BLOG);
+  showBlog();
+};
+// URL 삭제 버튼
+W._blogUrlDel = (wKey, member, dateStr, idx) => {
+  if (!BLOG[wKey]?.[member]?.[dateStr]) return;
+  const dayData = BLOG[wKey][member][dateStr];
+  let urls = Array.isArray(dayData.urls) ? [...dayData.urls]
+           : (dayData.url ? [{ url: dayData.url, firstTime: dayData.firstTime||dayData.time, time: dayData.time }]
+           : []);
+  urls.splice(idx, 1);
+  BLOG[wKey][member][dateStr] = { urls };
+  set(rBlog, BLOG);
+  showBlog();
 };
 W._blogRole = (member, role) => {
   if (!BLOG.__roles) BLOG.__roles = {};
