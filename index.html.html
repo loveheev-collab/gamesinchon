@@ -381,6 +381,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
       <div class="sb-sub-item" id="nav-biz-add" onclick="W._swBiz('추가리스트')">📋 추가 리스트</div>
     </div>
     <div class="sb-item" id="nav-blog" onclick="W._swBlog()"><span class="ico">📝</span> 업무량</div>
+    <div class="sb-item" id="nav-links" onclick="W._swLinks()"><span class="ico">🔗</span> 링크모음</div>
     <div class="sb-item" id="nav-staff-alt" onclick="W._swStaff('대체휴무')"><span class="ico">🗓</span> 대체휴무</div>
   </div>
   <hr class="sb-divider">
@@ -454,6 +455,7 @@ const rDeposit = ref(db,'deposit2025');
 const rWorkload = ref(db,'workload2025');
 const rSchedule = ref(db,'schedule2025'); // 금일/익일 예정건
 const rFeedback = ref(db,'feedback2025'); // 미납 피드백
+const rLinks   = ref(db,'links2025');    // 링크모음
 
 // ── 설정 ─────────────────────────────────────────────
 const STS = ['상담','추가'];
@@ -547,7 +549,8 @@ let NOTICE = {text:'', editing:false};
 let ADDLIST = {};
 let DEPOSIT = {};
 let WORKLOAD = {};
-let BLOG = {}; // {week_mon: {member: {mon:{url,time}, tue:{url,time},...}, memberRoles:{m:'팀부장'/'경력'}}}
+let BLOG = {};
+let LINKS = []; // {week_mon: {member: {mon:{url,time}, tue:{url,time},...}, memberRoles:{m:'팀부장'/'경력'}}}
 let SCHEDULE = {};
 let FEEDBACK = {};
 let staffTab = '업무량';
@@ -589,6 +592,10 @@ onValue(rConfig, snap => {
 onValue(rBlog, snap => {
   BLOG = snap.val() || {};
   if (cw === 150) showBlog();
+});
+onValue(rLinks, snap => {
+  LINKS = snap.val() || [];
+  if (cw === 160) showLinks();
 });
 
 onValue(rArchive, snap => {
@@ -740,6 +747,7 @@ function renderTabs() {
     }
     else if (cw === -1) pt.textContent = '대시보드';
     else if (cw === 150) pt.textContent = '업무량 (블로그)';
+    else if (cw === 160) pt.textContent = '링크모음';
     else if (cw === 99) pt.textContent = '영업현황판';
     else pt.textContent = (WEEKS[cw]?.label||'') + ' 매출 현황';
   }
@@ -1264,6 +1272,7 @@ function renderAllDashboard() {
 
 function renderMain() {
   if (cw === 150) { showBlog(); return; }
+  if (cw === 160) { showLinks(); return; }
   document.getElementById('mc').style.display = '';
   document.getElementById('bc').style.display = 'none';
   document.getElementById('sc').style.display = 'none';
@@ -2949,6 +2958,100 @@ window.showBlog = function showBlog() {
   }
 }
 
+// ── 링크모음 ───────────────────────────────────────────
+window.showLinks = function showLinks() {
+  ['mc','bc','sc','dc'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display='none';});
+  const sc = document.getElementById('sc');
+  sc.style.display = '';
+  ['nav-dash','nav-biz','nav-staff','nav-dep','nav-blog','nav-staff-alt','nav-links'].forEach(id=>document.getElementById(id)?.classList.remove('on'));
+  document.getElementById('nav-links')?.classList.add('on');
+
+  const links = Array.isArray(LINKS) ? LINKS : Object.values(LINKS || {});
+
+  let h = `<div style="padding:20px;max-width:900px">
+    <div style="font-size:17px;font-weight:900;color:var(--text);margin-bottom:4px">🔗 링크모음</div>
+    <div style="font-size:11px;color:var(--text3);margin-bottom:16px">자주 쓰는 시트·문서·사이트 링크를 모아두세요. 왼쪽 ≡ 핸들을 드래그해 순서를 변경할 수 있어요.</div>
+
+    <!-- 추가 폼 -->
+    <div style="display:flex;gap:8px;margin-bottom:20px;align-items:center">
+      <input id="lnk-name" type="text" placeholder="링크명 (예: 출결 시트)"
+        style="flex:1;padding:8px 12px;font-size:13px;border:1px solid var(--border);border-radius:8px;background:var(--bg)">
+      <input id="lnk-url" type="url" placeholder="https:// 링크 주소"
+        style="flex:2;padding:8px 12px;font-size:13px;border:1px solid var(--border);border-radius:8px;background:var(--bg)"
+        onkeydown="if(event.key==='Enter')W._linkAdd()">
+      <button onclick="W._linkAdd()"
+        style="padding:8px 18px;background:#2563EB;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">+ 추가</button>
+    </div>
+
+    <!-- 링크 목록 -->
+    <div style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+      <table style="width:100%;border-collapse:collapse">
+        <thead>
+          <tr style="background:var(--bg2,#F8FAFC)">
+            <th style="padding:10px 10px;border-bottom:1px solid var(--border);width:24px"></th>
+            <th style="padding:10px 14px;text-align:left;font-size:12px;color:var(--text3);font-weight:700;border-bottom:1px solid var(--border);width:200px">링크명</th>
+            <th style="padding:10px 14px;text-align:left;font-size:12px;color:var(--text3);font-weight:700;border-bottom:1px solid var(--border)">링크 (URL)</th>
+            <th style="padding:10px 14px;text-align:center;font-size:12px;color:var(--text3);font-weight:700;border-bottom:1px solid var(--border);width:80px">열기</th>
+            <th style="padding:10px 14px;border-bottom:1px solid var(--border);width:32px"></th>
+          </tr>
+        </thead>
+        <tbody id="lnk-tbody">`;
+
+  if (links.length === 0) {
+    h += `<tr><td colspan="5" style="padding:32px;text-align:center;color:var(--text3);font-size:13px">
+      아직 저장된 링크가 없어요.<br><span style="font-size:11px">위에서 링크명과 URL을 입력하고 추가해보세요.</span>
+    </td></tr>`;
+  } else {
+    links.forEach((lnk, idx) => {
+      const name = lnk.name || '';
+      const url  = lnk.url  || '';
+      const safeName = name.replace(/"/g,'&quot;');
+      const safeUrl  = url.replace(/"/g,'&quot;');
+      const valid = url.startsWith('http');
+      h += `<tr data-idx="${idx}" style="border-bottom:1px solid var(--border);transition:background .15s"
+              onmouseover="if(!this.classList.contains('dragging'))this.style.background='var(--hover,#F5F7FA)'"
+              onmouseout="if(!this.classList.contains('dragging'))this.style.background=''">
+        <td style="padding:8px 10px;text-align:center;cursor:grab;color:#CBD5E1;font-size:16px;user-select:none"
+            title="드래그해서 순서 변경"
+            draggable="true"
+            ondragstart="W._linkDragStart(event,${idx})"
+            ondragover="W._linkDragOver(event)"
+            ondrop="W._linkDrop(event,${idx})"
+            ondragend="W._linkDragEnd(event)">≡</td>
+        <td style="padding:10px 14px">
+          <input value="${safeName}" placeholder="링크명"
+            style="width:100%;font-size:13px;font-weight:600;border:none;background:transparent;color:var(--text);outline:none"
+            onchange="W._linkEdit(${idx},'name',this.value)">
+        </td>
+        <td style="padding:10px 14px">
+          <input value="${safeUrl}" placeholder="https://..."
+            style="width:100%;font-size:12px;border:none;background:transparent;color:${valid?'#2563EB':'var(--text3)'};outline:none"
+            onchange="W._linkEdit(${idx},'url',this.value)">
+        </td>
+        <td style="padding:10px 14px;text-align:center">
+          ${valid
+            ? `<a href="${safeUrl}" target="_blank" rel="noopener"
+                style="font-size:12px;color:#2563EB;text-decoration:none;font-weight:600;white-space:nowrap">↗ 열기</a>`
+            : `<span style="font-size:12px;color:#CBD5E1">—</span>`}
+        </td>
+        <td style="padding:10px 14px;text-align:center">
+          <button onclick="W._linkDel(${idx})"
+            style="border:none;background:transparent;color:#CBD5E1;cursor:pointer;font-size:16px;line-height:1;padding:0"
+            onmouseover="this.style.color='#EF4444'" onmouseout="this.style.color='#CBD5E1'"
+            title="삭제">×</button>
+        </td>
+      </tr>`;
+    });
+  }
+
+  h += `</tbody></table></div></div>`;
+  sc.innerHTML = h;
+};
+
+
+
+
+
 window.W = {
   _bizMonthKey(startKey) {
     if (!startKey) return;
@@ -3671,6 +3774,75 @@ W._swBlog = () => {
   document.getElementById('nav-blog')?.classList.add('on');
   renderTabs();
   showBlog();
+};
+W._swLinks = () => {
+  cw = 160; curMonth = 'current';
+  ['nav-dash','nav-biz','nav-staff','nav-dep','nav-blog','nav-staff-alt','nav-links'].forEach(id=>document.getElementById(id)?.classList.remove('on'));
+  document.getElementById('nav-staff-sub')?.style && (document.getElementById('nav-staff-sub').style.display='none');
+  document.getElementById('nav-biz-sub')?.style && (document.getElementById('nav-biz-sub').style.display='none');
+  document.getElementById('nav-links')?.classList.add('on');
+  renderTabs();
+  showLinks();
+};
+W._linkAdd = () => {
+  const nameEl = document.getElementById('lnk-name');
+  const urlEl  = document.getElementById('lnk-url');
+  const name = nameEl?.value.trim();
+  const url  = urlEl?.value.trim();
+  if (!name || !url) { alert('링크명과 URL을 모두 입력해주세요.'); return; }
+  if (!url.startsWith('http')) { alert('URL은 http:// 또는 https://로 시작해야 합니다.'); return; }
+  const arr = Array.isArray(LINKS) ? [...LINKS] : Object.values(LINKS || {});
+  arr.push({ name, url });
+  LINKS = arr;
+  set(rLinks, LINKS).then(() => showLinks());
+};
+W._linkEdit = (idx, field, val) => {
+  const arr = Array.isArray(LINKS) ? [...LINKS] : Object.values(LINKS || {});
+  if (!arr[idx]) return;
+  arr[idx] = { ...arr[idx], [field]: val.trim() };
+  LINKS = arr;
+  set(rLinks, LINKS).then(() => { if (field === 'url') showLinks(); });
+};
+W._linkDel = (idx) => {
+  if (!confirm('이 링크를 삭제할까요?')) return;
+  const arr = Array.isArray(LINKS) ? [...LINKS] : Object.values(LINKS || {});
+  arr.splice(idx, 1);
+  LINKS = arr;
+  set(rLinks, LINKS).then(() => showLinks());
+};
+
+// ── 드래그 앤 드롭 순서 변경 ──────────────────────────
+let _linkDragFrom = null;
+W._linkDragStart = (e, idx) => {
+  _linkDragFrom = idx;
+  e.dataTransfer.effectAllowed = 'move';
+  const tr = e.currentTarget.closest('tr');
+  if (tr) { tr.classList.add('dragging'); tr.style.opacity = '0.4'; }
+};
+W._linkDragOver = (e) => {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  const tr = e.currentTarget.closest('tr');
+  if (tr) tr.style.background = '#EFF6FF';
+};
+W._linkDrop = (e, toIdx) => {
+  e.preventDefault();
+  if (_linkDragFrom === null || _linkDragFrom === toIdx) return;
+  const arr = Array.isArray(LINKS) ? [...LINKS] : Object.values(LINKS || {});
+  const [moved] = arr.splice(_linkDragFrom, 1);
+  arr.splice(toIdx, 0, moved);
+  LINKS = arr;
+  set(rLinks, LINKS).then(() => showLinks());
+  _linkDragFrom = null;
+};
+W._linkDragEnd = (e) => {
+  _linkDragFrom = null;
+  // 모든 행 스타일 초기화
+  document.querySelectorAll('#lnk-tbody tr').forEach(tr => {
+    tr.classList.remove('dragging');
+    tr.style.opacity = '';
+    tr.style.background = '';
+  });
 };
 W._blogUrl = (wKey, member, dateStr, url, inputEl, idx=0) => {
   if (!BLOG[wKey]) BLOG[wKey] = {};
