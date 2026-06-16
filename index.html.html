@@ -2130,6 +2130,34 @@ function showDep() {
   // 예정건 행 초기 세팅 및 초과 빈행 정리
   const initRows = {금일: 7, 익일: 7};
   let needSave = false;
+
+  // ── 어제 익일 → 오늘 금일 자동 이전 (carry-over) ──────────────────
+  // 어제 날짜 계산
+  const _todayD = new Date(); _todayD.setHours(0,0,0,0);
+  const _yestD  = new Date(_todayD); _yestD.setDate(_yestD.getDate() - 1);
+  const yestStr = `${_yestD.getFullYear()}-${String(_yestD.getMonth()+1).padStart(2,'0')}-${String(_yestD.getDate()).padStart(2,'0')}`;
+  const _carryFlag = `carried_${yestStr}_to_${today}`;
+
+  if (!SCHEDULE[_carryFlag]) {
+    // 아직 이전 안 된 경우에만 실행
+    const yestIkil = SCHEDULE[yestStr]?.익일 || {};
+    const filledYestIkil = Object.entries(yestIkil).filter(([,r]) => r.멘토 || r.이름 || r.금액);
+    if (filledYestIkil.length > 0) {
+      if (!SCHEDULE[today]) SCHEDULE[today] = {};
+      if (!SCHEDULE[today].금일) SCHEDULE[today].금일 = {};
+      filledYestIkil.forEach(([, r]) => {
+        const newId = 'cy' + Date.now() + '_' + Math.random().toString(36).slice(2,6);
+        // 완납/미납 상태는 초기화하여 오늘 처리 대기 상태로
+        SCHEDULE[today].금일[newId] = { ...r, 완납: false, 미납: false };
+      });
+      needSave = true;
+    }
+    // 이전 완료 표시 (중복 실행 방지)
+    SCHEDULE[_carryFlag] = today;
+    needSave = true;
+  }
+  // ────────────────────────────────────────────────────────────────────
+
   ['금일','익일'].forEach(type => {
     if (!SCHEDULE[today]) SCHEDULE[today] = {};
     if (!SCHEDULE[today][type]) SCHEDULE[today][type] = {};
