@@ -19,6 +19,16 @@
 }
 </style>
 <style>
+.lnk-inp {
+  width:100%;padding:5px 8px;
+  border:1px solid transparent;border-radius:6px;
+  background:transparent;outline:none;
+  transition:none;cursor:text;
+}
+.lnk-inp:focus {
+  border-color:#93C5FD !important;
+  background:#EFF6FF !important;
+}
 *{box-sizing:border-box;margin:0;padding:0;font-variant-numeric:normal;outline:none !important}
 .layout{display:flex;min-height:100vh}
 .sidebar{width:200px;background:#fff;border-right:1px solid #E8ECF0;flex-shrink:0;position:fixed;top:0;left:0;height:100vh;overflow-y:auto;z-index:200;display:flex;flex-direction:column}
@@ -3020,21 +3030,15 @@ window.showLinks = function showLinks() {
             ondragend="W._linkDragEnd(event)">≡</td>
         <td style="padding:6px 10px">
           <input value="${safeName}" placeholder="링크명 클릭해서 수정"
-            style="width:100%;font-size:13px;font-weight:600;padding:5px 8px;
-                   border:1px solid transparent;border-radius:6px;background:transparent;
-                   color:var(--text);outline:none;transition:border .15s,background .15s;cursor:text"
-            onfocus="this.style.borderColor='#93C5FD';this.style.background='#EFF6FF'"
-            onblur="this.style.borderColor='transparent';this.style.background='transparent';W._linkEdit(${idx},'name',this.value)"
-            >
+            class="lnk-inp"
+            style="font-size:13px;font-weight:600;color:var(--text)"
+            onblur="W._linkEdit(${idx},'name',this.value)">
         </td>
         <td style="padding:6px 10px">
           <input value="${safeUrl}" placeholder="https://..."
-            style="width:100%;font-size:12px;padding:5px 8px;
-                   border:1px solid transparent;border-radius:6px;background:transparent;
-                   color:${valid?'#2563EB':'var(--text3)'};outline:none;transition:border .15s,background .15s;cursor:text"
-            onfocus="this.style.borderColor='#93C5FD';this.style.background='#EFF6FF'"
-            onblur="this.style.borderColor='transparent';this.style.background='transparent';W._linkEdit(${idx},'url',this.value)"
-            >
+            class="lnk-inp"
+            style="font-size:12px;color:${valid?'#2563EB':'var(--text3)'}"
+            onblur="W._linkEdit(${idx},'url',this.value)">
         </td>
         <td style="padding:10px 14px;text-align:center">
           ${valid
