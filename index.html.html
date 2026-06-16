@@ -2701,6 +2701,27 @@ function renderWorkload() {
 
 
 // ── 업무량 (블로그) ────────────────────────────────────
+// 로컬 날짜 문자열 반환 헬퍼 (UTC 버그 방지)
+function _localDateStr(d) {
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+// 날짜 문자열 → 해당 주 월요일 문자열 (로컬 기준)
+function _toMonday(dateStr) {
+  const d = new Date(dateStr+'T00:00:00');
+  const day = d.getDay(); // 0=일,1=월,...,6=토
+  const offset = day === 0 ? -6 : -(day - 1);
+  d.setDate(d.getDate() + offset);
+  return _localDateStr(d);
+}
+// 오늘이 속한 주 월요일
+function _getTodayMonday() {
+  const nd = new Date();
+  const day = nd.getDay();
+  const mon = new Date(nd);
+  mon.setDate(nd.getDate() - (day === 0 ? 6 : day - 1));
+  return _localDateStr(mon);
+}
+
 window.showBlog = function showBlog() {
   ['mc','bc','sc','dc'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display='none';});
   const sc = document.getElementById('sc');
@@ -2710,52 +2731,42 @@ window.showBlog = function showBlog() {
   document.getElementById('nav-blog')?.classList.add('on');
 
   try {
-    // 이번 주 월요일 자동 계산
     const today = todayStr();
-    const _getTodayMon = () => {
-      const nd = new Date(); const day = nd.getDay();
-      const mon = new Date(nd); mon.setDate(nd.getDate()-(day===0?6:day-1));
-      return mon.toISOString().slice(0,10);
-    };
-    // 월요일 보정: 입력한 날이 속한 주의 월요일 (일요일은 -6일)
-    const _toMon = (dateStr) => {
-      const d = new Date(dateStr+'T00:00:00');
-      const day = d.getDay(); // 0=일, 1=월, ..., 6=토
-      const offset = day === 0 ? -6 : -(day - 1); // 월요일로 당기기
-      d.setDate(d.getDate() + offset);
-      return d.toISOString().slice(0,10);
-    };
-    // 현재 선택된 월요일 (없으면 이번 주 월요일, 있어도 월요일로 보정)
-    if (!window._blogMonday) window._blogMonday = _getTodayMon();
-    else window._blogMonday = _toMon(window._blogMonday);
+
+    // 현재 선택된 주 월요일 초기화 (없으면 이번 주 월요일)
+    if (!window._blogMonday) window._blogMonday = _getTodayMonday();
+    // date input 등에서 임의 날짜가 들어온 경우 해당 주 월요일로 보정
+    window._blogMonday = _toMonday(window._blogMonday);
     const wKey = window._blogMonday;
 
-    // 월~일 7일 생성 (wKey는 반드시 월요일)
+    // 월~일 7일 생성 (wKey는 반드시 월요일, 로컬 기준)
     const days = [];
-    const startBase = new Date(wKey+'T00:00:00');
-    for (let i=0;i<7;i++) {
-      const d = new Date(startBase); d.setDate(startBase.getDate()+i);
-      const ds = d.toISOString().slice(0,10);
+    const startBase = new Date(wKey+'T00:00:00'); // 로컬 자정
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(startBase);
+      d.setDate(startBase.getDate() + i);
+      const ds = _localDateStr(d); // UTC 버그 수정: 로컬 날짜 사용
       const wd = ['일','월','화','수','목','금','토'][d.getDay()];
       days.push({ds, label: wd+' '+(d.getMonth()+1)+'/'+(d.getDate())});
     }
     const sundayStr = days[6].ds;
-    // 다음 월요일 마감
-
 
     // 직원별 팀부장/경력 구분 데이터
     const blogRoles = (BLOG.__roles) || {};
     const isValidUrl = v => v && v.trim().startsWith('http');
+    // 시간 표시: ISO 저장값을 로컬 시각으로 표시
     const fmtTime = t => {
       if (!t) return '';
       const d = new Date(t);
       return (d.getMonth()+1)+'/'+d.getDate()+' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
     };
 
-    // 이전/다음 주 이동
-    const prevMon = (() => { const d=new Date(startBase); d.setDate(d.getDate()-7); return _toMon(d.toISOString().slice(0,10)); })();
-    const nextMonNav = (() => { const d=new Date(startBase); d.setDate(d.getDate()+7); return _toMon(d.toISOString().slice(0,10)); })();
-    const isThisWeek = wKey === _getTodayMon();
+    // 이전/다음 주 이동 (로컬 기준, UTC 버그 수정)
+    const prevBase = new Date(startBase); prevBase.setDate(prevBase.getDate() - 7);
+    const nextBase = new Date(startBase); nextBase.setDate(nextBase.getDate() + 7);
+    const prevMon = _localDateStr(prevBase);
+    const nextMonNav = _localDateStr(nextBase);
+    const isThisWeek = wKey === _getTodayMonday();
 
     let h = `<div style="padding:16px 20px">
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap">
@@ -2775,7 +2786,7 @@ window.showBlog = function showBlog() {
           style="padding:6px 12px;border-radius:8px;font-size:13px;border:1px solid var(--border);background:var(--bg);cursor:pointer">▶</button>
         <span style="font-size:12px;color:var(--text3)">${wKey} ~ ${sundayStr}</span>
         ${isThisWeek?'<span style="font-size:11px;padding:2px 10px;border-radius:20px;background:#DBEAFE;color:#2563EB;font-weight:700">이번 주</span>':''}
-        <button onclick="window._blogMonday='${_getTodayMon()}';showBlog()"
+        <button onclick="window._blogMonday=_getTodayMonday();showBlog()"
           style="padding:5px 14px;border-radius:8px;font-size:12px;font-weight:700;border:1px solid var(--border);background:var(--bg);cursor:pointer;color:var(--text2)">이번 주로</button>
       </div>`;
 
@@ -2833,13 +2844,23 @@ window.showBlog = function showBlog() {
             const cell = mData[d.ds] || {};
             const url = cell.url || '';
             const time = cell.time || '';
+            const firstTime = cell.firstTime || time;
+            const hist = cell.history || [];
+            const hasEdit = hist.length > 0 || (firstTime && time && firstTime !== time);
             const valid = isValidUrl(url);
+            // 입력/수정 시각 표시 (초기 렌더)
+            let timeHtml = '';
+            if (time) {
+              timeHtml = `<span style="color:#6B7280">입력 ${fmtTime(firstTime)}</span>`;
+              if (hasEdit) {
+                timeHtml += `<span style="color:${valid?'#D97706':'#9CA3AF'}"> · 수정 ${fmtTime(time)}</span>`;
+              }
+            }
             return `<td style="padding:4px 6px;border:1px solid var(--border);vertical-align:top;background:${valid?'#F0FDF4':''}">
               <input type="url" value="${url.replace(/"/g,'&quot;')}" placeholder="https://..."
                 style="width:100%;font-size:10px;padding:4px 6px;border:1px solid ${valid?'#86EFAC':'var(--border)'};border-radius:5px;background:${valid?'#F0FDF4':'#fff'}"
                 onchange="W._blogUrl('${wKey}','${m}','${d.ds}',this.value,this)">
-              <div data-timedisp="1" style="font-size:9px;margin-top:2px;line-height:1.6">${time?`<span style="color:${valid?'#16A34A':'var(--text3)'}">입력 ${fmtTime(time)}</span>${(cell.history||[]).map(h=>`<span style="color:#94A3B8;text-decoration:line-through"> → ${fmtTime(h.time)}</span>`).join('')}`:''}
-              </div>
+              <div data-timedisp="1" style="font-size:9px;margin-top:2px;line-height:1.6">${timeHtml}</div>
             </td>`;
           }).join('')}
           <td data-achieve="1" data-req="${reqCount||''}" style="padding:6px;border:1px solid var(--border);text-align:center;font-weight:700;
@@ -3583,6 +3604,8 @@ W._arcView = (tab, arcKey) => { window._arcBizTab = tab; renderArchiveView(arcKe
 // 업무량 핸들러
 W._swBlog = () => {
   cw = 150; curMonth = 'current';
+  // 탭 재클릭 시 날짜 유지 (이미 업무량 탭이면 그대로, 다른 탭에서 넘어오면 유지)
+  // _blogMonday는 초기화하지 않음 — 사용자가 선택한 주가 유지됨
   ['nav-dash','nav-biz','nav-staff','nav-dep','nav-blog','nav-staff-alt'].forEach(id=>document.getElementById(id)?.classList.remove('on'));
   document.getElementById('nav-staff-sub')?.style && (document.getElementById('nav-staff-sub').style.display='none');
   document.getElementById('nav-biz-sub')?.style && (document.getElementById('nav-biz-sub').style.display='none');
@@ -3597,12 +3620,15 @@ W._blogUrl = (wKey, member, dateStr, url, inputEl) => {
   const prev = BLOG[wKey][member][dateStr] || {};
   // 수정 이력 누적 (최대 5개)
   const history = prev.history ? [...prev.history] : [];
-  if (prev.url && prev.url !== url.trim()) {
-    history.push({ url: prev.url, time: prev.time });
+  const isEdit = !!(prev.url && prev.url !== url.trim()); // 수정 여부
+  if (isEdit) {
+    history.push({ url: prev.url, time: prev.time, label: prev.firstTime ? '수정' : '입력' });
     if (history.length > 5) history.shift();
   }
   const time = url.trim() ? now : '';
-  BLOG[wKey][member][dateStr] = { url: url.trim(), time, history };
+  // 최초 입력 시각은 한 번 기록 후 유지
+  const firstTime = url.trim() ? (prev.firstTime || now) : '';
+  BLOG[wKey][member][dateStr] = { url: url.trim(), time, firstTime, history };
   set(rBlog, BLOG);
   // 전체 재렌더 없이 해당 셀 스타일만 업데이트
   if (inputEl) {
@@ -3613,7 +3639,6 @@ W._blogUrl = (wKey, member, dateStr, url, inputEl) => {
     // 시각 표시 업데이트 - 기존 div 찾거나 생성
     let timeDiv = inputEl.parentElement.querySelector('div[data-timedisp]');
     if (!timeDiv) {
-      // 기존 렌더된 div가 있으면 재활용, 없으면 생성
       const existingDiv = inputEl.nextElementSibling;
       if (existingDiv && existingDiv.tagName === 'DIV') {
         timeDiv = existingDiv;
@@ -3625,12 +3650,15 @@ W._blogUrl = (wKey, member, dateStr, url, inputEl) => {
       }
     }
     if (time) {
-      const d = new Date(time);
       const fmt = t => { const dt=new Date(t); return (dt.getMonth()+1)+'/'+dt.getDate()+' '+String(dt.getHours()).padStart(2,'0')+':'+String(dt.getMinutes()).padStart(2,'0'); };
-      const hist = BLOG[wKey]?.[member]?.[dateStr]?.history || [];
-      let html = `<span style="color:${valid?'#16A34A':'var(--text3)'}">입력 ${fmt(time)}</span>`;
-      if (hist.length > 0) {
-        html += hist.map(h=>`<span style="color:#94A3B8;text-decoration:line-through"> → ${fmt(h.time)}</span>`).join('');
+      const cell = BLOG[wKey]?.[member]?.[dateStr] || {};
+      const hist = cell.history || [];
+      const hasEdit = isEdit || hist.length > 0;
+      // 최초 입력 시각 표시
+      let html = `<span style="color:#6B7280">입력 ${fmt(cell.firstTime||time)}</span>`;
+      // 수정한 경우 마지막 수정 시각 추가
+      if (hasEdit) {
+        html += `<span style="color:${valid?'#D97706':'#9CA3AF'}"> · 수정 ${fmt(time)}</span>`;
       }
       timeDiv.style.cssText = 'font-size:9px;margin-top:2px;line-height:1.6';
       timeDiv.innerHTML = html;
