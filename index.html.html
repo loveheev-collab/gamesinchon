@@ -2989,7 +2989,7 @@ window.showLinks = function showLinks() {
         <thead>
           <tr style="background:var(--bg2,#F8FAFC)">
             <th style="padding:10px 10px;border-bottom:1px solid var(--border);width:24px"></th>
-            <th style="padding:10px 14px;text-align:left;font-size:12px;color:var(--text3);font-weight:700;border-bottom:1px solid var(--border);width:300px">링크명</th>
+            <th style="padding:10px 14px;text-align:left;font-size:12px;color:var(--text3);font-weight:700;border-bottom:1px solid var(--border);width:420px">링크명</th>
             <th style="padding:10px 14px;text-align:left;font-size:12px;color:var(--text3);font-weight:700;border-bottom:1px solid var(--border)">링크 (URL)</th>
             <th style="padding:10px 14px;text-align:center;font-size:12px;color:var(--text3);font-weight:700;border-bottom:1px solid var(--border);width:80px">열기</th>
             <th style="padding:10px 14px;border-bottom:1px solid var(--border);width:32px"></th>
@@ -3023,18 +3023,18 @@ window.showLinks = function showLinks() {
             style="width:100%;font-size:13px;font-weight:600;padding:5px 8px;
                    border:1px solid transparent;border-radius:6px;background:transparent;
                    color:var(--text);outline:none;transition:border .15s,background .15s;cursor:text"
-            onfocus="this.style.border='1px solid #93C5FD';this.style.background='#EFF6FF'"
-            onblur="this.style.border='1px solid transparent';this.style.background='transparent'"
-            onchange="W._linkEdit(${idx},'name',this.value)">
+            onfocus="this.style.borderColor='#93C5FD';this.style.background='#EFF6FF'"
+            onblur="this.style.borderColor='transparent';this.style.background='transparent';W._linkEdit(${idx},'name',this.value)"
+            >
         </td>
         <td style="padding:6px 10px">
           <input value="${safeUrl}" placeholder="https://..."
             style="width:100%;font-size:12px;padding:5px 8px;
                    border:1px solid transparent;border-radius:6px;background:transparent;
                    color:${valid?'#2563EB':'var(--text3)'};outline:none;transition:border .15s,background .15s;cursor:text"
-            onfocus="this.style.border='1px solid #93C5FD';this.style.background='#EFF6FF'"
-            onblur="this.style.border='1px solid transparent';this.style.background='transparent';if(this.value.trim().startsWith('http'))showLinks()"
-            onchange="W._linkEdit(${idx},'url',this.value)">
+            onfocus="this.style.borderColor='#93C5FD';this.style.background='#EFF6FF'"
+            onblur="this.style.borderColor='transparent';this.style.background='transparent';W._linkEdit(${idx},'url',this.value)"
+            >
         </td>
         <td style="padding:10px 14px;text-align:center">
           ${valid
@@ -3807,9 +3807,11 @@ W._linkAdd = () => {
 W._linkEdit = (idx, field, val) => {
   const arr = Array.isArray(LINKS) ? [...LINKS] : Object.values(LINKS || {});
   if (!arr[idx]) return;
-  arr[idx] = { ...arr[idx], [field]: val.trim() };
+  const trimmed = val.trim();
+  if (arr[idx][field] === trimmed) return; // 변경 없으면 저장 안 함
+  arr[idx] = { ...arr[idx], [field]: trimmed };
   LINKS = arr;
-  set(rLinks, LINKS).then(() => { if (field === 'url') showLinks(); });
+  set(rLinks, LINKS);
 };
 W._linkDel = (idx) => {
   if (!confirm('이 링크를 삭제할까요?')) return;
