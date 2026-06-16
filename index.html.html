@@ -4,7 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>게임신촌 업무 현황판</title>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=Roboto:wght@500;700&family=Roboto+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=Roboto:wght@500;700&family=Roboto+Mono:wght@500;700&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after {
   font-variant-numeric: normal !important;
@@ -41,7 +42,7 @@
 .sb-item{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:8px;cursor:pointer;color:#5A6785;font-size:13px;font-weight:500;transition:all .15s;margin-bottom:2px;text-decoration:none;border:none;background:none;width:100%;text-align:left}
 .sb-item:hover{background:#F5F7FA;color:#1A2340}
 .sb-item.on{background:#EFF4FF;color:#2563EB;font-weight:700}
-.sb-item .ico{font-size:15px;width:20px;text-align:center;flex-shrink:0}
+.sb-item .ico{font-size:16px;width:20px;text-align:center;flex-shrink:0;display:flex;align-items:center;justify-content:center}
 .sb-sub{padding-left:14px;margin-top:2px}
 .sb-sub-item{display:flex;align-items:center;gap:7px;padding:7px 10px;border-radius:7px;cursor:pointer;color:#8A97B0;font-size:12px;font-weight:500;transition:all .15s;margin-bottom:1px;border-left:2px solid transparent}
 .sb-sub-item:hover{color:#1A2340;background:#F5F7FA}
@@ -88,13 +89,9 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .ksub{font-size:11px;color:var(--text3);margin-top:2px}
 /* 결산 누계 강조 KPI */
 .kg-highlight{display:grid;grid-template-columns:repeat(auto-fit,minmax(195px,1fr));gap:0;margin-bottom:22px;border-radius:14px;overflow:hidden;border:3px solid #1D4ED8;box-shadow:0 4px 24px rgba(37,99,235,.18)}
-.kc-hl{background:var(--bg2);padding:18px 20px;border-right:1px solid #BFCFFF;position:relative}
+.kc-hl{background:var(--bg2);padding:18px 20px;border-right:1px solid #BFCFFF}
 .kc-hl:last-child{border-right:none}
-.kc-hl::before{content:'';position:absolute;top:0;left:0;right:0;height:5px}
-.kc-hl.hl-go::before{background:#D97706}
-.kc-hl.hl-g::before{background:#16A34A}
-.kc-hl.hl-a::before{background:#2563EB}
-.kc-hl.hl-diff::before{background:var(--diff-color,#DC2626)}
+
 .kc-hl .klbl{font-size:11px;font-weight:900;color:#6B7280;letter-spacing:.3px;margin-bottom:7px;text-transform:uppercase}
 .kc-hl .kval{font-size:24px;font-weight:900;font-family:'Roboto',monospace;letter-spacing:-1.5px}
 .kc-hl .ksub{font-size:11px;color:#9CA3AF;margin-top:4px}
@@ -105,7 +102,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .dg{display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:10px;margin-bottom:11px}
 .dc{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px}
 .dc label{font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:5px}
-.dinp{width:100%;padding:6px 8px;background:var(--bg2);border:1.5px solid var(--accent);border-radius:6px;color:var(--accent);font-size:13px;font-weight:700;text-align:right;font-family:'Roboto',monospace}
+.dinp{width:100%;padding:6px 8px;background:var(--bg2);border:1.5px solid var(--border);border-radius:6px;color:var(--text);font-size:13px;font-weight:700;text-align:right;font-family:'Roboto',monospace}
 .dinp:focus{outline:none;box-shadow:0 0 0 3px rgba(37,99,235,.1)}
 .dcalc{display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:10px}
 .dcc{border-radius:8px;padding:10px 13px;display:flex;align-items:center;justify-content:space-between}
@@ -382,18 +379,19 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
   </div>
   <div class="sb-sec">
     <div class="sb-sec-lbl">메뉴</div>
-    <div class="sb-item" id="nav-dash" onclick="W._swDash()"><span class="ico">📊</span> 대시보드</div>
-    <div class="sb-item" id="nav-dep" onclick="W._swDep()"><span class="ico">💵</span> 입금 파악</div>
-    <div class="sb-item" id="nav-biz" onclick="W._toggleBiz()"><span class="ico">💼</span> 영업현황 <span id="nav-biz-arrow" style="margin-left:auto;font-size:10px;transition:transform .2s">▼</span></div>
+    <div class="sb-item" id="nav-dash" onclick="W._swDash()"><i class="ti ti-layout-dashboard ico" aria-hidden="true"></i> 대시보드</div>
+    <div class="sb-item" id="nav-dep" onclick="W._swDep()"><i class="ti ti-credit-card ico" aria-hidden="true"></i> 입금 파악</div>
+    <div class="sb-item" id="nav-biz" onclick="W._toggleBiz()"><i class="ti ti-chart-bar ico" aria-hidden="true"></i> 영업현황 <span id="nav-biz-arrow" style="margin-left:auto;font-size:10px;transition:transform .2s">▼</span></div>
     <div class="sb-sub" id="nav-biz-sub" style="display:none">
       <div class="sb-sub-item" id="nav-biz-sum" onclick="W._swBiz('요약')">📊 영업 데이터</div>
       <div class="sb-sub-item" id="nav-biz-con" onclick="W._swBiz('상담내역')">📋 상담 내역</div>
       <div class="sb-sub-item" id="nav-biz-unp" onclick="W._swBiz('미납리스트')">💰 미납 리스트</div>
       <div class="sb-sub-item" id="nav-biz-add" onclick="W._swBiz('추가리스트')">📋 추가 리스트</div>
     </div>
-    <div class="sb-item" id="nav-blog" onclick="W._swBlog()"><span class="ico">📝</span> 업무량</div>
-    <div class="sb-item" id="nav-links" onclick="W._swLinks()"><span class="ico">🔗</span> 링크모음</div>
-    <div class="sb-item" id="nav-staff-alt" onclick="W._swStaff('대체휴무')"><span class="ico">🗓</span> 대체휴무</div>
+    <div class="sb-item" id="nav-blog" onclick="W._swBlog()"><i class="ti ti-checklist ico" aria-hidden="true"></i> 업무량</div>
+    <div class="sb-item" id="nav-rvstat" onclick="W._swRvStat()"><i class="ti ti-star ico" aria-hidden="true"></i> 리뷰작성현황</div>
+    <div class="sb-item" id="nav-links" onclick="W._swLinks()"><i class="ti ti-link ico" aria-hidden="true"></i> 링크모음</div>
+    <div class="sb-item" id="nav-staff-alt" onclick="W._swStaff('대체휴무')"><i class="ti ti-calendar-off ico" aria-hidden="true"></i> 대체휴무</div>
   </div>
   <hr class="sb-divider">
   <div class="sb-sec">
@@ -406,7 +404,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
   <hr class="sb-divider">
   <div class="sb-sec">
     <div class="sb-sec-lbl">관리</div>
-    <a class="sb-item" href="admin.html"><span class="ico">⚙</span> 설정</a>
+    <a class="sb-item" href="admin.html"><i class="ti ti-settings ico" aria-hidden="true"></i> 설정</a>
   </div>
   <div class="sb-footer">
     <div style="font-size:11px;color:#B0BEC5;line-height:1.8">
@@ -467,6 +465,7 @@ const rWorkload = ref(db,'workload2025');
 const rSchedule = ref(db,'schedule2025'); // 금일/익일 예정건
 const rFeedback = ref(db,'feedback2025'); // 미납 피드백
 const rLinks   = ref(db,'links2025');    // 링크모음
+const rRvStat  = ref(db,'rvstat2026');   // 리뷰작성현황
 
 // ── 설정 ─────────────────────────────────────────────
 const STS = ['상담','추가'];
@@ -554,14 +553,15 @@ let cw = -1, bst = '요약';
 let curMonth = 'current';
 let ARCHIVE = {};
 let arcSubTab = '결산';
-let DATA = {}, DAILY = {prevYear:190730000,thisYear:170276400,consult:0,contract:0,sales:0};
+let DATA = {}, DAILY = {prevYear:190730000,thisYear:170276400,consult:0,contract:0,sales:0,refundAmt:0};
 let REVIEW = {}, BIZ = {}, CONSULT = {};
 let NOTICE = {text:'', editing:false};
 let ADDLIST = {};
 let DEPOSIT = {};
 let WORKLOAD = {};
 let BLOG = {};
-let LINKS = []; // {week_mon: {member: {mon:{url,time}, tue:{url,time},...}, memberRoles:{m:'팀부장'/'경력'}}}
+let LINKS = [];
+let RVSTAT = {}; // {week_mon: {member: {mon:{url,time}, tue:{url,time},...}, memberRoles:{m:'팀부장'/'경력'}}}
 let SCHEDULE = {};
 let FEEDBACK = {};
 let staffTab = '업무량';
@@ -603,6 +603,10 @@ onValue(rConfig, snap => {
 onValue(rBlog, snap => {
   BLOG = snap.val() || {};
   if (cw === 150) showBlog();
+});
+onValue(rRvStat, snap => {
+  RVSTAT = snap.val() || {};
+  if (cw === 170) showRvStat();
 });
 onValue(rLinks, snap => {
   LINKS = snap.val() || [];
@@ -759,6 +763,7 @@ function renderTabs() {
     else if (cw === -1) pt.textContent = '대시보드';
     else if (cw === 150) pt.textContent = '업무량 (블로그)';
     else if (cw === 160) pt.textContent = '링크모음';
+    else if (cw === 170) pt.textContent = '리뷰작성현황';
     else if (cw === 99) pt.textContent = '영업현황판';
     else pt.textContent = (WEEKS[cw]?.label||'') + ' 매출 현황';
   }
@@ -1015,27 +1020,24 @@ function renderAllDashboard() {
       <div class="dg">
         <div class="dc"><label>전년 누계 매출 (원)</label><input class="dinp" id="dp" type="text" inputmode="numeric"></div>
         <div class="dc"><label>올해 누계 매출 (원)</label><input class="dinp" id="dt" type="text" inputmode="numeric"></div>
-        <div class="dc"><label>전일 상담 건수</label><input class="dinp" id="dco" type="text" inputmode="numeric"></div>
-        <div class="dc"><label>전일 등록 건수</label><input class="dinp" id="dr" type="text" inputmode="numeric"></div>
-        <div class="dc"><label>전일 매출 (원)</label><input class="dinp" id="ds" type="text" inputmode="numeric"></div>
-      </div>
+        <div class="dc"><label>환불 (원)</label><input class="dinp" id="drf" type="text" inputmode="numeric" oninput="W._di('refundAmt',this.value);formatBizInp(this)"></div>
+        <div class="dc" style="background:#fff;border:2px solid #2563EB;border-radius:8px;padding:4px 8px"><label style="color:#2563EB;font-weight:700">결산 순매출 (원)</label><input class="dinp" id="dnet" type="text" readonly style="background:#fff;color:var(--text);cursor:default;border-color:#2563EB"></div>
+        <div class="dc"><label>일 필요매출 (원)</label><input class="dinp" id="ddaily" type="text" readonly style="background:var(--bg2);color:var(--text2);cursor:default"></div>
+        <div class="dc"><label>남은 기간</label><input class="dinp" id="dremain" type="text" readonly style="background:var(--bg2);color:var(--text2);cursor:default"></div>
       <div class="dcalc">
         <div class="dcc" id="ddc" style="background:var(--bg);border:1px solid var(--border);border-radius:8px">
           <span style="font-size:12px;font-weight:700;color:var(--text2)">전년대비 차이</span>
           <span style="font-size:14px;font-weight:900;font-family:'Roboto',monospace;color:var(--red)" id="ddv">-</span>
         </div>
-        <div class="dcc" style="background:var(--bg);border:1px solid var(--border);border-radius:8px">
-          <span style="font-size:12px;font-weight:700;color:var(--text2)">전일 전환율</span>
-          <span style="font-size:14px;font-weight:900;font-family:'Roboto',monospace;color:var(--text)" id="dcv">-</span>
-        </div>
+
       </div>
     </div>`;
 
   // 결산 누계
   h += `<div class="kg-highlight-label">결산 누계 현황</div>
     <div class="kg-highlight">
-      <div class="kc-hl hl-go"><div class="klbl">월 목표</div><div class="kval" style="color:#D97706">${F(TG)}</div><div class="ksub">원</div></div>
-      <div class="kc-hl hl-g"><div class="klbl">누계 실적</div><div class="kval" style="color:#16A34A" id="dash-kpi-sales">${F(DAILY.thisYear||0)}</div><div class="ksub">원</div></div>
+      <div class="kc-hl hl-go"><div class="klbl">월 목표</div><div class="kval" style="color:var(--text)">${F(TG)}</div><div class="ksub">원</div></div>
+      <div class="kc-hl hl-g" style="background:#fff;border:2px solid #16A34A;border-radius:10px"><div class="klbl">누계 실적</div><div class="kval" style="color:#16A34A" id="dash-kpi-sales">${F(DAILY.thisYear||0)}</div><div class="ksub">원</div></div>
       <div class="kc-hl hl-a"><div class="klbl">달성률</div><div class="kval" style="color:#2563EB" id="dash-kpi-rate">${TG>0?((DAILY.thisYear||0)/TG*100).toFixed(1)+'%':'0.0%'}</div><div class="ksub">누계 기준</div></div>
       <div class="kc-hl hl-diff" id="dash-kpi-diff-card">
         <div class="klbl">잔여 목표</div>
@@ -1273,7 +1275,7 @@ function renderAllDashboard() {
   h += `<div class="rtn">🟢 실시간 공유 중 — 누구든 입력하면 모든 접속자 화면에 즉시 반영됩니다</div>`;
   mc.innerHTML = h;
 
-  const fields = [['dp','prevYear'],['dt','thisYear'],['dco','consult'],['dr','contract'],['ds','sales']];
+  const fields = [['dp','prevYear'],['dt','thisYear'],['drf','refundAmt']];
   fields.forEach(([id,key]) => {
     const el = document.getElementById(id);
     if (el) el.oninput = function(){ W._di(key, this.value); formatBizInp(this); };
@@ -1284,6 +1286,7 @@ function renderAllDashboard() {
 function renderMain() {
   if (cw === 150) { showBlog(); return; }
   if (cw === 160) { showLinks(); return; }
+  if (cw === 170) { showRvStat(); return; }
   document.getElementById('mc').style.display = '';
   document.getElementById('bc').style.display = 'none';
   document.getElementById('sc').style.display = 'none';
@@ -1296,9 +1299,10 @@ function renderMain() {
       <div class="dg">
         <div class="dc"><label>전년 누계 매출 (원)</label><input class="dinp" id="dp" type="text" inputmode="numeric" oninput="W._di('prevYear',this.value);formatBizInp(this)"></div>
         <div class="dc"><label>올해 누계 매출 (원)</label><input class="dinp" id="dt" type="text" inputmode="numeric" oninput="W._di('thisYear',this.value);formatBizInp(this)"></div>
-        <div class="dc"><label>전일 상담 건수</label><input class="dinp" id="dco" type="text" inputmode="numeric" oninput="W._di('consult',this.value)"></div>
-        <div class="dc"><label>전일 등록 건수</label><input class="dinp" id="dr" type="text" inputmode="numeric" oninput="W._di('contract',this.value)"></div>
-        <div class="dc"><label>전일 매출 (원)</label><input class="dinp" id="ds" type="text" inputmode="numeric" oninput="W._di('sales',this.value);formatBizInp(this)"></div>
+        <div class="dc"><label>환불 (원)</label><input class="dinp" id="drf" type="text" inputmode="numeric" oninput="W._di('refundAmt',this.value);formatBizInp(this)"></div>
+        <div class="dc" style="background:#fff;border:2px solid #2563EB;border-radius:8px;padding:4px 8px"><label style="color:#2563EB;font-weight:700">결산 순매출 (원)</label><input class="dinp" id="dnet" type="text" readonly style="background:#fff;color:var(--text);cursor:default;border-color:#2563EB"></div>
+        <div class="dc"><label>일 필요매출 (원)</label><input class="dinp" id="ddaily" type="text" inputmode="numeric" readonly style="background:var(--bg2);color:var(--text2);cursor:default"></div>
+        <div class="dc"><label>남은 기간</label><input class="dinp" id="dremain" type="text" readonly style="background:var(--bg2);color:var(--text2);cursor:default"></div>
       </div>
       <div class="dcalc">
         <div class="dcc" id="ddc" style="background:var(--bg);border:1px solid var(--border);border-radius:8px">
@@ -1325,19 +1329,32 @@ function renderMain() {
 }
 
 function updDailyInp() {
-  const map = [['dp','prevYear'],['dt','thisYear'],['dco','consult'],['dr','contract'],['ds','sales']];
+  const map = [['dp','prevYear'],['dt','thisYear'],['drf','refundAmt']];
   map.forEach(([id,k]) => {
     const el = document.getElementById(id);
     if (el && document.activeElement !== el)
-      el.value = (k==='prevYear'||k==='thisYear'||k==='sales') ? F(DAILY[k]) : DAILY[k]||'';
+      el.value = F(DAILY[k]||0);
   });
 }
 function updDailyCalc() {
   const diff = DAILY.thisYear - DAILY.prevYear;
-  const dv = document.getElementById('ddv'), dc = document.getElementById('ddc'), cv = document.getElementById('dcv');
+  const dv = document.getElementById('ddv'), dc = document.getElementById('ddc');
   if (dv) { dv.textContent=(diff>=0?'+':'')+F(diff)+'원'; dv.style.color=diff>=0?'#15803D':'#DC2626'; }
   if (dc) dc.style.cssText=`background:${diff>=0?'#F0FDF4':'#FEF2F2'};border:1px solid ${diff>=0?'#BBF7D0':'#FECACA'};border-radius:8px`;
-  if (cv) cv.textContent = DAILY.consult>0 ? (DAILY.contract/DAILY.consult*100).toFixed(1)+'%' : '0.0%';
+  // 결산 순매출 = 올해누계 - 환불
+  const netSales = (DAILY.thisYear||0) - (DAILY.refundAmt||0);
+  const elNet = document.getElementById('dnet');
+  if (elNet) { elNet.value = F(netSales); elNet.style.color = 'var(--text)'; }
+  // 남은 기간 + 일 필요매출
+  const now = new Date();
+  const lastDay = new Date(now.getFullYear(), now.getMonth()+1, 0);
+  const remainDays = Math.max(0, lastDay.getDate() - now.getDate() + 1);
+  const elRemain = document.getElementById('dremain');
+  if (elRemain) elRemain.value = remainDays + '일';
+  const remainAmt = Math.max(0, TG - (DAILY.thisYear||0));
+  const dailyNeed = remainDays > 0 ? Math.ceil(remainAmt / remainDays) : 0;
+  const elDaily = document.getElementById('ddaily');
+  if (elDaily) { elDaily.value = F(dailyNeed); elDaily.style.color = dailyNeed > 0 ? '#DC2626' : '#15803D'; }
   // 결산 누계 현황 KPI 실시간 갱신
   const ks = document.getElementById('dash-kpi-sales');
   const kr = document.getElementById('dash-kpi-rate');
@@ -2747,7 +2764,7 @@ window.showBlog = function showBlog() {
   const sc = document.getElementById('sc');
   sc.style.display = '';
   // nav 활성화
-  ['nav-dash','nav-biz','nav-staff','nav-dep','nav-blog'].forEach(id=>document.getElementById(id)?.classList.remove('on'));
+  ['nav-dash','nav-biz','nav-staff','nav-dep','nav-blog','nav-rvstat'].forEach(id=>document.getElementById(id)?.classList.remove('on'));
   document.getElementById('nav-blog')?.classList.add('on');
 
   try {
@@ -3786,14 +3803,234 @@ W._swBlog = () => {
   renderTabs();
   showBlog();
 };
+// ── 리뷰작성현황 ───────────────────────────────────────
+window.showRvStat = function showRvStat() {
+  ['mc','bc','sc','dc'].forEach(function(id){var e=document.getElementById(id);if(e)e.style.display='none';});
+  var sc = document.getElementById('sc');
+  sc.style.display = '';
+  ['nav-dash','nav-biz','nav-staff','nav-dep','nav-blog','nav-staff-alt','nav-links','nav-rvstat'].forEach(function(id){document.getElementById(id)?.classList.remove('on');});
+  document.getElementById('nav-rvstat')?.classList.add('on');
+
+  var WEEK_LABELS = ['1주차','2주차','3주차','4주차'];
+  if (!window._rvMonth) window._rvMonth = '2026-06';
+  var mKey = window._rvMonth;
+  var parts = mKey.split('-');
+  var yr = Number(parts[0]), mo = Number(parts[1]);
+  var prevM = mo === 1 ? (yr-1)+'-12' : yr+'-'+String(mo-1).padStart(2,'0');
+  var nextM = mo === 12 ? (yr+1)+'-01' : yr+'-'+String(mo+1).padStart(2,'0');
+  var curM  = todayStr().slice(0,7);
+  var mData = RVSTAT[mKey] || {};
+
+  var firstDay = new Date(yr, mo-1, 1);
+  var lastDay  = new Date(yr, mo, 0);
+  var fmt2 = function(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); };
+  var period = fmt2(firstDay)+' ~ '+fmt2(lastDay);
+
+  var h = '';
+  h += '<div style="display:flex;gap:0;height:calc(100vh - 48px);overflow:hidden">';
+  h += '<div style="flex:1;min-width:0;overflow-y:auto;padding:16px 12px 16px 16px">';
+
+  // 월 네비게이션
+  h += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">';
+  h += '<button onclick="window._rvMonth=\''+prevM+'\';showRvStat()" style="width:28px;height:28px;border:1px solid var(--border);border-radius:6px;background:var(--bg);cursor:pointer;font-size:13px">◀</button>';
+  h += '<span style="font-size:15px;font-weight:900;color:var(--text)">'+yr+'년 '+mo+'월 리뷰작성현황</span>';
+  h += '<button onclick="window._rvMonth=\''+nextM+'\';showRvStat()" style="width:28px;height:28px;border:1px solid var(--border);border-radius:6px;background:var(--bg);cursor:pointer;font-size:13px">▶</button>';
+
+  h += '</div>';
+
+  // 조건 배너
+  h += '<div style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:8px;padding:8px 14px;margin-bottom:12px;font-size:11px;color:#1D4ED8;font-weight:700">';
+  h += '⭐ 네이버 리뷰 3개 이상 필수 &nbsp;|&nbsp; 💾 저장 필수 &nbsp;|&nbsp; 🔔 알림받기 필수';
+  h += '<span style="font-weight:400;color:#6B7280;margin-left:8px">('+period+')</span></div>';
+
+  // 테이블
+  h += '<div style="border:2px solid #93C5FD;border-radius:8px;overflow:hidden">';
+  h += '<table style="width:100%;border-collapse:collapse;font-size:11px">';
+  h += '<thead>';
+  h += '<tr style="background:#DBEAFE">';
+  h += '<th colspan="'+(WEEK_LABELS.length+3)+'" style="padding:10px;text-align:center;font-size:13px;font-weight:900;color:#1D4ED8;border-bottom:1px solid #93C5FD">';
+  h += '네이버 리뷰 / 카카오 리뷰 / 구글 리뷰 / 지점홈페이지 리뷰 체크';
+  h += '<span style="color:#DC2626"> (네이버 리뷰 3개 이상 필수 / 저장, 알림받기 필수)</span></th></tr>';
+  h += '<tr style="background:#EFF6FF">';
+  h += '<th style="padding:7px 6px;border:1px solid #BFDBFE;width:52px;color:#374151;font-size:10px">팀</th>';
+  h += '<th style="padding:7px 6px;border:1px solid #BFDBFE;width:60px;color:#374151;font-size:10px">이름</th>';
+  WEEK_LABELS.forEach(function(w){
+    h += '<th style="padding:7px 6px;border:1px solid #BFDBFE;color:#374151;font-size:10px;width:130px">'+w+'</th>';
+  });
+  h += '<th style="padding:7px 6px;border:1px solid #BFDBFE;width:50px;color:#DC2626;font-size:10px;font-weight:900">월 누적</th>';
+  h += '</tr></thead><tbody>';
+
+  // 예시 행 — 고정 키로 월 무관하게 유지
+  var EXROW_KEY = '__exrow';
+  var exRow = (RVSTAT[EXROW_KEY] && RVSTAT[EXROW_KEY].rows) ? RVSTAT[EXROW_KEY].rows : {};
+  h += '<tr style="background:#F8FAFC">';
+  h += '<td style="padding:6px;border:1px solid #BFDBFE;text-align:center;font-size:9px;font-weight:700;color:#94A3B8;background:#F1F5F9;border-left:3px solid #CBD5E1">예시</td>';
+  h += '<td style="padding:6px 8px;border:1px solid #BFDBFE;font-size:10px;color:#94A3B8;white-space:nowrap;background:#F1F5F9">ex. 홍길동</td>';
+  WEEK_LABELS.forEach(function(wk) {
+    var exVal = exRow[wk] || '';
+    var safeEx = exVal.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    h += '<td style="padding:3px 4px;border:1px solid #BFDBFE;vertical-align:top;width:130px;background:#F1F5F9">';
+    h += '<textarea placeholder="예시 입력..." rows="3" spellcheck="false" data-wk="'+wk+'"';
+    h += ' onblur="W._rvExRow(this.dataset.wk,this.value)"';
+    h += ' style="width:100%;font-size:10px;padding:3px 5px;border:1px solid #E2E8F0;border-radius:4px;background:#fff;outline:none;color:#374151;resize:vertical;font-family:inherit;line-height:1.5;box-sizing:border-box">';
+    h += safeEx+'</textarea></td>';
+  });
+  h += '<td style="padding:4px 6px;border:1px solid #FECACA;text-align:center;vertical-align:middle;background:#FEF2F2">';
+  h += '<input value="'+(RVSTAT[EXROW_KEY]&&RVSTAT[EXROW_KEY].total||'')+'" placeholder="0"';
+  h += ' onblur="W._rvExTotal(this.value)"';
+  h += ' style="width:36px;font-size:12px;font-weight:900;text-align:center;border:1px solid #FECACA;border-radius:4px;padding:3px 2px;background:transparent;outline:none;color:#DC2626">';
+  h += '</td></tr>';
+
+  TM_CFG.forEach(function(team) {
+    var tData = mData[team.name] || {};
+    var memberCount = team.members.length;
+
+    team.members.forEach(function(member, mi) {
+      var mbrData = tData[member] || {};
+      var manualTotal = mbrData.__total || '';
+      var teamBg = team.color+'18';
+
+      h += '<tr>';
+      if (mi === 0) {
+        h += '<td rowspan="'+memberCount+'" style="padding:6px;border:1px solid #BFDBFE;text-align:center;font-weight:900;font-size:11px;color:'+team.color+';background:'+teamBg+';border-left:3px solid '+team.color+'">'+team.name+'</td>';
+      }
+      h += '<td style="padding:6px 8px;border:1px solid #BFDBFE;font-weight:600;font-size:11px;white-space:nowrap;background:var(--bg)">'+member+'</td>';
+
+      WEEK_LABELS.forEach(function(wk) {
+        var saved = mbrData[wk];
+        var textVal = Array.isArray(saved) ? saved.filter(Boolean).join('\n')
+                    : (typeof saved === 'string' ? saved : '');
+        var filled = !!textVal.trim();
+        var bdColor = filled ? '#86EFAC' : '#BFDBFE';
+        var bgColor = filled ? '#F0FDF4' : 'var(--bg)';
+        var safeVal = textVal.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        h += '<td style="padding:3px 4px;border:1px solid #BFDBFE;vertical-align:top;width:130px">';
+        h += '<textarea placeholder="내용 입력" rows="3" spellcheck="false"';
+        h += ' style="width:100%;font-size:10px;padding:3px 5px;border:1px solid '+bdColor+';border-radius:4px;background:'+bgColor+';outline:none;color:#374151;resize:vertical;font-family:inherit;line-height:1.5;box-sizing:border-box"';
+        h += ' onblur="W._rvText(\''+mKey+'\',\''+team.name+'\',\''+member+'\',\''+wk+'\',this.value)"';
+        h += ' oninput="this.style.borderColor=this.value.trim()?\'#86EFAC\':\'#BFDBFE\';this.style.background=this.value.trim()?\'#F0FDF4\':\'var(--bg)\'">';
+        h += safeVal+'</textarea></td>';
+      });
+
+      h += '<td style="padding:4px 6px;border:1px solid #FECACA;text-align:center;vertical-align:middle;background:#FEF2F2">';
+      h += '<input value="'+manualTotal+'" placeholder="0"';
+      h += ' style="width:36px;font-size:12px;font-weight:900;text-align:center;border:1px solid #FECACA;border-radius:4px;padding:3px 2px;background:transparent;outline:none;color:#DC2626"';
+      h += ' onblur="W._rvTotal(\''+mKey+'\',\''+team.name+'\',\''+member+'\',this.value)">';
+      h += '</td></tr>';
+    });
+
+    // 팀 구분선
+    h += '<tr style="background:'+team.color+'0D"><td colspan="'+(WEEK_LABELS.length+3)+'" style="padding:3px 8px;border:1px solid #BFDBFE;border-left:3px solid '+team.color+'"></td></tr>';
+  });
+
+  h += '</tbody></table></div></div>';
+
+  // 오른쪽 공지 패널 (수정 가능)
+  var DEFAULT_NOTICE = [
+    '***사업부 전체 공지***',
+    '1. 기한 : 매 결산일 기준(1일~말일)',
+    '2. 대상 : 사업부 전체 경력이상(신입, 초경력 제외)',
+    '3. 포상 : [1등] 5만원 or 늦출권 1개',
+    '4. 조건 : 최소조건 : 네이버 리뷰 3개 필수',
+    '네이버리뷰 최소조건 3개이상이 달성되면 카카오나 구글, 지점홈페이지 리뷰도 횟수로 인정 O',
+    '5. 네이버 리뷰 작성시 필수조건 : 영수증, 저장, 알림받기 설정'
+  ].join('\n');
+  // 공지는 전역 단일 키로 저장 — 달 무관하게 항상 같은 내용
+  var noticeText = (RVSTAT.__notice !== undefined && RVSTAT.__notice !== null)
+    ? RVSTAT.__notice : DEFAULT_NOTICE;
+  var safeNotice = noticeText.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  h += '<div style="width:260px;flex-shrink:0;border-left:2px solid #FECACA;overflow-y:auto;padding:16px 14px;background:#FFF9F9">';
+  h += '<div style="font-size:12px;font-weight:900;color:#DC2626;margin-bottom:8px;letter-spacing:.3px">&#128226; 사업부 전체 공지</div>';
+
+  h += '<textarea id="rv-notice-ta" spellcheck="false" rows="18" onblur="W._rvNotice(this.dataset.mkey,this.value)" data-mkey="'+mKey+'"';
+  h += ' style="width:100%;font-size:11px;line-height:1.8;padding:8px 10px;border:1px solid #FECACA;border-radius:7px;background:#fff;outline:none;resize:vertical;font-family:inherit;color:#374151;box-sizing:border-box">';
+  h += safeNotice;
+  h += '</textarea>';
+  h += '</div>';
+  h += '</div>';
+  sc.innerHTML = h;
+};
+
 W._swLinks = () => {
   cw = 160; curMonth = 'current';
-  ['nav-dash','nav-biz','nav-staff','nav-dep','nav-blog','nav-staff-alt','nav-links'].forEach(id=>document.getElementById(id)?.classList.remove('on'));
+  ['nav-dash','nav-biz','nav-staff','nav-dep','nav-blog','nav-staff-alt','nav-links','nav-rvstat'].forEach(id=>document.getElementById(id)?.classList.remove('on'));
   document.getElementById('nav-staff-sub')?.style && (document.getElementById('nav-staff-sub').style.display='none');
   document.getElementById('nav-biz-sub')?.style && (document.getElementById('nav-biz-sub').style.display='none');
   document.getElementById('nav-links')?.classList.add('on');
   renderTabs();
   showLinks();
+};
+W._swRvStat = () => {
+  cw = 170; curMonth = 'current';
+  // 모든 패널 명시적으로 숨기고 sc만 표시
+  ['mc','bc','dc'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display='none';});
+  const sc=document.getElementById('sc'); if(sc)sc.style.display='';
+  // 서브메뉴 닫기
+  ['nav-staff-sub','nav-biz-sub','nav-dash-sub'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display='none';});
+  ['nav-dash','nav-biz','nav-staff','nav-dep','nav-blog','nav-staff-alt','nav-links','nav-rvstat'].forEach(id=>document.getElementById(id)?.classList.remove('on'));
+  document.getElementById('nav-rvstat')?.classList.add('on');
+  renderTabs();
+  showRvStat();
+};
+// ── 리뷰 데이터 핸들러 ─────────────────────────────────
+W._rvText = (mKey, team, member, wk, val) => {
+  if (!RVSTAT[mKey]) RVSTAT[mKey] = {};
+  if (!RVSTAT[mKey][team]) RVSTAT[mKey][team] = {};
+  if (!RVSTAT[mKey][team][member]) RVSTAT[mKey][team][member] = {};
+  const trimmed = val.trim();
+  if (RVSTAT[mKey][team][member][wk] === trimmed) return;
+  RVSTAT[mKey][team][member][wk] = trimmed;
+  set(rRvStat, RVSTAT);
+};
+W._rvTotal = (mKey, team, member, val) => {
+  if (!RVSTAT[mKey]) RVSTAT[mKey] = {};
+  if (!RVSTAT[mKey][team]) RVSTAT[mKey][team] = {};
+  if (!RVSTAT[mKey][team][member]) RVSTAT[mKey][team][member] = {};
+  if (RVSTAT[mKey][team][member].__total === val.trim()) return;
+  RVSTAT[mKey][team][member].__total = val.trim();
+  set(rRvStat, RVSTAT);
+};
+W._rvExRow = (wk, val) => {
+  if (!RVSTAT['__exrow']) RVSTAT['__exrow'] = {rows:{}, total:''};
+  if (!RVSTAT['__exrow'].rows) RVSTAT['__exrow'].rows = {};
+  if (RVSTAT['__exrow'].rows[wk] === val.trim()) return;
+  RVSTAT['__exrow'].rows[wk] = val.trim();
+  set(rRvStat, RVSTAT);
+};
+W._rvExTotal = (val) => {
+  if (!RVSTAT['__exrow']) RVSTAT['__exrow'] = {rows:{}, total:''};
+  if (RVSTAT['__exrow'].total === val.trim()) return;
+  RVSTAT['__exrow'].total = val.trim();
+  set(rRvStat, RVSTAT);
+};
+W._rvNotice = (mKey, val) => {
+  if (RVSTAT.__notice === val) return;
+  RVSTAT.__notice = val;
+  set(rRvStat, RVSTAT);
+};
+W._rvExampleText = (mKey, val) => {
+  if (!RVSTAT[mKey]) RVSTAT[mKey] = {};
+  if (!RVSTAT[mKey].__example) RVSTAT[mKey].__example = {text:'',imgs:[]};
+  if (RVSTAT[mKey].__example.text === val.trim()) return;
+  RVSTAT[mKey].__example.text = val.trim();
+  set(rRvStat, RVSTAT);
+};
+W._rvExampleImg = (mKey, ii, val) => {
+  if (!RVSTAT[mKey]?.__example) return;
+  if (RVSTAT[mKey].__example.imgs[ii] === val.trim()) return;
+  RVSTAT[mKey].__example.imgs[ii] = val.trim();
+  set(rRvStat, RVSTAT).then(() => showRvStat());
+};
+W._rvExampleImgAdd = (mKey) => {
+  if (!RVSTAT[mKey]) RVSTAT[mKey] = {};
+  if (!RVSTAT[mKey].__example) RVSTAT[mKey].__example = {text:'',imgs:[]};
+  RVSTAT[mKey].__example.imgs.push('');
+  set(rRvStat, RVSTAT).then(() => showRvStat());
+};
+W._rvExampleImgDel = (mKey, ii) => {
+  if (!RVSTAT[mKey]?.__example?.imgs) return;
+  RVSTAT[mKey].__example.imgs.splice(ii, 1);
+  set(rRvStat, RVSTAT).then(() => showRvStat());
 };
 W._linkAdd = () => {
   const nameEl = document.getElementById('lnk-name');
