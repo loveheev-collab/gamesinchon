@@ -383,10 +383,10 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
     <div class="sb-item" id="nav-dep" onclick="W._swDep()"><i class="ti ti-credit-card ico" aria-hidden="true"></i> 입금 파악</div>
     <div class="sb-item" id="nav-biz" onclick="W._toggleBiz()"><i class="ti ti-chart-bar ico" aria-hidden="true"></i> 영업현황 <span id="nav-biz-arrow" style="margin-left:auto;font-size:10px;transition:transform .2s">▼</span></div>
     <div class="sb-sub" id="nav-biz-sub" style="display:none">
-      <div class="sb-sub-item" id="nav-biz-sum" onclick="W._swBiz('요약')">📊 영업 데이터</div>
-      <div class="sb-sub-item" id="nav-biz-con" onclick="W._swBiz('상담내역')">📋 상담 내역</div>
-      <div class="sb-sub-item" id="nav-biz-unp" onclick="W._swBiz('미납리스트')">💰 미납 리스트</div>
-      <div class="sb-sub-item" id="nav-biz-add" onclick="W._swBiz('추가리스트')">📋 추가 리스트</div>
+      <div class="sb-sub-item" id="nav-biz-sum" onclick="W._swBiz('요약')">영업 데이터</div>
+      <div class="sb-sub-item" id="nav-biz-con" onclick="W._swBiz('상담내역')">상담 내역</div>
+      <div class="sb-sub-item" id="nav-biz-unp" onclick="W._swBiz('미납리스트')">미납 리스트</div>
+      <div class="sb-sub-item" id="nav-biz-add" onclick="W._swBiz('추가리스트')">추가 리스트</div>
     </div>
     <div class="sb-item" id="nav-blog" onclick="W._swBlog()"><i class="ti ti-checklist ico" aria-hidden="true"></i> 업무량</div>
     <div class="sb-item" id="nav-rvstat" onclick="W._swRvStat()"><i class="ti ti-star ico" aria-hidden="true"></i> 리뷰작성현황</div>
@@ -585,8 +585,8 @@ TEAMS.forEach(t => {
   WEEKS.forEach((_,wi) => DATA[t.name][wi] = {sales:'',consult:'',contract:''});
 });
 TM_CFG.forEach(t => {
-  BIZ[t.name] = {};
-  t.members.forEach(m => BIZ[t.name][m] = {sales:0, inquiry:0, totalSales:0, refund:0, goal:0});
+  if (!BIZ[t.name]) BIZ[t.name] = {};
+  t.members.forEach(m => { if (!BIZ[t.name][m]) BIZ[t.name][m] = {sales:0, inquiry:0, totalSales:0, refund:0, goal:0}; });
 });
 
 // ── Firebase ─────────────────────────────────────────
@@ -644,13 +644,15 @@ onValue(rReview, snap => {
 });
 onValue(rBiz, snap => {
   const v = snap.val();
-  if (v) TM_CFG.forEach(t => {
-    if (v[t.name]) {
-      t.members.forEach(m => {
-        if (v[t.name][m]) BIZ[t.name][m] = {...BIZ[t.name][m], ...v[t.name][m]};
+  // Firebase 원본 전체를 그대로 BIZ에 저장 (TM_CFG 로딩 순서 무관하게 데이터 보존)
+  if (v) {
+    Object.keys(v).forEach(tKey => {
+      if (!BIZ[tKey]) BIZ[tKey] = {};
+      Object.keys(v[tKey]).forEach(m => {
+        BIZ[tKey][m] = {...(BIZ[tKey][m]||{}), ...v[tKey][m]};
       });
-    }
-  });
+    });
+  }
   if (!_loaded.biz) { _loaded.biz = true; _checkInitRender(); }
   else if (cw === 99 && bst === '요약') {
     const f = document.activeElement;
@@ -1211,8 +1213,12 @@ function renderAllDashboard() {
 
   // ── 팀별 성과 (영업현황 BIZ 데이터 기준) ──
   const ms = calcMS();
-  // 팀 이름 변경 대응: 멤버 이름으로 BIZ 전체 탐색
+  // TM_CFG 기준으로 해당 멤버의 팀 키를 먼저 찾아 정확히 참조
   const _dashGetBd = (m) => {
+    // 1순위: TM_CFG에서 이 멤버가 속한 팀 이름으로 직접 접근
+    const myTeam = TM_CFG.find(t => t.members.includes(m));
+    if (myTeam && BIZ[myTeam.name]?.[m]) return BIZ[myTeam.name][m];
+    // 2순위: 전체 BIZ 탐색 (fallback)
     for (const tKey of Object.keys(BIZ)) {
       if (BIZ[tKey]?.[m]) return BIZ[tKey][m];
     }
@@ -3660,7 +3666,8 @@ window.W = {
       if(netEl2) netEl2.textContent = F(tTM-tRef);
       if(goalEl) goalEl.textContent = F(tGoalSum);
     }
-    set(rBiz,BIZ); updBizKPI();
+    // TM_CFG에 없는 팀 데이터도 보존하며 저장
+    set(rBiz, BIZ); updBizKPI();
   },
   _cc(date) {
     cCol[date] = !cCol[date];
