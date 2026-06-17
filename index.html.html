@@ -679,7 +679,8 @@ onValue(rNotice, snap => {
 });
 onValue(rAddList, snap => {
   ADDLIST = snap.val() || {};
-  if (cw === 99 && bst === '추가리스트') showBiz();
+  // 입력 중(_alEditing)이면 재렌더 안 함
+  if (cw === 99 && bst === '추가리스트' && !window._alEditing) showBiz();
 });
 onValue(rDeposit, snap => {
   DEPOSIT = snap.val() || {};
@@ -1624,7 +1625,9 @@ function renderAddListTab() {
 
   const renderRow = (id, row) => {
     const st = row.status || '진행중';
-    return `<tr class="status-${st}">
+    return `<tr class="status-${st}" data-al-id="${id}"
+      onfocusin="window._alEditing=true"
+      onfocusout="setTimeout(()=>{const a=document.activeElement;if(!a?.closest('tr[data-al-id=\'${id}\']'))window._alEditing=false;},100)">
       <td>
         <select class="al-sel" onchange="W._alUpdate('${id}','mentor',this.value)">
           <option value="">선택</option>
@@ -1664,12 +1667,51 @@ function renderAddListTab() {
     <th style="width:22px"></th>
   </tr></thead>`;
 
+  // 전체 합계 계산
+  const totalAll   = allRows.reduce((s,[,r]) => s + N(r.expectedAmount||0), 0);
+  const totalWan   = allRows.filter(([,r]) => r.status==='완납').reduce((s,[,r]) => s + N(r.expectedAmount||0), 0);
+  const totalMi    = allRows.filter(([,r]) => r.status==='미납').reduce((s,[,r]) => s + N(r.expectedAmount||0), 0);
+  const cntAll     = allRows.filter(([,r]) => r.student||r.mentor).length;
+  const cntWan     = allRows.filter(([,r]) => (r.student||r.mentor) && r.status==='완납').length;
+  const cntMi      = allRows.filter(([,r]) => (r.student||r.mentor) && r.status==='미납').length;
+
+  // 현재 필터 상태 (window._alFilter: 'all'|'완납'|'미납')
+  if (!window._alFilter) window._alFilter = 'all';
+  const af = window._alFilter;
+
   let h = `<div class="addlist-wrap">
-    <div class="stitle" style="margin-bottom:10px">📋 추가 리스트</div>`;
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap">
+      <div class="stitle" style="margin:0">📋 추가 리스트</div>
+      <div style="display:flex;gap:6px">
+        <button onclick="window._alFilter='all';W._bst('추가리스트')"
+          style="padding:5px 14px;font-size:12px;font-weight:700;border-radius:7px;cursor:pointer;
+                 border:1px solid ${af==='all'?'var(--accent)':'var(--border)'};
+                 background:${af==='all'?'#EFF4FF':'var(--bg)'};
+                 color:${af==='all'?'var(--accent)':'var(--text3)'}">
+          전체 ${cntAll}건<span style="font-size:11px;font-weight:400;margin-left:4px">${F(totalAll)}원</span>
+        </button>
+        <button onclick="window._alFilter='완납';W._bst('추가리스트')"
+          style="padding:5px 14px;font-size:12px;font-weight:700;border-radius:7px;cursor:pointer;
+                 border:1px solid ${af==='완납'?'#16A34A':'var(--border)'};
+                 background:${af==='완납'?'#F0FDF4':'var(--bg)'};
+                 color:${af==='완납'?'#16A34A':'var(--text3)'}">
+          완납 ${cntWan}건<span style="font-size:11px;font-weight:400;margin-left:4px">${F(totalWan)}원</span>
+        </button>
+        <button onclick="window._alFilter='미납';W._bst('추가리스트')"
+          style="padding:5px 14px;font-size:12px;font-weight:700;border-radius:7px;cursor:pointer;
+                 border:1px solid ${af==='미납'?'#DC2626':'var(--border)'};
+                 background:${af==='미납'?'#FEF2F2':'var(--bg)'};
+                 color:${af==='미납'?'#DC2626':'var(--text3)'}">
+          미납 ${cntMi}건<span style="font-size:11px;font-weight:400;margin-left:4px">${F(totalMi)}원</span>
+        </button>
+      </div>
+    </div>`;
 
   TM_CFG.forEach(t => {
-    const teamRows = allRows.filter(([,row]) => row.team === t.name);
+    const teamRows = allRows.filter(([,row]) => row.team === t.name
+      && (af==='all' || (row.status||'진행중') === af));
     const filledRows = teamRows.filter(([,row]) => row.student || row.mentor);
+    if (!filledRows.length && af !== 'all') return; // 필터 시 빈 팀 숨김
     const totalAmt = teamRows.reduce((s,[,row]) => s + N(row.expectedAmount||0), 0);
     h += `<div class="unpaid-team-block" style="margin-bottom:14px">
       <div class="unpaid-team-hdr" style="background:${t.color}">
@@ -1679,7 +1721,30 @@ function renderAddListTab() {
       <table class="addlist-tbl">
         ${thead}<tbody>`;
     if (teamRows.length) {
-      teamRows.forEach(([id, row]) => { h += renderRow(id, row); });
+      // 멘토별 그룹핑
+      const mentorGroups = {};
+      teamRows.forEach(([id, row]) => {
+        const m = row.mentor || '(미배정)';
+        if (!mentorGroups[m]) mentorGroups[m] = [];
+        mentorGroups[m].push([id, row]);
+      });
+      // TM_CFG 멤버 순서 기준 정렬
+      const orderedMentors = [
+        ...t.members.filter(m => mentorGroups[m]),
+        ...Object.keys(mentorGroups).filter(m => !t.members.includes(m))
+      ];
+      orderedMentors.forEach(mentor => {
+        const rows = mentorGroups[mentor];
+        const mAmt = rows.reduce((s,[,r]) => s + N(r.expectedAmount||0), 0);
+        const mCnt = rows.filter(([,r]) => r.student||r.mentor).length;
+        h += `<tr style="background:${t.color}10">
+          <td colspan="11" style="padding:5px 12px;border-left:3px solid ${t.color};font-size:11px;font-weight:700;color:var(--text2)">
+            ${mentor}
+            <span style="font-weight:400;color:var(--text3);margin-left:8px">${mCnt}건 · ${F(mAmt)}원</span>
+          </td>
+        </tr>`;
+        rows.forEach(([id, row]) => { h += renderRow(id, row); });
+      });
     } else {
       h += `<tr><td colspan="11" style="text-align:center;padding:16px;color:var(--text3);font-size:12px">항목 없음</td></tr>`;
     }
@@ -2137,7 +2202,7 @@ function renderConsult(searchKw='') {
         const t=getTeam(r.mentor);
         if(t&&t.name!==lt){
           lt=t.name;
-          rowsHtml+=`<tr class="team-sep" style="background:${t.color}12"><td colspan="9" style="color:${t.color};border-left:3px solid ${t.color}">${t.name}</td></tr>`;
+          rowsHtml+=`<tr class="team-sep" style="background:var(--bg2)"><td colspan="9" style="color:var(--text2);border-left:3px solid ${t.color};font-weight:700">${t.name}</td></tr>`;
         }
         rowsHtml += makeRow(date,rid,r);
       });
@@ -3780,13 +3845,19 @@ window.W = {
   _alUpdate(id, field, val) {
     if(!ADDLIST[id]) return;
     ADDLIST[id][field] = val;
-    // 멘토 선택 시 팀 자동 세팅
+    // 멘토 선택 시 팀 자동 세팅 (재렌더 없이 저장만)
     if(field==='mentor' && val) {
       const t = getTeam(val);
       if(t) ADDLIST[id].team = t.name;
+      set(rAddList, ADDLIST);
+      return;
     }
     set(rAddList, ADDLIST);
-    if(field==='status' && cw===99 && bst==='추가리스트') showBiz();
+    // 상태 변경 시 재렌더 (멘토 그룹 재배치)
+    if(field==='status' && cw===99 && bst==='추가리스트') {
+      window._alEditing = false;
+      showBiz();
+    }
   },
   _cp() {
     navigator.clipboard.writeText(document.getElementById('mbox').textContent).then(()=>{
