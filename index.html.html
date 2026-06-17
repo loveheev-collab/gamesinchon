@@ -330,7 +330,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .tp-row .val{font-weight:700;font-family:'Roboto',monospace;font-size:13px}
 .tp-row .val.g{color:#16A34A}
 .tp-row .val.b{color:#2563EB}
-.tp-row .val.o{color:#D97706}
+
 .tp-row .val.r{color:#DC2626}
 .tp-badges{display:flex;gap:6px;padding:8px 0 4px}
 .tp-badge{padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700}
@@ -545,7 +545,6 @@ function applyConfig(cfg) {
     if (!BIZ[t.name]) BIZ[t.name] = {};
     t.members.forEach(m => { if (!BIZ[t.name][m]) BIZ[t.name][m] = {sales:0,inquiry:0,totalSales:0,refund:0,goal:0}; });
   });
-  console.log('[applyConfig] TM_CFG:', TM_CFG.map(t=>t.name+'('+t.members.join(',')+')'), 'BIZ_PERIOD:', BIZ_PERIOD);
 }
 
 // ── 상태 ─────────────────────────────────────────────
@@ -553,7 +552,7 @@ let cw = -1, bst = '요약';
 let curMonth = 'current';
 let ARCHIVE = {};
 let arcSubTab = '결산';
-let DATA = {}, DAILY = {prevYear:190730000,thisYear:170276400,consult:0,contract:0,sales:0,refundAmt:0};
+let DATA = {}, DAILY = {prevYear:0,thisYear:0,refundAmt:0};
 let REVIEW = {}, BIZ = {}, CONSULT = {};
 let NOTICE = {text:'', editing:false};
 let ADDLIST = {};
@@ -1788,10 +1787,7 @@ function showBiz() {
   let _arcBizData = null;
   if (_isPastBizView) {
     const bizArc = ARCHIVE.biz || {};
-    console.log('[BIZ Archive] 찾는 기간:', BIZ_PERIOD.s, '~', BIZ_PERIOD.e);
-    console.log('[BIZ Archive] 저장된 아카이브 목록:', Object.entries(bizArc).map(([k,v])=>k+': period='+JSON.stringify(v.period)));
     const arcEntry = Object.values(bizArc).find(v => v.period && v.period.s === BIZ_PERIOD.s && v.period.e === BIZ_PERIOD.e);
-    console.log('[BIZ Archive] 매칭된 항목:', arcEntry ? '있음, biz키:' + Object.keys(arcEntry.biz||{}) : '없음');
     if (arcEntry && arcEntry.biz) _arcBizData = arcEntry.biz;
   }
 
@@ -2700,7 +2696,7 @@ function renderWorkload() {
     const day = d.getDay();
     const mon = new Date(d);
     mon.setDate(d.getDate() - (day===0?6:day-1) + offset*7);
-    return mon.toISOString().slice(0,10);
+    return mon.getFullYear()+'-'+String(mon.getMonth()+1).padStart(2,'0')+'-'+String(mon.getDate()).padStart(2,'0');
   };
   const weekKeys = [-1,0,1].map(i=>getWeekMon(i));
   if (!window._wlWeek || !weekKeys.includes(window._wlWeek)) window._wlWeek = weekKeys[1];
@@ -3824,7 +3820,10 @@ window.showRvStat = function showRvStat() {
   document.getElementById('nav-rvstat')?.classList.add('on');
 
   var WEEK_LABELS = ['1주차','2주차','3주차','4주차'];
-  if (!window._rvMonth) window._rvMonth = '2026-06';
+  if (!window._rvMonth) {
+    var _now = new Date();
+    window._rvMonth = _now.getFullYear()+'-'+String(_now.getMonth()+1).padStart(2,'0');
+  }
   var mKey = window._rvMonth;
   var parts = mKey.split('-');
   var yr = Number(parts[0]), mo = Number(parts[1]);
@@ -3844,9 +3843,9 @@ window.showRvStat = function showRvStat() {
 
   // 월 네비게이션
   h += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">';
-  h += '<button onclick="window._rvMonth=\''+prevM+'\';showRvStat()" style="width:28px;height:28px;border:1px solid var(--border);border-radius:6px;background:var(--bg);cursor:pointer;font-size:13px">◀</button>';
+  h += '<button onclick="window._rvMonth=\''+prevM+'\';showRvStat();document.getElementById(\'sc\').scrollTop=0" style="width:28px;height:28px;border:1px solid var(--border);border-radius:6px;background:var(--bg);cursor:pointer;font-size:13px">◀</button>';
   h += '<span style="font-size:15px;font-weight:900;color:var(--text)">'+yr+'년 '+mo+'월 리뷰작성현황</span>';
-  h += '<button onclick="window._rvMonth=\''+nextM+'\';showRvStat()" style="width:28px;height:28px;border:1px solid var(--border);border-radius:6px;background:var(--bg);cursor:pointer;font-size:13px">▶</button>';
+  h += '<button onclick="window._rvMonth=\''+nextM+'\';showRvStat();document.getElementById(\'sc\').scrollTop=0" style="width:28px;height:28px;border:1px solid var(--border);border-radius:6px;background:var(--bg);cursor:pointer;font-size:13px">▶</button>';
 
   h += '</div>';
 
