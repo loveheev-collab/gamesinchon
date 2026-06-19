@@ -304,26 +304,22 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .sb-미납{background:#E5E7EB;color:#374151}
 .sb-진행중{background:var(--accent-light);color:var(--accent)}
 /* ── 주차별 계획표 ── */
-.wp-tbl{width:100%;border-collapse:collapse;background:var(--bg2);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:20px}
-.wp-tbl th{padding:9px 12px;font-size:11px;font-weight:700;color:var(--text3);background:var(--bg);border-bottom:2px solid var(--border);text-align:center;white-space:nowrap}
-.wp-tbl th:first-child{text-align:left}
-.wp-tbl td{padding:8px 12px;border-bottom:1px solid var(--border);font-size:13px;vertical-align:middle;text-align:center}
-.wp-tbl tr:last-child td{border-bottom:none}
-.wp-tbl td:first-child{text-align:left;font-weight:700}
-.wp-tbl .wp-cur{background:#EFF4FF}
 .wp-week-lbl{font-weight:900;font-size:13px}
 .wp-period{font-size:11px;color:var(--text3);margin-left:4px}
-.wp-inp{width:100%;padding:4px 6px;border:1px solid transparent;border-radius:5px;font-size:13px;font-family:'Roboto',monospace;background:transparent;text-align:right;color:var(--text)}
-.wp-inp:hover{border-color:var(--border);background:var(--bg)}
-.wp-inp:focus{outline:none;border-color:var(--accent);background:#fff}
 .wp-rate{font-weight:700;font-size:13px}
 .wp-remain{color:var(--gold);font-weight:700}
 .wp-daily{color:var(--accent);font-weight:700}
 /* ── 팀별 성과 카드 ── */
 .tp-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;margin-bottom:20px}
-.tp-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;overflow:hidden}
-.tp-card-hdr{padding:10px 14px;color:#fff;font-size:14px;font-weight:900}
-.tp-card-body{padding:12px 14px}
+.tp-card{background:var(--bg);border:1px solid var(--border);border-radius:12px;overflow:hidden;flex:1;min-width:200px}
+.tp-card-hdr{padding:12px 16px 0;display:flex;justify-content:space-between;align-items:flex-start}
+.tp-card-body{padding:0 16px 14px}
+.tp-rate-big{font-size:28px;font-weight:500;line-height:1}
+.tp-rate-lbl{font-size:10px;color:var(--text3);margin-top:2px;text-align:right}
+.tp-bar-wrap{padding:10px 16px 12px}
+.tp-bar-labels{display:flex;justify-content:space-between;margin-top:5px}
+.tp-bar-now{font-size:11px;font-weight:500;color:var(--text)}
+.tp-bar-goal{font-size:11px;color:var(--text3)}
 .tp-row{display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid var(--border);font-size:12px}
 .tp-row:last-child{border-bottom:none}
 .tp-row .lbl{color:var(--text3);font-weight:500}
@@ -335,7 +331,16 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .tp-badges{display:flex;gap:6px;padding:8px 0 4px}
 .tp-badge{padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700}
 .tp-divider{height:1px;background:var(--border);margin:6px 0}
-.tp-rate-row{display:flex;gap:12px;padding:4px 0}
+.tp-rate-row{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:4px}
+.tp-bar-bg{background:var(--border);border-radius:4px;height:5px;overflow:hidden}
+.tp-bar-fill{height:100%;border-radius:4px;transition:width .3s}
+.tp-mbr-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.tp-mbr-name{font-size:12px;color:var(--text);min-width:52px;white-space:nowrap}
+.tp-mbr-right{flex:1;min-width:0}
+.tp-mbr-nums{display:flex;justify-content:space-between;margin-bottom:3px}
+.tp-mbr-sales{font-size:12px;color:var(--text)}
+.tp-mbr-pct{font-size:11px;color:var(--text3)}
+.tp-card-hdr{display:flex;justify-content:space-between;align-items:center}
 .tp-rate-item{flex:1;text-align:center}
 .tp-rate-item .r-lbl{font-size:10px;color:var(--text3);margin-bottom:2px}
 .tp-rate-item .r-val{font-size:16px;font-weight:900;color:var(--accent)}
@@ -1048,168 +1053,6 @@ function renderAllDashboard() {
       </div>
     </div>`;
 
-  // ── 주차별 매출 계획 (탭 방식) ──
-  const selWeek = window._dashWeekTab ?? (curWeekIdx >= 0 ? curWeekIdx : 0);
-  window._dashWeekTab = selWeek;
-  const w = WEEKS[selWeek];
-
-  // 탭 상단에 전체 주차 요약 미니 바
-  const weekSummaryBtns = WEEKS.map((ww,i) => {
-    const ws2 = TEAMS.reduce((s,t)=>s+N(DATA[t.name]?.[i]?.sales||0),0);
-    const g2 = N(ww.total||0);
-    const r2 = g2>0?ws2/g2:0;
-    const isSel = i === selWeek;
-    const isCurW = i === curWeekIdx;
-    return `<button onclick="W._dashWeekTab(${i})" style="
-      flex:1;padding:10px 8px;border:none;cursor:pointer;border-radius:8px;
-      background:${isSel?ww.color||'#2563EB':'var(--bg)'};
-      color:${isSel?'#fff':'var(--text)'};
-      border:2px solid ${isCurW?'#F59E0B':(isSel?'transparent':'var(--border)')};
-      transition:all .15s;position:relative">
-      ${isCurW?'<span style="position:absolute;top:4px;right:6px;font-size:9px;background:#F59E0B;color:#fff;padding:1px 4px;border-radius:8px">진행중</span>':''}
-      <div style="font-size:13px;font-weight:900">${ww.label}</div>
-      <div style="font-size:11px;margin-top:3px;opacity:.85">${F(ws2)}</div>
-      <div style="font-size:11px;font-weight:700;color:${isSel?'#fff':TC(r2)}">${(r2*100).toFixed(1)}%</div>
-    </button>`;
-  }).join('');
-
-  // 선택 주차 상세
-  const ws = TEAMS.reduce((s,t)=>s+N(DATA[t.name]?.[selWeek]?.sales||0),0);
-  const goal = N(w?.total||0);
-  const rate = goal > 0 ? ws/goal : 0;
-  const remain = Math.max(0, goal - ws);
-  const st = ST(rate);
-
-  let remainDays = '—', dailyTarget = '—';
-  if (w?.endDate) {
-    const endDate = new Date(w.endDate+'T23:59:59');
-    const days = Math.max(0, Math.ceil((endDate - today) / 86400000));
-    remainDays = days + '일';
-    dailyTarget = days > 0 ? F(Math.ceil(remain/days))+'원' : (ws>=goal?'달성':'—');
-  }
-
-  const weekColor = TM_CFG[0]?.color || '#2563EB';
-
-  h += `<div class="kg-highlight-label" style="margin-top:20px">주차별 매출 계획</div>
-    <div style="display:flex;gap:8px;margin-bottom:14px">${weekSummaryBtns}</div>
-    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:16px">
-      <div style="padding:12px 16px;background:${WEEKS[selWeek]?.color||'#1A2340'}18;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-        <span style="font-size:15px;font-weight:900">${w?.label||''}</span>
-        <span style="font-size:12px;color:var(--text3)">기간:</span>
-        <input type="date" value="${w?.startDate||''}" style="border:1px solid var(--border);border-radius:4px;padding:2px 6px;font-size:12px;background:var(--bg)"
-          onchange="W._weekDate(${selWeek},'startDate',this.value)">
-        <span style="color:var(--text3)">~</span>
-        <input type="date" value="${w?.endDate||''}" style="border:1px solid var(--border);border-radius:4px;padding:2px 6px;font-size:12px;background:var(--bg)"
-          onchange="W._weekDate(${selWeek},'endDate',this.value)">
-        <span style="margin-left:auto;font-size:13px;font-weight:700;color:${TC(rate)}">${st.b} ${(rate*100).toFixed(1)}% &nbsp;|&nbsp; ${F(ws)}원 / ${F(goal)}원</span>
-      </div>
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:0;border-bottom:1px solid var(--border)">
-        <div style="padding:12px 16px;border-right:1px solid var(--border)">
-          <div style="font-size:11px;color:var(--text3);margin-bottom:4px">목표</div>
-          <input class="wp-inp" value="${F(goal)}" style="width:100%;text-align:right;font-size:16px;font-weight:900;font-family:'Roboto',monospace"
-            onblur="W._weekGoal(${selWeek},this.value)">
-        </div>
-        <div style="padding:12px 16px;border-right:1px solid var(--border)">
-          <div style="font-size:11px;color:var(--text3);margin-bottom:4px">잔여 필요</div>
-          <div style="font-size:16px;font-weight:900;font-family:'Roboto',monospace;color:var(--text)">${remain>0?F(remain):'—'}</div>
-        </div>
-        <div style="padding:12px 16px;border-right:1px solid var(--border)">
-          <div style="font-size:11px;color:var(--text3);margin-bottom:4px">남은일</div>
-          <div style="font-size:16px;font-weight:900;color:var(--text)">${remainDays}</div>
-        </div>
-        <div style="padding:12px 16px">
-          <div style="font-size:11px;color:var(--text3);margin-bottom:4px">일별 목표</div>
-          <div style="font-size:16px;font-weight:900;font-family:'Roboto',monospace;color:var(--text)">${dailyTarget}</div>
-        </div>
-      </div>
-      <table class="wp-tbl" style="border-radius:0;margin:0;border:none;table-layout:fixed">
-        <thead><tr>
-          <th style="width:260px;text-align:left">팀</th>
-          <th style="width:110px">목표</th>
-          <th style="width:110px">실적 (직접입력)</th>
-          <th style="width:70px">달성률</th>
-          <th style="width:110px">잔여</th>
-          <th style="width:60px">상담</th>
-          <th style="width:60px">등록</th>
-          <th style="width:70px">전환율</th>
-        </tr></thead>
-        <tbody>`;
-
-  // 주차 기간으로 CONSULT 자동 집계
-  const wk = WEEKS[selWeek];
-  const wkS = wk?.startDate || '';
-  const wkE = wk?.endDate || '';
-  // 팀별 상담/등록 집계
-  const wkConsult = {}, wkReg = {};
-  TM_CFG.forEach(t => { wkConsult[t.name]=0; wkReg[t.name]=0; });
-  Object.entries(CONSULT).forEach(([date, rows]) => {
-    if (!wkS || !wkE || date < wkS || date > wkE) return;
-    Object.values(rows||{}).forEach(r => {
-      const tm = getTeam(r.mentor);
-      if (!tm) return;
-      if (r.status==='상담' || r.result) wkConsult[tm.name]++;
-      if (['완납','COD','미등록회수'].includes(r.result)) wkReg[tm.name]++;
-    });
-  });
-
-  TEAMS.forEach(t => {
-    const d = DATA[t.name]?.[selWeek]||{};
-    const ts = N(d.sales);
-    const tc2 = wkConsult[t.name] || 0;  // 상담내역 자동 집계
-    const tk2 = wkReg[t.name] || 0;      // 상담내역 자동 집계
-    // 저장된 팀 목표가 있으면 사용, 없으면 자동계산
-    const autoTg = Math.round((goal||0)*(t.members/TM)/10000)*10000;
-    const tg = d.teamGoal ? N(d.teamGoal) : autoTg;
-    const tr2 = tg>0?ts/tg:0;
-    h += `<tr style="background:${t.color}08">
-      <td style="font-size:12px;color:${t.color};font-weight:700">
-        ${t.name}
-        <div style="font-size:10px;font-weight:400;color:var(--text3);margin-top:1px;white-space:nowrap">
-          ${TM_CFG.find(tc=>tc.name===t.name)?.members.map(m=>MRT(m)).join(' · ')||''}
-        </div>
-      </td>
-      <td style="text-align:right;padding:3px 6px">
-        <input class="wp-inp" value="${F(tg)}" style="width:100%;text-align:right;font-size:12px;color:var(--text2)"
-          title="자동계산: ${F(autoTg)} | 직접 수정 가능"
-          onblur="W._weekField(${selWeek},'${t.name}','teamGoal',this.value)">
-      </td>
-      <td style="text-align:right;padding:3px 6px">
-        <input class="wp-inp" value="${ts?F(ts):''}" placeholder="0" style="width:100%;text-align:right;font-size:12px;color:var(--text);font-weight:700"
-          onblur="W._weekSales(${selWeek},'${t.name}',this.value)">
-      </td>
-      <td style="text-align:center;font-size:12px"><span style="color:${TC(tr2)};font-weight:700">${(tr2*100).toFixed(1)}%</span></td>
-      <td style="text-align:right;font-family:'Roboto',monospace;font-size:12px;color:var(--text);padding:3px 6px">${tg>ts?F(tg-ts):'—'}</td>
-      <td style="text-align:center;font-size:12px;font-weight:600">${tc2||'—'}</td>
-      <td style="text-align:center;font-size:12px;font-weight:600">${tk2||'—'}</td>
-      <td style="text-align:center;font-size:12px;color:var(--text2)">${tc2>0?P(tk2,tc2):'—'}</td>
-    </tr>`;
-  });
-
-  // 주차 합계 - 상담/등록은 자동 집계값 사용
-  const totalC_w = Object.values(wkConsult).reduce((s,v)=>s+v,0);
-  const totalK_w = Object.values(wkReg).reduce((s,v)=>s+v,0);
-  h += `<tr style="background:#1A2340;color:#fff;font-weight:700">
-    <td style="text-align:left">합계</td>
-    <td style="text-align:right;font-family:'Roboto',monospace;color:#fff">${F(goal)}</td>
-    <td style="text-align:right;font-family:'Roboto',monospace;color:#fff">${F(ws)}</td>
-    <td style="text-align:center"><span style="color:${TC(rate)}">${(rate*100).toFixed(1)}%</span></td>
-    <td style="text-align:right;font-family:'Roboto',monospace;color:#fff">${remain>0?F(remain):'—'}</td>
-    <td style="text-align:center;font-family:'Roboto',monospace">${totalC_w||'—'}</td>
-    <td style="text-align:center;font-family:'Roboto',monospace">${totalK_w||'—'}</td>
-    <td style="text-align:center">${totalC_w>0?P(totalK_w,totalC_w):'—'}</td>
-  </tr>`;
-  h += `</tbody></table></div>`;
-
-  // 월 합계 미니
-  const totalGoal = WEEKS.reduce((s,ww)=>s+N(ww.total||0),0);
-  const totalResult = TEAMS.reduce((s,t)=>WEEKS.reduce((ss,_,i)=>ss+N(DATA[t.name]?.[i]?.sales||0),s),0);
-  const totalRate = totalGoal>0?totalResult/totalGoal:0;
-  h += `<div style="background:#0F172A;color:#fff;border-radius:10px;padding:10px 16px;display:flex;gap:20px;align-items:center;margin-bottom:16px;font-size:13px">
-    <span style="font-weight:900">월 합계</span>
-    <span>목표 <b style="font-family:'Roboto',monospace;color:#FCD34D">${F(totalGoal)}</b>원</span>
-    <span>실적 <b style="font-family:'Roboto',monospace;color:#6EE7B7">${F(totalResult)}</b>원</span>
-    <span style="font-weight:700;color:${TC(totalRate)}">${ST(totalRate).b} ${(totalRate*100).toFixed(1)}%</span>
-  </div>`;
 
   // ── 팀별 성과 (영업현황 BIZ 데이터 기준) ──
   const ms = calcMS();
@@ -1252,31 +1095,57 @@ function renderAllDashboard() {
     // 등록률: 등록수 ÷ 상담수
     const regRate = tSang>0 ? (tReg/tSang*100).toFixed(1)+'%' : '—';
 
-    h += `<div class="tp-card">
-      <div class="tp-card-hdr" style="background:${t.color}">${t.name} (${mList.length}명)</div>
-      <div class="tp-card-body">
-        <div class="tp-row"><span class="lbl">영업 총매출</span><span class="val" style="color:var(--text);font-weight:900">${F(tBizSales)}원</span></div>
-        <div class="tp-row"><span class="lbl">순매출</span><span class="val" style="color:var(--text);font-weight:400;font-size:12px">${F(tNetSales)}원</span></div>
-        <div class="tp-row"><span class="lbl">목표 매출</span><span class="val" style="color:var(--text);font-weight:400;font-size:12px">${tGoalBiz>0?F(tGoalBiz)+'원':'미설정'}</span></div>
-        <div class="tp-row"><span class="lbl">달성률</span>
-          <span class="val" style="display:flex;align-items:center;gap:4px;color:${TC(tRate)}">
-            <span style="width:7px;height:7px;border-radius:50%;background:${TC(tRate)};display:inline-block;flex-shrink:0"></span>
-            ${(tRate*100).toFixed(1)}%
-          </span>
+    // 개인별 달성률 바
+    const mbrBars = mList.map(m => {
+      const bd = _dashGetBd(m);
+      const mSales = bd.totalSales||0;
+      const mGoal  = bd.goal||0;
+      const mRate  = mGoal>0 ? Math.min(100, mSales/mGoal*100) : 0;
+      return `<div class="tp-mbr-row">
+        <span class="tp-mbr-name">${MRT(m)}</span>
+        <div class="tp-mbr-right">
+          <div class="tp-mbr-nums">
+            <span class="tp-mbr-sales">${F(mSales)}원</span>
+            <span class="tp-mbr-pct">${mGoal>0?mRate.toFixed(1)+'%':'—'}</span>
+          </div>
+          <div class="tp-bar-bg"><div class="tp-bar-fill" style="width:${mRate}%;background:${t.color}88"></div></div>
         </div>
-        <div class="tp-divider"></div>
+      </div>`;
+    }).join('');
+
+    h += `<div class="tp-card">
+      <div class="tp-card-hdr">
+        <span class="tp-badge" style="background:${t.color};color:#fff;font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px">${t.name} (${mList.length}명)</span>
+        <div style="text-align:right">
+          <div class="tp-rate-big" style="color:${TC(tRate)}">${(tRate*100).toFixed(1)}%</div>
+          <div class="tp-rate-lbl">달성률</div>
+        </div>
+      </div>
+      <div class="tp-bar-wrap">
+        <div class="tp-bar-bg" style="height:10px;border-radius:6px">
+          <div class="tp-bar-fill" style="width:${Math.min(100,tRate*100)}%;background:${TC(tRate)};border-radius:6px"></div>
+        </div>
+        <div class="tp-bar-labels">
+          <span class="tp-bar-now">${F(tNetSales)}원</span>
+          <span class="tp-bar-goal">목표 ${tGoalBiz>0?F(tGoalBiz)+'원':'미설정'}</span>
+        </div>
+      </div>
+      <div class="tp-divider"></div>
+      <div class="tp-card-body">
+        ${mbrBars}
+        <div class="tp-divider" style="margin:8px 0"></div>
         <div class="tp-badges">
           <span class="tp-badge" style="background:#F0FDF4;color:#15803D">완납 ${F(tWan)}</span>
-          <span class="tp-badge" style="background:#F3F4F6;color:#4B5563">미납 ${F(tMiNap)}</span>
+          <span class="tp-badge" style="background:#FEF2F2;color:#991B1B">미납 ${F(tMiNap)}</span>
           <span class="tp-badge" style="background:#F3F4F6;color:#4B5563">취소 ${tCancel}</span>
           ${tCOD>0?`<span class="tp-badge" style="background:#F3F4F6;color:#4B5563">COD ${tCOD}</span>`:''}
         </div>
-        <div class="tp-divider"></div>
+        <div class="tp-divider" style="margin:8px 0"></div>
         <div class="tp-rate-row">
-          <div class="tp-rate-item"><div class="r-lbl">상담률</div><div class="r-val" style="color:var(--text)">${consultRate}</div></div>
-          <div class="tp-rate-item"><div class="r-lbl">등록률</div><div class="r-val" style="color:var(--text)">${regRate}</div></div>
-          <div class="tp-rate-item"><div class="r-lbl">문의</div><div class="r-val" style="color:var(--text)">${tInq}</div></div>
-          <div class="tp-rate-item"><div class="r-lbl">등록수</div><div class="r-val" style="color:var(--text)">${tReg}</div></div>
+          <div class="tp-rate-item"><div class="r-lbl">상담률</div><div class="r-val">${consultRate}</div></div>
+          <div class="tp-rate-item"><div class="r-lbl">등록률</div><div class="r-val">${regRate}</div></div>
+          <div class="tp-rate-item"><div class="r-lbl">문의</div><div class="r-val">${tInq}</div></div>
+          <div class="tp-rate-item"><div class="r-lbl">등록수</div><div class="r-val">${tReg}</div></div>
         </div>
       </div>
     </div>`;
