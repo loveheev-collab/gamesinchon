@@ -396,7 +396,13 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
     <div class="sb-item" id="nav-blog" onclick="W._swBlog()"><i class="ti ti-checklist ico" aria-hidden="true"></i> 업무량</div>
     <div class="sb-item" id="nav-rvstat" onclick="W._swRvStat()"><i class="ti ti-star ico" aria-hidden="true"></i> 리뷰작성현황</div>
     <div class="sb-item" id="nav-links" onclick="W._swLinks()"><i class="ti ti-link ico" aria-hidden="true"></i> 링크모음</div>
-    <div class="sb-item" id="nav-staff-alt" onclick="W._swStaff('대체휴무')"><i class="ti ti-calendar-off ico" aria-hidden="true"></i> 대체휴무</div>
+  </div>
+  <hr class="sb-divider">
+  <div class="sb-sec">
+    <div class="sb-sec-lbl">관리</div>
+    <div class="sb-item" id="nav-manual" onclick="W._swManual()"><i class="ti ti-book ico" aria-hidden="true"></i> 매뉴얼</div>
+    <div class="sb-item" id="nav-branch" onclick="W._swBranch()"><i class="ti ti-building-store ico" aria-hidden="true"></i> 지점운영</div>
+    <a class="sb-item" href="admin.html"><i class="ti ti-settings ico" aria-hidden="true"></i> 설정</a>
   </div>
   <hr class="sb-divider">
   <div class="sb-sec">
@@ -405,11 +411,6 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
     <div id="sb-months"><div style="font-size:11px;color:#B0BEC5;padding:4px 8px">저장된 월 없음</div></div>
     <div style="font-size:10px;font-weight:700;color:#B0BEC5;padding:6px 8px 3px;letter-spacing:.5px">영업</div>
     <div id="sb-biz-arc"><div style="font-size:11px;color:#B0BEC5;padding:4px 8px">저장된 영업 없음</div></div>
-  </div>
-  <hr class="sb-divider">
-  <div class="sb-sec">
-    <div class="sb-sec-lbl">관리</div>
-    <a class="sb-item" href="admin.html"><i class="ti ti-settings ico" aria-hidden="true"></i> 설정</a>
   </div>
   <div class="sb-footer">
     <div style="font-size:11px;color:#B0BEC5;line-height:1.8">
@@ -471,6 +472,7 @@ const rSchedule = ref(db,'schedule2025'); // 금일/익일 예정건
 const rFeedback = ref(db,'feedback2025'); // 미납 피드백
 const rLinks   = ref(db,'links2025');    // 링크모음
 const rRvStat  = ref(db,'rvstat2026');   // 리뷰작성현황
+const rTuition = ref(db,'tuition2026');  // 수강료표
 
 // ── 설정 ─────────────────────────────────────────────
 const STS = ['상담','추가'];
@@ -565,6 +567,7 @@ let DEPOSIT = {};
 let WORKLOAD = {};
 let BLOG = {};
 let LINKS = [];
+let TUITION = {};
 let RVSTAT = {}; // {week_mon: {member: {mon:{url,time}, tue:{url,time},...}, memberRoles:{m:'팀부장'/'경력'}}}
 let SCHEDULE = {};
 let FEEDBACK = {};
@@ -611,6 +614,14 @@ onValue(rBlog, snap => {
 onValue(rRvStat, snap => {
   RVSTAT = snap.val() || {};
   if (cw === 170) showRvStat();
+});
+onValue(rTuition, snap => {
+  const v = snap.val();
+  if (v) {
+    if (v.wd) window._tuitionWD = v.wd;
+    if (v.we) window._tuitionWE = v.we;
+  }
+  if (cw === 190) showBranch();
 });
 onValue(rLinks, snap => {
   LINKS = snap.val() || [];
@@ -2705,7 +2716,7 @@ window.showBlog = function showBlog() {
   const sc = document.getElementById('sc');
   sc.style.display = '';
   // nav 활성화
-  ['nav-dash','nav-biz','nav-staff','nav-dep','nav-blog','nav-rvstat'].forEach(id=>document.getElementById(id)?.classList.remove('on'));
+  ['nav-dash','nav-biz','nav-staff','nav-dep','nav-blog','nav-rvstat','nav-manual','nav-branch'].forEach(id=>document.getElementById(id)?.classList.remove('on'));
   document.getElementById('nav-blog')?.classList.add('on');
 
   try {
@@ -3756,7 +3767,7 @@ window.showRvStat = function showRvStat() {
   ['mc','bc','sc','dc'].forEach(function(id){var e=document.getElementById(id);if(e)e.style.display='none';});
   var sc = document.getElementById('sc');
   sc.style.display = '';
-  ['nav-dash','nav-biz','nav-staff','nav-dep','nav-blog','nav-staff-alt','nav-links','nav-rvstat'].forEach(function(id){document.getElementById(id)?.classList.remove('on');});
+  ['nav-dash','nav-biz','nav-staff','nav-dep','nav-blog','nav-links','nav-rvstat','nav-manual','nav-branch'].forEach(function(id){document.getElementById(id)?.classList.remove('on');});
   document.getElementById('nav-rvstat')?.classList.add('on');
 
   var WEEK_LABELS = ['1주차','2주차','3주차','4주차'];
@@ -3902,9 +3913,428 @@ window.showRvStat = function showRvStat() {
   sc.innerHTML = h;
 };
 
+const _saveTuition = () => set(rTuition, {wd: window._tuitionWD||[], we: window._tuitionWE||[]});
+W._tuitionFilter = () => {
+  const kw = (window._tuitionKw||'').toLowerCase();
+  const cat = window._tuitionCat||'';
+  const WD = window._tuitionWD || [];
+  const WE = window._tuitionWE || [];
+  const wdEl = document.getElementById('tuition-wd');
+  const weEl = document.getElementById('tuition-we');
+  if (!wdEl || !weEl) { showBranch(); return; }
+
+  function filterTable(rows, type) {
+    const filtered = rows.filter(r =>
+      (!cat || r.cat === cat) &&
+      (!kw || r.name.toLowerCase().includes(kw) || r.cat.toLowerCase().includes(kw))
+    );
+    if (!filtered.length) return '<div style="padding:20px;text-align:center;color:var(--text3);font-size:12px">검색 결과 없음</div>';
+    const CC = {'아트웍(원화)':['#FFF7ED','#C2410C'],'그래픽':['#EFF6FF','#1D4ED8'],'원화':['#F0FDF4','#166534'],'프로그래밍':['#FDF4FF','#6B21A8'],'기획':['#FFFBEB','#92400E'],'팀 프로젝트':['#F0F9FF','#0369A1'],'웹툰':['#FFF1F2','#9F1239'],'웹소설':['#F0FDFA','#134E4A'],'아트웍':['#FEF9EE','#B45309'],'게임기획':['#FFFBEB','#92400E'],'게임그래픽':['#EFF6FF','#1D4ED8'],'게임QA':['#F5F3FF','#4C1D95'],'이펙트':['#FFF1F2','#BE185D'],'이모티콘':['#FDF4FF','#6B21A8'],'스파인':['#F0FDFA','#065F46']};
+    let html = '<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="background:var(--bg2)">' +
+      '<th style="padding:7px 8px;border-bottom:1px solid var(--border);color:var(--text3);font-size:11px;width:90px;white-space:nowrap">학과</th>' +
+      '<th style="padding:7px 8px;border-bottom:1px solid var(--border);color:var(--text3);font-size:11px">과정명</th>' +
+      '<th style="padding:7px 8px;border-bottom:1px solid var(--border);color:var(--text3);font-size:11px;text-align:right;width:76px;white-space:nowrap">수강료</th>' +
+      '<th style="padding:7px 8px;border-bottom:1px solid var(--border);color:var(--text3);font-size:11px;text-align:center;width:34px;white-space:nowrap">시간</th>' +
+      '<th style="padding:7px 8px;border-bottom:1px solid var(--border);color:var(--text3);font-size:11px;text-align:center;width:34px;white-space:nowrap">일수</th>' +
+      '<th style="padding:7px 8px;border-bottom:1px solid var(--border);color:var(--text3);font-size:11px;text-align:center;width:44px;white-space:nowrap">총시간</th>' +
+      '</tr></thead><tbody>';
+    let lastCat = '';
+    filtered.forEach(r => {
+      if (r.cat !== lastCat) {
+        lastCat = r.cat;
+        const [_bg,_fc] = CC[r.cat]||['#F9FAFB','#374151'];
+        html += '<tr><td colspan="6" style="padding:5px 10px;font-size:11px;font-weight:700;color:'+_fc+';background:'+_bg+';border-bottom:1px solid rgba(0,0,0,0.07);border-left:4px solid '+_fc+'">'+r.cat+'</td></tr>';
+      }
+      const priceStr = r.price ? Number(r.price).toLocaleString()+'원' : '';
+      html += '<tr style="border-bottom:1px solid var(--border)" onmouseover="this.style.background=\'var(--bg2)\'" onmouseout="this.style.background=\'\'">' +
+        '<td style="padding:6px 8px;font-size:12px;color:var(--text2);white-space:nowrap">'+r.cat+'</td>' +
+        '<td style="padding:6px 8px;font-size:12px;color:var(--text)">'+r.name+'</td>' +
+        '<td style="padding:6px 8px;text-align:right;font-size:12px;font-weight:600;color:var(--text)">'+priceStr+'</td>' +
+        '<td style="padding:6px 8px;text-align:center;font-size:12px;color:var(--text3);white-space:nowrap">'+r.h+'</td>' +
+        '<td style="padding:6px 8px;text-align:center;font-size:12px;color:var(--text3);white-space:nowrap">'+r.d+'</td>' +
+        '<td style="padding:6px 8px;text-align:center;font-size:12px;color:var(--text3);white-space:nowrap">'+r.th+'</td>' +
+        '</tr>';
+    });
+    html += '</tbody></table>';
+    return html;
+  }
+
+  wdEl.innerHTML = filterTable(WD, 'wd');
+  weEl.innerHTML = filterTable(WE, 'we');
+};
+W._tuitionEdit = (type, idx, field, val) => {
+  const arr = type==='wd' ? window._tuitionWD : window._tuitionWE;
+  if (!arr || !arr[idx]) return;
+  arr[idx][field] = field==='price' ? (val?Number(val.replace(/,/g,''))||'':'') : val;
+  _saveTuition();
+};
+W._tuitionDel = (type, idx) => {
+  if (!confirm('이 과정을 삭제할까요?')) return;
+  const arr = type==='wd' ? window._tuitionWD : window._tuitionWE;
+  arr.splice(idx, 1);
+  _saveTuition().then(()=>showBranch());
+};
+W._tuitionAdd = (type) => {
+  const arr = type==='wd' ? window._tuitionWD : window._tuitionWE;
+  arr.push({cat:'그래픽', name:'과정명 입력', price:'', h:'2H', d:'10D', th:'20H'});
+  _saveTuition().then(()=>showBranch());
+};
+W._swManual = () => {
+  cw = 180; curMonth = 'current';
+  ['nav-dash','nav-biz','nav-staff','nav-dep','nav-blog','nav-links','nav-rvstat','nav-manual','nav-branch'].forEach(id=>document.getElementById(id)?.classList.remove('on'));
+  ['mc','bc','dc'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display='none';});
+  const sc=document.getElementById('sc'); if(sc)sc.style.display='';
+  document.getElementById('nav-manual')?.classList.add('on');
+  renderTabs();
+  sc.innerHTML = `<div style="padding:40px;text-align:center;color:var(--text3)">
+    <i class="ti ti-book" style="font-size:48px;display:block;margin-bottom:16px;opacity:.3"></i>
+    <div style="font-size:16px;font-weight:700;margin-bottom:8px;color:var(--text2)">매뉴얼</div>
+    <div style="font-size:13px">준비 중입니다.</div>
+  </div>`;
+};
+W._swBranch = () => {
+  cw = 190; curMonth = 'current';
+  ['nav-dash','nav-biz','nav-staff','nav-dep','nav-blog','nav-links','nav-rvstat','nav-manual','nav-branch'].forEach(id=>document.getElementById(id)?.classList.remove('on'));
+  ['mc','bc','dc'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display='none';});
+  const sc=document.getElementById('sc'); if(sc)sc.style.display='';
+  document.getElementById('nav-branch')?.classList.add('on');
+  renderTabs();
+  showBranch();
+};
+
+window._branchTab = 'regulation';
+window._branchEditMode = false;
+
+window.showBranch = function() {
+  const sc = document.getElementById('sc');
+  const tab = window._branchTab;
+
+  function btnStyle(t) {
+    const on = tab === t;
+    return 'padding:6px 16px;font-size:13px;font-weight:600;border-radius:7px;cursor:pointer;border:1px solid '+(on?'#2563EB':'var(--border)')+';background:'+(on?'#EFF4FF':'var(--bg)')+';color:'+(on?'#2563EB':'var(--text3)');
+  }
+
+  const tabBar = '<div style="display:flex;gap:8px;margin-bottom:16px">' +
+    '<button onclick="window._branchTab=\'regulation\';showBranch()" style="'+btnStyle('regulation')+'">신촌DB 규정</button>' +
+    '<button onclick="window._branchTab=\'tuition\';showBranch()" style="'+btnStyle('tuition')+'">수강료</button>' +
+    '</div>';
+
+  if (tab === 'tuition') {
+    sc.innerHTML = '<div style="padding:16px 20px">' + tabBar + buildTuitionPage() + '</div>';
+  } else if (tab === 'regulation') {
+    sc.innerHTML = '<div style="padding:16px 20px">' + tabBar + buildRegulationPage() + '</div>';
+  }
+};
+
+function buildRegulationPage() {
+  const rData = window._regData || {};
+  const history = rData.history || [];
+
+  function row(tagTxt, text, detail) {
+    return '<tr style="border-bottom:0.5px solid var(--border)">' +
+      '<td style="padding:10px 12px;width:96px;vertical-align:top;white-space:nowrap">' +
+        '<span style="font-size:12px;font-weight:500;color:var(--text);background:var(--bg2);border:0.5px solid var(--border);border-radius:4px;padding:3px 9px;display:inline-block">' + tagTxt + '</span>' +
+      '</td>' +
+      '<td style="padding:10px 12px;font-size:13px;color:var(--text);line-height:1.7;vertical-align:top;border-left:0.5px solid var(--border)">' +
+        text +
+        (detail ? '<div style="font-size:12px;color:var(--text);margin-top:6px;line-height:1.8;background:var(--bg2);border-radius:6px;padding:6px 10px">' + detail + '</div>' : '') +
+      '</td></tr>';
+  }
+  function panel(icon, title, rows) {
+    return '<div style="margin-bottom:16px">' +
+      '<div style="font-size:14px;font-weight:500;color:var(--text);padding:9px 12px;background:var(--bg2);border-radius:8px 8px 0 0;border:0.5px solid var(--border);border-bottom:none;display:flex;align-items:center;gap:8px">' +
+      '<i class="ti ti-' + icon + '" style="font-size:15px;color:var(--text3)" aria-hidden="true"></i>' + title + '</div>' +
+      '<table style="width:100%;border-collapse:collapse;border:0.5px solid var(--border);border-radius:0 0 8px 8px;overflow:hidden">' +
+      rows + '</table></div>';
+  }
+
+  const dbTurn = panel('database', '신촌DB 턴 규정',
+    row('공식', '기타를 제외한 URL유입 문의 / 토스') +
+    row('핵심', '대표 / 내사 / 네이버') +
+    row('단과', '이모티콘, AI(개발, 원화), 버추얼 캐릭터') +
+    row('행사', 'SNS유입 DB (없는번호만 재배정 가능)',
+      '18:00~22:00 유입된 평일 행사디비는 [신촌평일당직행사] 소화<br>' +
+      '10:00~19:00 유입된 주말 행사디비는 [신촌주말당직행사] 소화') +
+    row('기타', '지점에서 소화할 수 없는 과목 / 초3이하, 60세 이상',
+      '사업PM, 서버프로그래밍, 3D애니메이션, 도트디자인(픽셀아트), 메타버스, 웹드라마') +
+    row('착신정지', '고객의 요청으로 수신정지된 멘트가 나오는 DB / 원장턴') +
+    row('재배정', '모든 디비는 3일 안에 확인 되어야지 재배정 가능',
+      '단, 당직 디비는 당직 당일에 확인이 안 되면 재배정 불가능') +
+    row('당직 기타턴', '없는 과목 및 세미나 및 원데이클래스 (과목 미 체크, 위치조회 등은 공식)',
+      '당직기타턴 배정시 [신촌평일당직기타], [신촌주말당직기타] 로 기입') +
+    row('이모티콘', '이모티콘 단일 문의시 해당날 당직디비공식소화 (당직디비기타X)',
+      '저녁 22:00 ~ 오전 09:29 사이 들어온 디비 → 전날 당직자 소화')
+  );
+
+  const dbProd = panel('clipboard-list', 'DB 생산 및 권한 규정',
+    row('내사 (일주일 이내)', '평일+주말 DB기입 권한상 일주일 이내 내사 발생 시 기존 담당자 권한 인정') +
+    row('내사 (일주일 초과)', '기존 담당자에게 권한 요청 → 요청전화 2회 불응답시 권한상실',
+      '해당요일에 맞는 턴으로 배정 진행 (상담완료 DB: 상담완료시점 1달 인정, 이후 컨텍시 1주일씩 권한)') +
+    row('평일 내사 (휴무)', '휴무일 경우 다음턴 먼저 소화 후 해당턴 담당자는 이후 선배정',
+      '① 담당자와 연결한 경우: 기존 담당자 권한 인정<br>' +
+      '② 이관DB로 담당자와 연락 없는 경우: 권한 인정X, 내사로 배정<br>' +
+      '③ 날짜 미기입: 권한 인정X') +
+    row('주말당직 내사', '해당 시간 당직 지원 근무 중 상담 가능한 인원 중 제비뽑기 또는 룰렛',
+      '상담 중인 인원 및 먼저 DB를 받은 인원 제외') +
+    row('학부모/실수강생', '학부모 선유입 후 실수강생 유입 → 학부모DB 담당자 권한상실',
+      '단, 첫 컨텍시 실수강생 이름+번호 확인 시도 증거 있을 경우 재배정 가능<br>' +
+      '실수강생 선유입 후 학부모DB 유입 → 선유입 실수강생DB 담당자에게 권한 양도 후 재배정') +
+    row('본인 아님', '홈페이지 통해서 문의한 적 없을 경우 → 신청 시간+과목 확인 필수',
+      '카카오톡 이름과 다른 경우 → 삭제요청 (유입 기준 3일 내 재배정 O)<br>' +
+      '본인이 맞지만 남긴 적 없는 경우 → 재배정 불가능<br>' +
+      '본인이 맞지만 실수로 남긴 경우 → 재배정 불가능') +
+    row('DB 생산 양식', '[내선][개인][문자] 양식 필수 · 날짜 미체크시 권한포기로 생산 가능',
+      '[내선]: 통화 내용 요약 입력<br>' +
+      '[카톡]: 반드시 보낸 날짜와 내용이 나오도록 입력<br>' +
+      '[문자]: 문자 보낸 내용을 요약해서 입력<br>' +
+      '※ 양식 미사용 시 이후 실컨텍 기록 있더라도 권한 인정 안 함') +
+    row('DB 기입 권한 인정', '평일: 퇴근 후 컨텍 시 익일 오전 10시까지 일지 기입하면 권한 인정',
+      '주말: 주말동안 컨텍 시 월요일 오전 10시까지 일지 기입하면 권한 인정<br>' +
+      '부득이한 사정으로 바로 권한 확인 불가능하면 확인 기점으로 1시간 권한 인정') +
+    row('전화안받음', '전일 오후 6시 이후 연락 된 경우 → 익일 오후 12시까지 기입시에만 권한인정',
+      '주말에 연락이 온 경우 → 월요일 오후 12시까지 기입시에만 권한인정 (개인, 추천 제외)<br>' +
+      '문자콜백 수기작성 답변 인정 (9:30~18:00 해당 시간만 해당) / 자동거절멘트는 노인정') +
+    row('이관생 구DB 생산', '무료수강권 4개 이하 → 구DB 생산 가능 + 공식재유입시 사업부 더블처리',
+      '무료수강권 5개 이상 → 구DB 생산 불가능 + 공식재유입시 기존담당자 그대로 소화<br>' +
+      '유료수강권 남아있는 경우 → 구DB 생산 불가능 + 공식재유입시 이관담당자 그대로 소화<br>' +
+      '추등하여 수강권 남아있는 경우 (유료+무료 포함) → 구DB 생산 불가능<br>' +
+      '권한없는 모든 구DB건 인원제한 없이 생산 가능 (단, 1인 1일 2회)') +
+    row('토스 기준', '신촌지점과 타지점 언급 시 신촌지점으로 유도하는 시도는 첫 컨텍 시 반드시 진행',
+      '그랬음에도 타지점 희망 → 토스<br>' +
+      '신촌지점과 타지점 둘 다 고민 → 토스 X, 신촌지점에서 안내드리겠다 O') +
+    row('5분 중복', '공식·핵심 유입 후 5분 이내 기타·행사 들어올 경우 → 처음 온 DB 그대로 소화',
+      '기타·행사 유입 후 5분 이내 공식·핵심 들어올 경우 → 나중에 들어온 DB로 소화<br>' +
+      '단, 5분 안에 컨택이 되었다면 그대로 소화 / 최대한 공식으로 소화하기 위함')
+  );
+
+  const attend = panel('award', '근태 및 포상 규정',
+    row('네이버 플레이스 리뷰', '기한: 매 결산일 기준(1일~말일) / 대상: 사업부 전체 경력이상(신입, 초경력 제외)',
+      '포상: 5만원 or 늦출권 1개<br>' +
+      '조건: 최소조건 네이버 리뷰 3개 이상<br>' +
+      '네이버리뷰 최소조건 3개 이상 달성되면 카카오나 구글, 지점홈페이지 리뷰도 횟수로 인정 O<br>' +
+      '네이버 리뷰 작성시 필수조건: 영수증, 저장, 알림받기 설정') +
+    row('지각 규정', '주말 오전 10시 59초까지 인정, 10시 30분까지 도착 시 해당일 마지막 턴 배정',
+      '30분 이후 도착 시 해당일 DB배정 없음 (평일페북포함)<br>' +
+      '지각으로 인해 당직 포기시 평일 공식 1턴 제한<br>' +
+      '평일 대중교통 연착으로 인한 지각 시 기사화된 증빙자료 제출 시 정상참작<br>' +
+      '기사화된 증빙자료 제출 제외 지각시 규정대로 진행 (1회 당 지각시 공식 1턴 제한)') +
+    row('점심시간', '결산기준 총매 4억 5천 달성시 유지 이하일 경우 1시간',
+      '4억 5천: 12시 ~ 13시 30분 / 4억 5천 미만: 12시 ~ 13시<br>' +
+      '당직 4억 5천: 10시 30분 ~ 12시 / 당직 4억 5천 미만: 11시 ~ 12시') +
+    row('주말당직 포상', '토+일 = 매출 2,500만 이상 월요일 5시 퇴근 (60만원이상 기여자)',
+      '토+일 = 주말상담건 3건 이상시 → 월요일 통화량 10분 차감 (월요일만 해당)') +
+    row('휴무', '당일 휴무 신청시 공식 1턴 제한 (최소 전일 12시 이전 신청)',
+      '영업일내 정식휴무 + 포상휴무 이외에 늦출, 휴무 또는 조퇴시 공식 1턴 제한<br>' +
+      '출근 후 공식 받고 퇴근시 다음 공식 제한<br>' +
+      '휴무 소진 후 응급실, 신혼여행, 출산 등 피치못할 상황시 원장님 컨펌 후 면제')
+  );
+
+  const weekend = panel('calendar-week', '주말당직 규정',
+    row('최소 인원', '주말당직 최소 인원은 4명으로 제한',
+      '지원 후 취소 시 최소 인원 4명 이하인 경우 대체자를 구한 상태에서 취소<br>' +
+      '어떠한 경우라도 사업부방에 공유 (취소 가능 시간: 당직 근무시간 직전까지)') +
+    row('지각 처리', '출근시간 기준 30분 이내 출근 시 DB 마지막 순번 배정 및 못 받은 경우 페북DB 배정') +
+    row('추첨 규정 (10명 이내)', '네이버당첨차추첨 통해서 진행 · 번호순서는 DB순번에 맞춰서 진행',
+      '추첨 및 사다리타기 진행시 그날 당직자 중 가장 높은 직급의 담당자 확인 후 진행<br>' +
+      '추첨시 반드시 타팀인원 1명 이상 관전해야 인정') +
+    row('추첨 규정 (10명 초과)', '네이버사다리타기 통해서 진행 · 번호순서는 DB순번에 맞춰서 진행') +
+    row('구DB 생산', '출근시 마감자 지원 & 마감 지원없을시 13시 마감자 뽑기',
+      '주말 출근시 구디비 상담 확보 2건시 바로 퇴근 (조기퇴근자 15시까지 디비 보장 / 마감자율)<br>' +
+      'DB생산 & 본인구디비일 경우도 녹취본 및 자료증빙 필수<br>' +
+      '사무실에 최소인원 2명 남을시 자동 당직마감')
+  );
+
+  let histHtml = '';
+  if (history.length === 0) {
+    histHtml = '<div style="padding:20px;text-align:center;color:var(--text3);font-size:12px">수정 이력이 없습니다</div>';
+  } else {
+    histHtml = history.map(h => {
+    const initials = h.who.slice(0,2);
+    return '<div style="display:flex;gap:10px;padding:8px 0;border-bottom:0.5px solid var(--border)">' +
+      '<div style="width:28px;height:28px;border-radius:50%;background:var(--bg2);border:0.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;color:var(--text3);flex-shrink:0">' + initials + '</div>' +
+      '<div style="flex:1">' +
+        '<div style="font-size:12px"><span style="font-weight:700;color:var(--text)">' + h.who + '</span><span style="color:var(--text3);font-size:11px;margin-left:6px">' + h.when + '</span></div>' +
+        '<div style="font-size:11px;color:var(--text3);margin-top:1px">' + h.section + '</div>' +
+        '<div style="margin-top:4px;font-size:11px;background:var(--bg2);border-radius:6px;padding:5px 8px;color:var(--text3)">' +
+          (h.prev ? '<span style="text-decoration:line-through">' + h.prev + '</span><br>' : '') +
+          '<span>→ ' + h.next + '</span>' +
+        '</div>' +
+      '</div></div>';
+  }).join('');
+  }
+
+  const histPanel = '<div style="border:0.5px solid var(--border);border-radius:10px;overflow:hidden;height:fit-content">' +
+    '<div style="padding:10px 14px;background:var(--bg2);border-bottom:0.5px solid var(--border);display:flex;align-items:center;gap:8px">' +
+    '<i class="ti ti-history" style="font-size:15px;color:var(--text3)" aria-hidden="true"></i>' +
+    '<span style="font-size:13px;font-weight:700;color:var(--text);flex:1">수정 이력</span></div>' +
+    '<div style="padding:10px 14px">' + histHtml + '</div></div>';
+
+  const header = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">' +
+    '<div><div style="font-size:15px;font-weight:700;color:var(--text)">신촌DB 규정 매뉴얼</div>' +
+    '<div style="font-size:11px;color:var(--text3);margin-top:2px">팀장/부장만 수정 가능</div></div></div>';
+
+  return header + dbTurn + dbProd + attend + weekend + histPanel;
+}
+
+function buildTuitionPage() {
+  const em = window._branchEditMode;
+  const kw = (window._tuitionKw||'').toLowerCase();
+  const catF = window._tuitionCat||'';
+  if (!window._tuitionWD) initTuitionData();
+  const WD = window._tuitionWD;
+  const WE = window._tuitionWE;
+
+  const CATS = ['아트웍(원화)','그래픽','원화','프로그래밍','기획','팀 프로젝트','웹툰','웹소설','아트웍','게임기획','게임그래픽','게임QA','이펙트','이모티콘','스파인'];
+  const ALL_CATS = [...new Set([...WD.map(r=>r.cat),...WE.map(r=>r.cat)])];
+
+  function buildTable(rows, type) {
+    const filtered = rows.filter(r =>
+      (!catF || r.cat===catF) &&
+      (!kw || r.name.toLowerCase().includes(kw) || r.cat.toLowerCase().includes(kw))
+    );
+    let html = '<table style="width:100%;border-collapse:collapse;font-size:12px">';
+    html += '<thead><tr style="background:var(--bg2)">' +
+      '<th style="padding:7px 8px;border-bottom:1px solid var(--border);color:var(--text3);font-size:11px;width:90px;white-space:nowrap">학과</th>' +
+      '<th style="padding:7px 8px;border-bottom:1px solid var(--border);color:var(--text3);font-size:11px">과정명</th>' +
+      '<th style="padding:7px 8px;border-bottom:1px solid var(--border);color:var(--text3);font-size:11px;text-align:right;width:76px;white-space:nowrap">수강료</th>' +
+      '<th style="padding:7px 8px;border-bottom:1px solid var(--border);color:var(--text3);font-size:11px;text-align:center;width:34px;white-space:nowrap">시간</th>' +
+      '<th style="padding:7px 8px;border-bottom:1px solid var(--border);color:var(--text3);font-size:11px;text-align:center;width:34px;white-space:nowrap">일수</th>' +
+      '<th style="padding:7px 8px;border-bottom:1px solid var(--border);color:var(--text3);font-size:11px;text-align:center;width:44px;white-space:nowrap">총시간</th>' +
+      (em ? '<th style="width:20px;border-bottom:1px solid var(--border)"></th>' : '') +
+      '</tr></thead><tbody>';
+
+    if (!filtered.length) {
+      html += '<tr><td colspan="7" style="padding:20px;text-align:center;color:var(--text3);font-size:12px">검색 결과 없음</td></tr>';
+      html += '</tbody></table>';
+      return html;
+    }
+    let lastCat = '';
+    filtered.forEach(r => {
+      const idx = rows.indexOf(r);
+      if (r.cat !== lastCat && !em) {
+        lastCat = r.cat;
+        const CC2 = {'아트웍(원화)':['#FFF7ED','#C2410C'],'그래픽':['#EFF6FF','#1D4ED8'],'원화':['#F0FDF4','#166534'],'프로그래밍':['#FDF4FF','#6B21A8'],'기획':['#FFFBEB','#92400E'],'팀 프로젝트':['#F0F9FF','#0369A1'],'웹툰':['#FFF1F2','#9F1239'],'웹소설':['#F0FDFA','#134E4A'],'아트웍':['#FEF9EE','#B45309'],'게임기획':['#FFFBEB','#92400E'],'게임그래픽':['#EFF6FF','#1D4ED8'],'게임QA':['#F5F3FF','#4C1D95'],'이펙트':['#FFF1F2','#BE185D'],'이모티콘':['#FDF4FF','#6B21A8'],'스파인':['#F0FDFA','#065F46']};
+        const [_bg,_fc] = CC2[r.cat] || ['#F9FAFB','#374151'];
+        html += '<tr><td colspan="6" style="padding:5px 10px;font-size:11px;font-weight:700;color:'+_fc+';background:'+_bg+';border-bottom:1px solid rgba(0,0,0,0.07);border-left:4px solid '+_fc+'">'+r.cat+'</td></tr>';
+      }
+      const priceStr = r.price ? Number(r.price).toLocaleString()+'원' : '';
+      if (em) {
+        const catOpts = CATS.map(c=>'<option value="'+c+'"'+(c===r.cat?' selected':'')+'>'+c+'</option>').join('');
+        html += '<tr style="border-bottom:1px solid var(--border)">' +
+          '<td style="padding:3px 5px"><select style="font-size:11px;width:100%;border:1px solid var(--border);border-radius:4px;padding:2px" onchange="W._tuitionEdit(\'' + type + '\',' + idx + ',\'cat\',this.value)">' + catOpts + '</select></td>' +
+          '<td style="padding:3px 5px"><input value="' + r.name.replace(/"/g,'&quot;') + '" style="font-size:11px;width:100%;border:1px solid var(--border);border-radius:4px;padding:2px 4px" onblur="W._tuitionEdit(\'' + type + '\',' + idx + ',\'name\',this.value)"></td>' +
+          '<td style="padding:3px 5px"><input value="' + (r.price||'') + '" placeholder="" style="font-size:11px;width:100%;border:1px solid var(--border);border-radius:4px;padding:2px 4px;text-align:right" onblur="W._tuitionEdit(\'' + type + '\',' + idx + ',\'price\',this.value)"></td>' +
+          '<td style="padding:3px 5px"><input value="' + r.h + '" style="font-size:11px;width:100%;border:1px solid var(--border);border-radius:4px;padding:2px;text-align:center" onblur="W._tuitionEdit(\'' + type + '\',' + idx + ',\'h\',this.value)"></td>' +
+          '<td style="padding:3px 5px"><input value="' + r.d + '" style="font-size:11px;width:100%;border:1px solid var(--border);border-radius:4px;padding:2px;text-align:center" onblur="W._tuitionEdit(\'' + type + '\',' + idx + ',\'d\',this.value)"></td>' +
+          '<td style="padding:3px 5px"><input value="' + r.th + '" style="font-size:11px;width:100%;border:1px solid var(--border);border-radius:4px;padding:2px;text-align:center" onblur="W._tuitionEdit(\'' + type + '\',' + idx + ',\'th\',this.value)"></td>' +
+          '<td style="padding:3px;text-align:center"><button onclick="W._tuitionDel(\'' + type + '\',' + idx + ')" style="border:none;background:transparent;color:#CBD5E1;cursor:pointer;font-size:14px" onmouseover="this.style.color=\'#EF4444\'" onmouseout="this.style.color=\'#CBD5E1\'">×</button></td>' +
+          '</tr>';
+      } else {
+        html += '<tr style="border-bottom:1px solid var(--border)" onmouseover="this.style.background=\'var(--bg2)\'" onmouseout="this.style.background=\'\'">' +
+          '<td style="padding:6px 8px;font-size:12px;color:var(--text2);white-space:nowrap">' + r.cat + '</td>' +
+          '<td style="padding:6px 8px;font-size:12px;color:var(--text)">' + r.name + '</td>' +
+          '<td style="padding:6px 8px;text-align:right;font-size:12px;font-weight:600;color:var(--text)">' + priceStr + '</td>' +
+          '<td style="padding:6px 8px;text-align:center;font-size:12px;color:var(--text3);white-space:nowrap">' + r.h + '</td>' +
+          '<td style="padding:6px 8px;text-align:center;font-size:12px;color:var(--text3);white-space:nowrap">' + r.d + '</td>' +
+          '<td style="padding:6px 8px;text-align:center;font-size:12px;color:var(--text3);white-space:nowrap">' + r.th + '</td>' +
+          '</tr>';
+      }
+    });
+    html += '</tbody></table>';
+    return html;
+  }
+
+  const editBtnStyle = 'padding:6px 14px;font-size:12px;border-radius:7px;cursor:pointer;border:1px solid ' + (em?'#2563EB':'var(--border)') + ';background:' + (em?'#EFF4FF':'var(--bg)') + ';color:' + (em?'#2563EB':'var(--text3)') + ';font-weight:' + (em?'700':'400');
+  const catOpts = ['', ...ALL_CATS].map(c => '<option value="'+c+'"'+(c===catF?' selected':'')+'>'+(c||'전체 학과')+'</option>').join('');
+
+  return '<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap">' +
+    '<div style="font-size:15px;font-weight:700;color:var(--text);white-space:nowrap">[게임신촌] 수강료표</div>' +
+    '<input id="tuition-kw" value="'+(window._tuitionKw||'')+'" placeholder="과정명 검색..." style="padding:5px 10px;font-size:12px;border:1px solid var(--border);border-radius:7px;background:var(--bg);color:var(--text);outline:none;width:130px" oninput="window._tuitionKw=this.value;W._tuitionFilter()">' +
+    '<select style="padding:5px 8px;font-size:12px;border:1px solid var(--border);border-radius:7px;background:var(--bg);color:var(--text);outline:none" onchange="window._tuitionCat=this.value;W._tuitionFilter()">' + catOpts + '</select>' +
+    '<div style="margin-left:auto;display:flex;gap:6px">' +
+    (em ? '<button onclick="W._tuitionAdd(\'wd\')" style="padding:5px 10px;font-size:12px;border-radius:7px;cursor:pointer;border:1px solid var(--border);background:var(--bg);color:var(--text3)">+ 평일</button><button onclick="W._tuitionAdd(\'we\')" style="padding:5px 10px;font-size:12px;border-radius:7px;cursor:pointer;border:1px solid var(--border);background:var(--bg);color:var(--text3)">+ 주말</button>' : '') +
+    '<button onclick="window._branchEditMode=!window._branchEditMode;showBranch()" style="' + editBtnStyle + '">' + (em?'완료':'수정') + '</button>' +
+    '</div></div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">' +
+    '<div style="border:1px solid var(--border);border-radius:10px;overflow:hidden"><div style="padding:9px 12px;font-size:13px;font-weight:700;color:var(--text);background:var(--bg2);border-bottom:1px solid var(--border)">평일</div><div id="tuition-wd">' + buildTable(WD,'wd') + '</div></div>' +
+    '<div style="border:1px solid var(--border);border-radius:10px;overflow:hidden"><div style="padding:9px 12px;font-size:13px;font-weight:700;color:var(--text);background:var(--bg2);border-bottom:1px solid var(--border)">주말</div><div id="tuition-we">' + buildTable(WE,'we') + '</div></div>' +
+    '</div>';
+}
+
+function initTuitionData() {
+  const wd = [
+    {cat:'아트웍(원화)', name:'디지털아트웍1~2(격일)', price:650000, h:'2H', d:'10D', th:'20H'},
+    {cat:'아트웍(원화)', name:'디지털아트웍(월~금)', price:'', h:'2H', d:'18D', th:'36H'},
+    {cat:'그래픽', name:'게임그래픽(월화목금)', price:'', h:'2H', d:'14D', th:'28H'},
+    {cat:'그래픽', name:'*게임그래픽1~4(화목화목금)', price:'', h:'2H', d:'10D', th:'20H'},
+    {cat:'그래픽', name:'*게임그래픽(포폴)(월수금월수)', price:'', h:'2H', d:'10D', th:'20H'},
+    {cat:'원화', name:'게임원화(월~금)', price:'', h:'2H', d:'18D', th:'36H'},
+    {cat:'원화', name:'게임원화(격일)(월수금월수/화목금화목)', price:'', h:'2H', d:'10D', th:'20H'},
+    {cat:'원화', name:'입시프리미엄(실전반)(월수금)', price:'', h:'2H', d:'10D', th:'20H'},
+    {cat:'원화', name:'입시프리미엄(실전반)(화목금)', price:'', h:'2H', d:'10D', th:'20H'},
+    {cat:'원화', name:'AI 원화', price:'', h:'2H', d:'18D', th:'36H'},
+    {cat:'원화', name:'게임UI(화/목)', price:'', h:'2H', d:'8D', th:'16H'},
+    {cat:'프로그래밍', name:'게임프로그램1~6(월~금)', price:'', h:'2H', d:'18D', th:'36H'},
+    {cat:'프로그래밍', name:'유니티1~6(월수금월수/화목화목금)', price:'', h:'2H', d:'10D', th:'20H'},
+    {cat:'프로그래밍', name:'언리얼 1~6(월~금)', price:'', h:'2H', d:'18D', th:'36H'},
+    {cat:'프로그래밍', name:'언리얼포트폴리오', price:'', h:'2H', d:'12D', th:'24H'},
+    {cat:'프로그래밍', name:'게임프로그래밍(포폴)(월수금월수)', price:'', h:'2H', d:'10D', th:'20H'},
+    {cat:'프로그래밍', name:'인디게임(월수금)', price:'', h:'3H', d:'10D', th:'30H'},
+    {cat:'기획', name:'게임기획(기초)1~4(화목화목금)', price:'', h:'3H', d:'10D', th:'30H'},
+    {cat:'기획', name:'게임기획(월수금월수)', price:'', h:'3H', d:'10D', th:'30H'},
+    {cat:'기획', name:'게임기획1~8(월~금)', price:'', h:'2H', d:'18D', th:'36H'},
+    {cat:'팀 프로젝트', name:'팀프로젝트(월/수/금)', price:'', h:'3H', d:'10D', th:'30H'},
+    {cat:'웹툰', name:'웹툰(월/수/금)', price:750000, h:'3H', d:'12D', th:'36H'},
+    {cat:'웹툰', name:'웹툰(포폴)(월수금월수)', price:'', h:'3H', d:'10D', th:'30H'},
+    {cat:'웹툰', name:'웹툰1~6(연출/시나리오)(화목화목금)', price:'', h:'3H', d:'10D', th:'30H'},
+    {cat:'웹툰', name:'웹툰1~6(연출/시나리오)/20시간', price:650000, h:'2H', d:'10D', th:'20H'},
+    {cat:'웹툰', name:'웹툰(기초)(월수금월수)', price:650000, h:'2H', d:'10D', th:'20H'},
+    {cat:'웹툰', name:'웹툰(심화)(화목화목금)', price:'', h:'3H', d:'10D', th:'30H'},
+    {cat:'웹툰', name:'웹툰(월수금월수)', price:650000, h:'2H', d:'10D', th:'20H'},
+    {cat:'웹툰', name:'웹툰(작화)(월~금)', price:650000, h:'2H', d:'10D', th:'20H'},
+    {cat:'웹툰', name:'웹툰입시', price:650000, h:'2H', d:'10D', th:'20H'},
+    {cat:'웹툰', name:'웹툰입시(작화)', price:650000, h:'2H', d:'10D', th:'20H'},
+    {cat:'웹툰', name:'웹툰어시/화목', price:'', h:'3H', d:'8D', th:'24H'},
+    {cat:'웹툰', name:'웹툰아트웍', price:650000, h:'2H', d:'10D', th:'20H'},
+    {cat:'웹소설', name:'웹소설1~6(화목금)', price:'', h:'2H', d:'10D', th:'20H'},
+  ];
+  const we = [
+    {cat:'원화', name:'*게임원화/주 (16시간)', price:'', h:'4H', d:'4D', th:'16H'},
+    {cat:'원화', name:'게임원화/주', price:'', h:'4H', d:'4D', th:'16H'},
+    {cat:'원화', name:'게임UI/주 (토)', price:'', h:'4H', d:'4D', th:'16H'},
+    {cat:'원화', name:'게임UI/주 (일)', price:'', h:'4H', d:'4D', th:'16H'},
+    {cat:'원화', name:'게임UI(심화포폴)/주 1~3', price:'', h:'4H', d:'4D', th:'16H'},
+    {cat:'아트웍', name:'디지털드로잉1~2/주', price:'', h:'3H', d:'4D', th:'12H'},
+    {cat:'아트웍', name:'디지털아트웍/주 (토)', price:650000, h:'5H', d:'4D', th:'20H'},
+    {cat:'아트웍', name:'디지털아트웍/주 (일)', price:'', h:'4H', d:'4D', th:'16H'},
+    {cat:'프로그래밍', name:'게임프로그램1~6/주', price:'', h:'5H', d:'4D', th:'20H'},
+    {cat:'프로그래밍', name:'언리얼1~6/주', price:'', h:'5H', d:'4D', th:'20H'},
+    {cat:'프로그래밍', name:'유니티1~6/주', price:'', h:'5H', d:'4D', th:'20H'},
+    {cat:'게임기획', name:'게임기획/주', price:'', h:'4H', d:'4D', th:'16H'},
+    {cat:'게임그래픽', name:'게임그래픽/주 (토)', price:'', h:'5H', d:'4D', th:'20H'},
+    {cat:'게임그래픽', name:'게임그래픽/주 (일)', price:'', h:'6H', d:'4D', th:'24H'},
+    {cat:'게임그래픽', name:'게임그래픽/주 (토/일)', price:'', h:'3H', d:'8D', th:'24H'},
+    {cat:'웹툰', name:'웹툰/주(백종범강사)', price:700000, h:'6H', d:'4D', th:'24H'},
+    {cat:'웹툰', name:'웹툰(연출스토리)1~6/주', price:700000, h:'6H', d:'4D', th:'24H'},
+    {cat:'웹툰', name:'웹툰PD1~4/주', price:'', h:'3H', d:'4D', th:'12H'},
+    {cat:'웹툰', name:'웹툰PD(심화포폴)/주', price:'', h:'3H', d:'4D', th:'12H'},
+    {cat:'웹소설', name:'JC클래스1~3/주(기초)', price:'', h:'3H', d:'4D', th:'12H'},
+    {cat:'웹소설', name:'JC클래스1~3/주(심화)', price:'', h:'4H', d:'4D', th:'16H'},
+    {cat:'웹소설', name:'JC클래스(포폴)/주', price:'', h:'4H', d:'4D', th:'16H'},
+    {cat:'웹소설', name:'웹소설1~6/주', price:'', h:'4H', d:'4D', th:'16H'},
+    {cat:'웹소설', name:'웹소설(포폴)/주', price:'', h:'4H', d:'4D', th:'16H'},
+    {cat:'게임QA', name:'게임QA1~4(기초)/주', price:'', h:'3H', d:'4D', th:'12H'},
+    {cat:'이펙트', name:'이펙트1~12/주', price:'', h:'5H', d:'4D', th:'20H'},
+    {cat:'이모티콘', name:'이모티콘제작1~6/주', price:'', h:'4H', d:'4D', th:'16H'},
+    {cat:'스파인', name:'2D애니메이션(스파인)1~6/주', price:'', h:'4H', d:'4D', th:'16H'},
+  ];
+  window._tuitionWD = wd;
+  window._tuitionWE = we;
+  return {wd, we};
+}
 W._swLinks = () => {
   cw = 160; curMonth = 'current';
-  ['nav-dash','nav-biz','nav-staff','nav-dep','nav-blog','nav-staff-alt','nav-links','nav-rvstat'].forEach(id=>document.getElementById(id)?.classList.remove('on'));
+  ['nav-dash','nav-biz','nav-staff','nav-dep','nav-blog','nav-links','nav-rvstat','nav-manual','nav-branch'].forEach(id=>document.getElementById(id)?.classList.remove('on'));
   document.getElementById('nav-staff-sub')?.style && (document.getElementById('nav-staff-sub').style.display='none');
   document.getElementById('nav-biz-sub')?.style && (document.getElementById('nav-biz-sub').style.display='none');
   document.getElementById('nav-links')?.classList.add('on');
@@ -3918,7 +4348,7 @@ W._swRvStat = () => {
   const sc=document.getElementById('sc'); if(sc)sc.style.display='';
   // 서브메뉴 닫기
   ['nav-staff-sub','nav-biz-sub','nav-dash-sub'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display='none';});
-  ['nav-dash','nav-biz','nav-staff','nav-dep','nav-blog','nav-staff-alt','nav-links','nav-rvstat'].forEach(id=>document.getElementById(id)?.classList.remove('on'));
+  ['nav-dash','nav-biz','nav-staff','nav-dep','nav-blog','nav-links','nav-rvstat','nav-manual','nav-branch'].forEach(id=>document.getElementById(id)?.classList.remove('on'));
   document.getElementById('nav-rvstat')?.classList.add('on');
   renderTabs();
   showRvStat();
