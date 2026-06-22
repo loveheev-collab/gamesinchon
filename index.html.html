@@ -4120,12 +4120,17 @@ function buildRegulationPage() {
         (detail ? '<div style="font-size:12px;color:var(--text);margin-top:6px;line-height:1.8;background:var(--bg2);border-radius:6px;padding:6px 10px">' + detail + '</div>' : '') +
       '</td></tr>';
   }
+  if (!window._regOpen) window._regOpen = {'신촌DB 턴 규정':true,'DB 생산 및 권한 규정':true,'근태 및 포상 규정':true,'주말당직 규정':true};
   function panel(icon, title, rows) {
-    return '<div style="margin-bottom:16px">' +
-      '<div style="font-size:14px;font-weight:500;color:var(--text);padding:9px 12px;background:var(--bg2);border-radius:8px 8px 0 0;border:0.5px solid var(--border);border-bottom:none;display:flex;align-items:center;gap:8px">' +
-      '<i class="ti ti-' + icon + '" style="font-size:15px;color:var(--text3)" aria-hidden="true"></i>' + title + '</div>' +
-      '<table style="width:100%;border-collapse:collapse;border:0.5px solid var(--border);border-radius:0 0 8px 8px;overflow:hidden">' +
-      rows + '</table></div>';
+    const isOpen = window._regOpen[title] !== false;
+    return '<div style="margin-bottom:10px;border:0.5px solid var(--border);border-radius:8px;overflow:hidden">' +
+      '<div onclick="window._regOpen[\''+title+'\']=' + '!' + 'window._regOpen[\''+title+'\'];showBranch()" style="cursor:pointer;font-size:14px;font-weight:500;padding:11px 14px;background:'+(isOpen?'var(--bg)':'var(--bg2)')+';border-left:'+(isOpen?'3px solid #378ADD':'3px solid transparent')+';display:flex;align-items:center;gap:8px;user-select:none">' +
+      '<i class="ti ti-'+icon+'" style="font-size:15px;color:'+(isOpen?'#378ADD':'var(--text3)')+'" aria-hidden="true"></i>' +
+      '<span style="flex:1;color:'+(isOpen?'#185FA5':'var(--text)')+'">'+title+'</span>' +
+      '<i class="ti ti-chevron-'+(isOpen?'up':'down')+'" style="font-size:13px;color:'+(isOpen?'#378ADD':'var(--text3)')+'" aria-hidden="true"></i>' +
+      '</div>' +
+      (isOpen ? '<table style="width:100%;border-collapse:collapse;border-top:0.5px solid var(--border)">'+rows+'</table>' : '') +
+      '</div>';
   }
 
   const dbTurn = panel('database', '신촌DB 턴 규정',
