@@ -3664,21 +3664,24 @@ window.W = {
     cCol[date]=false; set(rConsult,CONSULT); showBiz();
   },
   _cd(date,rid) {
-  _cd(date, rid) {
+ _cd(date, rid) {
     if (!confirm('삭제할까요?')) return;
-    // [INP 개선] 클릭하자마자 브라우저가 즉시 반응할 수 있도록 해당 행을 먼저 투명하게 처리
+    // [INP 개선] 삭제 버튼을 누른 그 행을 즉시 추적해서 화면에서 바로 제거
     const btn = document.activeElement;
     const tr = btn ? btn.closest('tr') : null;
     if (tr) {
-      tr.style.transition = 'opacity 0.15s';
-      tr.style.opacity = '0.3';
+      tr.style.transition = 'all 0.15s';
+      tr.style.opacity = '0';
+      setTimeout(() => { 
+        tr.remove(); // 무거운 전체 리렌더링 대신 필요한 행만 즉시 파괴
+      }, 150);
     }
-    // [INP 개선] 데이터 처리와 화면을 다시 그리는 무거운 작업을 0.016초 뒤로 미뤄서 랙을 방지
+    // [INP 개선] 화면 굳어짐 방지를 위해 백엔드 처리를 분리
     setTimeout(() => {
       delete CONSULT[date][rid];
       if (!Object.keys(CONSULT[date]).length) delete CONSULT[date];
       set(rConsult, CONSULT);
-      showBiz();
+      // 무거운 showBiz() 전체 재생성을 제외하여 브라우저의 과부하를 막음
     }, 16);
   },
   _csearch(kw) {
@@ -3731,19 +3734,22 @@ window.W = {
   _alDel(id) {
     _alDel(id) {
     if (!confirm('삭제할까요?')) return;
-    
-    // [INP 개선] 클릭했을 때 화면이 바로 반응하도록 지워질 행을 먼저 투명하게 처리
+    // [INP 개선] 클릭하자마자 삭제할 행을 찾아서 투명하게 만들고 화면에서 즉시 제거
     const tr = document.querySelector(`tr[data-al-id='${id}']`);
     if (tr) {
-      tr.style.transition = 'opacity 0.15s';
-      tr.style.opacity = '0.3';
+      tr.style.transition = 'all 0.15s';
+      tr.style.opacity = '0';
+      setTimeout(() => { 
+        tr.remove(); // 화면에서 해당 행만 즉시 파괴 (랙 원천 차단)
+      }, 150);
     }
-    // [INP 개선] 무거운 화면 갱신 작업을 비동기로 분리하여 버벅임(랙) 현상 해결
+    // [INP 개선] 데이터 삭제 및 저장은 서버에서 조용히 처리하도록 매크로태스크 분리
     setTimeout(() => {
       delete ADDLIST[id];
       set(rAddList, ADDLIST);
-      if (cw === 99 && bst === '추가리스트') showBiz();
+      // 무거운 showBiz() 전체 재생성을 실행하지 않고 백엔드 저장만 완료함
     }, 16);
+  },
   },
   },
   _alUpdate(id, field, val) {
