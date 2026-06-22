@@ -3664,10 +3664,64 @@ window.W = {
     cCol[date]=false; set(rConsult,CONSULT); showBiz();
   },
   _cd(date,rid) {
-    if(!confirm('삭제할까요?')) return;
+    // 이미 확인 단계 진행 중이면 무시
+    if(window._cdPending === date+'_'+rid) return;
+    window._cdPending = date+'_'+rid;
+    // 해당 행의 삭제 버튼을 인라인 확인 UI로 교체
+    const btn = document.querySelector(`button.dbc[onclick="W._cd('${date}','${rid}')"]`);
+    if(btn) {
+      btn.style.display = 'none';
+      const conf = document.createElement('span');
+      conf.id = 'cd-conf-'+rid;
+      conf.innerHTML = `<button onclick="W._cdConfirm('${date}','${rid}')" style="font-size:10px;padding:2px 6px;border-radius:4px;background:#DC2626;color:#fff;border:none;cursor:pointer;font-weight:700">삭제</button>`+
+        `<button onclick="W._cdCancel('${date}','${rid}')" style="font-size:10px;padding:2px 5px;border-radius:4px;background:var(--bg);border:1px solid var(--border);cursor:pointer;margin-left:2px">취소</button>`;
+      btn.parentNode.appendChild(conf);
+    }
+  },
+  _cdConfirm(date,rid) {
+    window._cdPending = null;
+    // 해당 tr만 즉시 제거 (재렌더링 없음)
+    const btn = document.querySelector(`button.dbc[onclick="W._cd('${date}','${rid}')"]`);
+    if(btn) btn.closest('tr')?.remove();
+    // 날짜 그룹 — 남은 삭제 버튼이 없으면(해당 날짜 행 전부 삭제) 헤더/테이블/추가버튼도 제거
+    const remaining = document.querySelectorAll(`button.dbc[onclick^="W._cd('${date}',"]`);
+    if(!remaining.length) {
+      const ctbl = document.getElementById('ctbl-'+date);
+      if(ctbl) {
+        const dhdr = ctbl.previousElementSibling;
+        if(dhdr && dhdr.classList.contains('dhdr')) dhdr.remove();
+        ctbl.remove();
+      }
+      const arb = document.getElementById('arb-'+date);
+      if(arb) arb.remove();
+    }
+    // Firebase 반영
     delete CONSULT[date][rid];
-    if(!Object.keys(CONSULT[date]).length) delete CONSULT[date];
-    set(rConsult,CONSULT); showBiz();
+    if(CONSULT[date] && !Object.keys(CONSULT[date]).length) delete CONSULT[date];
+    set(rConsult, CONSULT);
+    // 다음 프레임에 KPI 헤더(합계)만 조용히 업데이트
+    requestAnimationFrame(() => {
+      const searchKw = document.getElementById('consult-search')?.value || '';
+      const bc = document.getElementById('bc');
+      if(bc && bst === '상담내역') {
+        const newNav = `<div class="bsn">
+          <button class="bst" onclick="W._bst('요약')">영업 데이터</button>
+          <button class="bst on" onclick="W._bst('상담내역')">상담 내역</button>
+          <button class="bst" onclick="W._bst('미납리스트')">미납 리스트</button>
+          <button class="bst" onclick="W._bst('추가리스트')">추가 리스트</button>
+        </div>`;
+        bc.innerHTML = newNav + makeBizMonthNav() + renderConsult(searchKw);
+        const inp = document.getElementById('consult-search');
+        if(inp && searchKw) { inp.focus(); inp.setSelectionRange(inp.value.length, inp.value.length); }
+      }
+    });
+  },
+  _cdCancel(date,rid) {
+    window._cdPending = null;
+    const conf = document.getElementById('cd-conf-'+rid);
+    if(conf) conf.remove();
+    const btn = document.querySelector(`button.dbc[onclick="W._cd('${date}','${rid}')"]`);
+    if(btn) btn.style.display = '';
   },
   _csearch(kw) {
     const el = document.getElementById('bc');
