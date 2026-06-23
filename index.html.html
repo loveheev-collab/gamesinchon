@@ -444,7 +444,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 </div>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getDatabase, ref, set, get, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { getDatabase, ref, set, get, update, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
 const app = initializeApp({
   apiKey:"AIzaSyDvYouAWDL-KYTegBOie6P_teOtX3ubBlI",
@@ -3322,15 +3322,13 @@ window.W = {
     if(!SCHEDULE[date]) SCHEDULE[date]={};
     if(!SCHEDULE[date][type]) SCHEDULE[date][type]={};
     if(!SCHEDULE[date][type][id]) SCHEDULE[date][type][id]={};
-    if (val === '' || val === null || val === undefined) {
-      delete SCHEDULE[date][type][id][field];
-    } else {
-      SCHEDULE[date][type][id][field] = val;
-    }
+    const safeVal = (val === null || val === undefined) ? '' : val;
+    SCHEDULE[date][type][id][field] = safeVal;
     if (!SCHEDULE[date][type][id]._exists) SCHEDULE[date][type][id]._exists = true;
-    // 저장만 하고 리렌더 안 함 (Tab 포커스 유지)
+    // 해당 필드만 update (전체 덮어쓰기 방지)
     window._depRendering = true;
-    set(rSchedule, SCHEDULE);
+    const fieldPath = `${date}/${type}/${id}`;
+    update(ref(db, `schedule2025/${fieldPath}`), {[field]: safeVal || null, _exists: true});
     setTimeout(() => { window._depRendering = false; }, 2000);
     // 헤더 건수/금액만 업데이트
     const panelId = 'sch-panel-' + type;
