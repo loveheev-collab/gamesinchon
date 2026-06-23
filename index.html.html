@@ -2116,61 +2116,17 @@ function showDep() {
   document.getElementById('dc').style.display='';
   const today = todayStr();
 
-  // 예정건 행 초기 세팅 및 초과 빈행 정리
-  const initRows = {금일: 7, 익일: 7};
+  // 고정키('fixed') 초기화 - 날짜 무관하게 항상 유지
   let needSave = false;
-
-  // ── 어제 익일 → 오늘 금일 자동 이전 (carry-over) ──────────────────
-  // 어제 날짜 계산
-  const _todayD = new Date(); _todayD.setHours(0,0,0,0);
-  const _yestD  = new Date(_todayD); _yestD.setDate(_yestD.getDate() - 1);
-  const yestStr = `${_yestD.getFullYear()}-${String(_yestD.getMonth()+1).padStart(2,'0')}-${String(_yestD.getDate()).padStart(2,'0')}`;
-  const _carryFlag = `carried_${yestStr}_to_${today}`;
-
-  if (!SCHEDULE[_carryFlag]) {
-    // 아직 이전 안 된 경우에만 실행
-    const yestIkil = SCHEDULE[yestStr]?.익일 || {};
-    const filledYestIkil = Object.entries(yestIkil).filter(([,r]) => r.멘토 || r.이름 || r.금액);
-    if (filledYestIkil.length > 0) {
-      if (!SCHEDULE[today]) SCHEDULE[today] = {};
-      if (!SCHEDULE[today].금일) SCHEDULE[today].금일 = {};
-      filledYestIkil.forEach(([, r]) => {
-        const newId = 'cy' + Date.now() + '_' + Math.random().toString(36).slice(2,6);
-        // 완납/미납 상태는 초기화하여 오늘 처리 대기 상태로
-        SCHEDULE[today].금일[newId] = { ...r, 완납: false, 미납: false };
-      });
-      needSave = true;
-    }
-    // 이전 완료 표시 (중복 실행 방지)
-    SCHEDULE[_carryFlag] = today;
-    needSave = true;
-  }
-  // ────────────────────────────────────────────────────────────────────
-
+  if (!SCHEDULE['fixed']) SCHEDULE['fixed'] = {};
   ['금일','익일'].forEach(type => {
-    if (!SCHEDULE[today]) SCHEDULE[today] = {};
-    if (!SCHEDULE[today][type]) SCHEDULE[today][type] = {};
-    const keys = Object.keys(SCHEDULE[today][type]);
-    const cur = keys.length;
-    const target = initRows[type];
-    if (cur === 0) {
-      // 완전 비어있으면 초기 세팅
-      for (let i = 0; i < target; i++) {
+    if (!SCHEDULE['fixed'][type]) {
+      SCHEDULE['fixed'][type] = {};
+      for (let i = 0; i < 7; i++) {
         const id = 'pre' + String(i).padStart(2,'0');
-        SCHEDULE[today][type][id] = {멘토:'',이름:'',시간:'',금액:'',종류:'',결제방법:'',확률:'',특이사항:''};
+        SCHEDULE['fixed'][type][id] = {멘토:'',이름:'',시간:'',금액:'',종류:'',결제방법:'',확률:'',특이사항:''};
       }
       needSave = true;
-    } else if (type === '익일' && cur > target) {
-      // 익일만 초과 빈 행 삭제 (금일은 이동한 행이 있을 수 있으므로 건드리지 않음)
-      const emptyKeys = keys.filter(k => {
-        const r = SCHEDULE[today][type][k];
-        return !r.멘토 && !r.이름 && !r.시간 && !r.금액 && !r.특이사항;
-      });
-      const excess = cur - target;
-      if (emptyKeys.length > 0) {
-        emptyKeys.slice(0, excess).forEach(k => delete SCHEDULE[today][type][k]);
-        needSave = true;
-      }
     }
   });
   if (needSave) set(rSchedule, SCHEDULE);
@@ -2180,8 +2136,8 @@ function showDep() {
   let schGumilHtml = '';
   let schIkilHtml = '';
   try { depLeftHtml = renderDepLeft(today); } catch(e) { depLeftHtml = '<div style="color:red;padding:12px">renderDepLeft 오류: ' + e.message + '</div>'; }
-  try { schGumilHtml = renderSchPanel(today,'금일'); } catch(e) { schGumilHtml = '<div style="color:red;padding:12px">금일 오류: ' + e.message + '</div>'; }
-  try { schIkilHtml = renderSchPanel(today,'익일'); } catch(e) { schIkilHtml = '<div style="color:red;padding:12px">익일 오류: ' + e.message + '</div>'; }
+  try { schGumilHtml = renderSchPanel('fixed','금일'); } catch(e) { schGumilHtml = '<div style="color:red;padding:12px">금일 오류: ' + e.message + '</div>'; }
+  try { schIkilHtml = renderSchPanel('fixed','익일'); } catch(e) { schIkilHtml = '<div style="color:red;padding:12px">익일 오류: ' + e.message + '</div>'; }
 
   document.getElementById('dc').innerHTML = `
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap">
@@ -2322,34 +2278,8 @@ function renderDepLeft(today) {
   return h;
 }
 
-function renderSchPanel(today, type) {
-  // 익일 최대 7행 강제 trim (Firebase에 더 많이 저장된 경우 처리)
-  const maxRows = {금일: 99, 익일: 99};
-  if (SCHEDULE[today]?.[type]) {
-    const keys = Object.keys(SCHEDULE[today][type]).sort();
-    const max = maxRows[type];
-    // 빈 행만 trim (데이터 있는 행은 보존)
-    const emptyKeys = keys.filter(k => {
-      const r = SCHEDULE[today][type][k];
-      return !r.멘토 && !r.이름 && !r.시간 && !r.금액 && !r.특이사항;
-    });
-    const filledKeys = keys.filter(k => {
-      const r = SCHEDULE[today][type][k];
-      return r.멘토 || r.이름 || r.시간 || r.금액 || r.특이사항;
-    });
-    if (keys.length > max) {
-      // 빈 행을 잘라서 max에 맞춤
-      const toDelete = emptyKeys.slice(0, keys.length - max);
-      if (toDelete.length > 0) {
-        toDelete.forEach(k => delete SCHEDULE[today][type][k]);
-        window._depRendering = true;
-        set(rSchedule, SCHEDULE);
-        setTimeout(() => { window._depRendering = false; }, 1500);
-      }
-    }
-  }
-
-  const rows = Object.entries(SCHEDULE[today]?.[type]||{}).sort(([a],[b])=>a.localeCompare(b));
+function renderSchPanel(date, type) {
+  const rows = Object.entries(SCHEDULE[date]?.[type]||{}).sort(([a],[b])=>a.localeCompare(b));
   const hdrColor = type==='금일' ? '#2563EB' : '#7C3AED';
   const totalAmt = rows.reduce((s,[,r])=>s+N(r.금액||0),0);
   const filledRows = rows.filter(([,r])=>r.멘토||r.이름);
@@ -2390,7 +2320,7 @@ function renderSchPanel(today, type) {
       </tr></thead><tbody>`;
 
   rows.forEach(([id, r]) => {
-    const sk = `if(!SCHEDULE['${today}'])SCHEDULE['${today}']={};if(!SCHEDULE['${today}']['${type}'])SCHEDULE['${today}']['${type}']={};if(!SCHEDULE['${today}']['${type}']['${id}'])SCHEDULE['${today}']['${type}']['${id}']={}`;
+    const sk = `if(!SCHEDULE['${date}'])SCHEDULE['${date}']={};if(!SCHEDULE['${date}']['${type}'])SCHEDULE['${date}']['${type}']={};if(!SCHEDULE['${date}']['${type}']['${id}'])SCHEDULE['${date}']['${type}']['${id}']={}`;
     const typeBadge = r.종류==='추가' ? 'background:#EFF4FF;color:#2563EB' : r.종류==='신규' ? 'background:#F0FDF4;color:#16A34A' : '';
     const isDone = r.완납 === true;
     const isMiNap = r.미납 === true;
@@ -2399,39 +2329,37 @@ function renderSchPanel(today, type) {
     h += `<tr style="${rowBg}">
       <td style="text-align:center">
         ${type==='익일'
-          ? `<button title="금일로 이동" onclick="W._schMove('${today}','${id}')"
+          ? `<button title="금일로 이동" onclick="W._schMove('${date}','${id}')"
                style="background:#EFF4FF;border:1px solid #BFCFFF;border-radius:5px;cursor:pointer;font-size:14px;padding:2px 5px;color:#2563EB;line-height:1" tabindex="-1">→</button>`
           : `<input type="checkbox" class="dep-chk" ${isDone?'checked':''}
-               onchange="W._schDone('${today}','${type}','${id}',this.checked)" title="완납">`
+               onchange="W._schDone('${date}','${type}','${id}',this.checked)" title="완납">`
         }
       </td>
       ${type==='금일' ? `<td style="text-align:center">
         <input type="checkbox" class="dep-chk" style="accent-color:#6B7280" ${isMiNap?'checked':''}
-          onchange="W._schMiNap('${today}','${id}',this.checked)" title="미납">
+          onchange="W._schMiNap('${date}','${id}',this.checked)" title="미납">
       </td>` : ''}
       <td>
-        <select class="sch-sel sch-focus" data-panel="${panelId}" style="${ds}"
-          onchange="W._sch('${today}','${type}','${id}','멘토',this.value)"
+        <input class="sch-inp sch-focus" data-panel="${panelId}" style="width:68px;${ds}" value="${r.멘토||''}" placeholder="-"
+          oninput="${sk};SCHEDULE['${date}']['${type}']['${id}'].멘토=this.value"
+          onblur="W._sch('${date}','${type}','${id}','멘토',this.value)"
           onkeydown="W._schTab(event,this)">
-          <option value="">-</option>
-          ${TM_CFG.map(t=>t.members.map(m=>`<option value="${m}"${r.멘토===m?' selected':''}>${m}</option>`).join('')).join('')}
-        </select>
       </td>
       <td><input class="sch-inp sch-focus" data-panel="${panelId}" value="${r.이름||''}" style="${ds}"
-        oninput="${sk};SCHEDULE['${today}']['${type}']['${id}'].이름=this.value"
-        onblur="W._sch('${today}','${type}','${id}','이름',this.value)"
+        oninput="${sk};SCHEDULE['${date}']['${type}']['${id}'].이름=this.value"
+        onblur="W._sch('${date}','${type}','${id}','이름',this.value)"
         onkeydown="W._schTab(event,this)"></td>
       <td><input class="sch-inp sch-focus" data-panel="${panelId}" value="${r.시간||''}" style="min-width:52px;${ds}"
-        oninput="${sk};SCHEDULE['${today}']['${type}']['${id}'].시간=this.value"
-        onblur="W._sch('${today}','${type}','${id}','시간',this.value)"
+        oninput="${sk};SCHEDULE['${date}']['${type}']['${id}'].시간=this.value"
+        onblur="W._sch('${date}','${type}','${id}','시간',this.value)"
         onkeydown="W._schTab(event,this)"></td>
       <td><input class="sch-num sch-focus" data-panel="${panelId}" value="${r.금액?F(N(r.금액)):''}" placeholder="0" style="min-width:82px;${ds}"
-        oninput="${sk};SCHEDULE['${today}']['${type}','${id}'].금액=this.value"
-        onblur="W._sch('${today}','${type}','${id}','금액',this.value);this.value=this.value?F(N(this.value)):''"
+        oninput="${sk};SCHEDULE['${date}']['${type}','${id}'].금액=this.value"
+        onblur="W._sch('${date}','${type}','${id}','금액',this.value);this.value=this.value?F(N(this.value)):''"
         onkeydown="W._schTab(event,this)"></td>
       <td style="${typeBadge}">
         <select class="sch-sel sch-focus" data-panel="${panelId}" style="${typeBadge};${ds}"
-          onchange="W._sch('${today}','${type}','${id}','종류',this.value);W._schRefresh()"
+          onchange="W._sch('${date}','${type}','${id}','종류',this.value);W._schRefresh()"
           onkeydown="W._schTab(event,this)">
           <option value="">-</option>
           <option value="추가"${r.종류==='추가'?' selected':''}>추가</option>
@@ -2440,7 +2368,7 @@ function renderSchPanel(today, type) {
       </td>
       <td>
         <select class="sch-sel sch-focus" data-panel="${panelId}" style="${ds}"
-          onchange="W._sch('${today}','${type}','${id}','결제방법',this.value)"
+          onchange="W._sch('${date}','${type}','${id}','결제방법',this.value)"
           onkeydown="W._schTab(event,this)">
           <option value="">-</option>
           <option value="카드"${r.결제방법==='카드'?' selected':''}>카드</option>
@@ -2450,15 +2378,15 @@ function renderSchPanel(today, type) {
         </select>
       </td>
       <td><input class="sch-inp sch-focus" data-panel="${panelId}" style="text-align:center;min-width:46px;${ds}" value="${r.확률||''}"
-        oninput="${sk};SCHEDULE['${today}']['${type}']['${id}'].확률=this.value"
-        onblur="W._sch('${today}','${type}','${id}','확률',this.value)"
+        oninput="${sk};SCHEDULE['${date}']['${type}']['${id}'].확률=this.value"
+        onblur="W._sch('${date}','${type}','${id}','확률',this.value)"
         onkeydown="W._schTab(event,this)"></td>
       <td><input class="sch-inp sch-focus" data-panel="${panelId}" value="${r.특이사항||''}" style="${ds}"
-        oninput="${sk};SCHEDULE['${today}']['${type}']['${id}'].특이사항=this.value"
-        onblur="W._sch('${today}','${type}','${id}','특이사항',this.value)"
+        oninput="${sk};SCHEDULE['${date}']['${type}']['${id}'].특이사항=this.value"
+        onblur="W._sch('${date}','${type}','${id}','특이사항',this.value)"
         onkeydown="W._schTab(event,this)"></td>
       <td style="text-align:center;white-space:nowrap">
-        <button class="dbc" tabindex="-1" onclick="W._schDel('${today}','${type}','${id}')">×</button>
+        <button class="dbc" tabindex="-1" onclick="W._schDel('${date}','${type}','${id}')">×</button>
       </td>
     </tr>`;
   });
@@ -2466,10 +2394,10 @@ function renderSchPanel(today, type) {
   const doneCount = rows.filter(([,r])=>r.완납).length;
   h += `</tbody></table></div>
     <button class="sch-done-toggle" data-showing="false"
-      onclick="W._toggleDone('${today}','${type}')"
+      onclick="W._toggleDone('${date}','${type}')"
       style="width:100%;padding:6px;font-size:11px;font-weight:700;background:#F8FAFF;border:none;border-top:1px dashed var(--border);cursor:pointer;color:var(--text3);${doneCount===0?'display:none':''}"
     >완납 ${doneCount}건 숨겨짐 ▼ 펼치기</button>
-    <button class="sch-add-btn" onclick="W._schAdd('${today}','${type}')">+ 행 추가</button>
+    <button class="sch-add-btn" onclick="W._schAdd('${date}','${type}')">+ 행 추가</button>
   </div>`;
   return h;
 }
