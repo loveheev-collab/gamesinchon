@@ -2120,6 +2120,29 @@ function showDep() {
   // 고정키('fixed') 초기화 - 날짜 무관하게 항상 유지
   let needSave = false;
   if (!SCHEDULE['fixed']) SCHEDULE['fixed'] = {};
+
+  // ── 날짜가 바뀌면 완납 행 자동 삭제 ──────────────────────────────
+  const _lastDateKey = 'fixed_last_date';
+  const _lastDate = SCHEDULE[_lastDateKey] || null;
+  if (_lastDate && _lastDate !== today) {
+    // 날짜가 바뀐 경우: 금일/익일에서 완납된 행 삭제
+    ['금일','익일'].forEach(type => {
+      const rows = SCHEDULE['fixed'][type] || {};
+      Object.keys(rows).forEach(id => {
+        if (rows[id].완납 === true) {
+          delete SCHEDULE['fixed'][type][id];
+          needSave = true;
+        }
+      });
+    });
+  }
+  // 오늘 날짜 기록 (다음날 비교용)
+  if (SCHEDULE[_lastDateKey] !== today) {
+    SCHEDULE[_lastDateKey] = today;
+    needSave = true;
+  }
+  // ─────────────────────────────────────────────────────────────────
+
   ['금일','익일'].forEach(type => {
     if (!SCHEDULE['fixed'][type]) {
       SCHEDULE['fixed'][type] = {};
