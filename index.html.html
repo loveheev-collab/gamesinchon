@@ -2154,7 +2154,11 @@ function showDep() {
       needSave = true;
     }
   });
-  if (needSave) { window._depRendering = true; set(rSchedule, SCHEDULE); }
+  if (needSave) {
+    window._depRendering = true;
+    update(ref(db, 'schedule2025'), SCHEDULE).catch(e => console.error('schedule update err:', e));
+    setTimeout(() => { window._depRendering = false; }, 2000);
+  }
   setTimeout(() => { window._depRendering = false; }, 1500);
 
   let depLeftHtml = '';
@@ -3224,7 +3228,7 @@ window.W = {
     // 완납 시 미납 해제
     if(checked) SCHEDULE[date][type][id].미납 = false;
     window._depRendering = true;
-    set(rSchedule, SCHEDULE);
+    update(ref(db, `schedule2025/${date}/${type}/${id}`), {완납: checked, 미납: checked ? false : SCHEDULE[date][type][id].미납||false});
     setTimeout(() => { window._depRendering = false; }, 1500);
     W._updateSchSummary(date, type);
     const tr = document.querySelector(`[onclick*="_schDel('${date}','${type}','${id}')"]`)?.closest('tr');
@@ -3293,7 +3297,7 @@ window.W = {
     SCHEDULE[date].금일[id].미납 = checked;
     if(checked) SCHEDULE[date].금일[id].완납 = false;
     window._depRendering = true;
-    set(rSchedule, SCHEDULE);
+    update(ref(db, `schedule2025/${date}/금일/${id}`), {미납: checked, 완납: checked ? false : SCHEDULE[date].금일[id].완납||false});
     setTimeout(() => { window._depRendering = false; }, 1500);
     W._updateSchSummary(date, '금일');
     const tr = document.querySelector(`[onclick*="_schDel('${date}','금일','${id}')"]`)?.closest('tr');
@@ -3328,7 +3332,10 @@ window.W = {
     const newId = 'mv' + Date.now();
     SCHEDULE[date].금일[newId] = row;
     delete SCHEDULE[date].익일[id];
-    set(rSchedule, SCHEDULE);
+    window._depRendering = true;
+    update(ref(db, `schedule2025/${date}/금일`), {[newId]: row});
+    remove(ref(db, `schedule2025/${date}/익일/${id}`));
+    setTimeout(() => { window._depRendering = false; }, 1500);
     showDep();
   },
   _schTab(e, el) {
@@ -3378,14 +3385,16 @@ window.W = {
     if(!SCHEDULE[date][type]) SCHEDULE[date][type]={};
     const id = Math.random().toString(36).slice(2,9);
     SCHEDULE[date][type][id] = {_exists:true,멘토:'',이름:'',시간:'',금액:'',종류:'',결제방법:'',확률:'',특이사항:''};
-    set(rSchedule, SCHEDULE);
+    window._depRendering = true;
+    update(ref(db, `schedule2025/${date}/${type}`), {[id]: SCHEDULE[date][type][id]});
+    setTimeout(() => { window._depRendering = false; }, 1500);
     showDep();
   },
   _schDel(date, type, id) {
     if(!SCHEDULE[date]?.[type]?.[id]) return;
     delete SCHEDULE[date][type][id];
     window._depRendering = true;
-    set(rSchedule, SCHEDULE);
+    update(ref(db, 'schedule2025'), SCHEDULE);
     setTimeout(() => { window._depRendering = false; }, 1500);
     // 삭제 후 행 보충 없이 DOM에서만 해당 행 제거
     const tr = document.querySelector(`[onclick*="_schDel('${date}','${type}','${id}')"]`)?.closest('tr');
