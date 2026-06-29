@@ -3610,7 +3610,7 @@ window.W = {
   _cu(date, rid, field, val) {
     if(!CONSULT[date]||!CONSULT[date][rid]) return;
     CONSULT[date][rid][field] = val;
-    set(rConsult, CONSULT);
+    update(ref(db, `consult2025/${date}/${rid}`), {[field]: val});
     updBizKPI();
     // 결과 변경 시 배지 색상 즉시 반영
     if (field === 'result') {
