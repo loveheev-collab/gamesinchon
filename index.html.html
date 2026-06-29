@@ -2156,10 +2156,32 @@ function showDep() {
   });
   if (needSave) {
     window._depRendering = true;
-    update(ref(db, 'schedule2025'), SCHEDULE).catch(e => console.error('schedule update err:', e));
+    // 전체 덮어쓰기 방지 — 변경된 경로만 개별 update
+    const savePromises = [];
+    if (SCHEDULE[_lastDateKey]) {
+      savePromises.push(update(ref(db, 'schedule2025'), {[_lastDateKey]: today}));
+    }
+    // 완납 행 삭제는 remove로 개별 처리 (이미 위에서 delete됨)
+    ['금일','익일'].forEach(type => {
+      const rows = SCHEDULE['fixed']?.[type];
+      if (rows) {
+        Object.keys(rows).forEach(id => {
+          // 삭제된 행(완납)은 remove
+          savePromises.push(remove(ref(db, `schedule2025/fixed/${type}/${id}`)).catch(()=>{}));
+        });
+      }
+    });
+    // 초기 7행 생성도 개별 경로로
+    ['금일','익일'].forEach(type => {
+      if (SCHEDULE['fixed']?.[type]) {
+        Object.entries(SCHEDULE['fixed'][type]).forEach(([id, row]) => {
+          savePromises.push(update(ref(db, `schedule2025/fixed/${type}/${id}`), row));
+        });
+      }
+    });
+    Promise.all(savePromises).catch(e => console.error('schedule save err:', e));
     setTimeout(() => { window._depRendering = false; }, 2000);
   }
-  setTimeout(() => { window._depRendering = false; }, 1500);
 
   let depLeftHtml = '';
   let schGumilHtml = '';
@@ -3394,7 +3416,7 @@ window.W = {
     if(!SCHEDULE[date]?.[type]?.[id]) return;
     delete SCHEDULE[date][type][id];
     window._depRendering = true;
-    update(ref(db, 'schedule2025'), SCHEDULE);
+    remove(ref(db, `schedule2025/${date}/${type}/${id}`));
     setTimeout(() => { window._depRendering = false; }, 1500);
     // 삭제 후 행 보충 없이 DOM에서만 해당 행 제거
     const tr = document.querySelector(`[onclick*="_schDel('${date}','${type}','${id}')"]`)?.closest('tr');
