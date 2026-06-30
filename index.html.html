@@ -3526,7 +3526,9 @@ window.W = {
     const pt=document.getElementById('page-title');
     const titles = {요약:'영업 데이터',상담내역:'상담 내역',미납리스트:'미납 리스트',추가리스트:'추가 리스트',입금파악:'입금 파악'};
     if(pt) pt.textContent = titles[tab]||tab;
-    showBiz();
+    const sc3 = document.getElementById('sc');
+    if (sc3) sc3.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text3);font-size:13px">불러오는 중...</div>';
+    requestAnimationFrame(() => requestAnimationFrame(showBiz));
   },
   _bm(team,member,field,val) {
     const n=N(val);
