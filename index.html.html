@@ -3003,7 +3003,9 @@ window.W = {
     if(tab==='대체휴무') document.getElementById('nav-staff-alt')?.classList.add('on');
     const pt=document.getElementById('page-title');
     if(pt) pt.textContent = tab==='업무량'?'업무량':'대체휴무';
-    showStaff();
+    const sc2 = document.getElementById('sc');
+    if (sc2) sc2.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text3);font-size:13px">불러오는 중...</div>';
+    requestAnimationFrame(() => requestAnimationFrame(showStaff));
   },
   _stab(tab) {
     staffTab=tab;
@@ -3470,7 +3472,9 @@ window.W = {
     const pt=document.getElementById('page-title');
     const titles = {요약:'영업 데이터',상담내역:'상담 내역',미납리스트:'미납 리스트',추가리스트:'추가 리스트',입금파악:'입금 파악'};
     if(pt) pt.textContent = titles[tab]||tab;
-    showBiz();
+    const sc = document.getElementById('sc');
+    if (sc) sc.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text3);font-size:13px">불러오는 중...</div>';
+    requestAnimationFrame(() => requestAnimationFrame(showBiz));
   },
   _sw(wi) {
     curMonth='current'; cw=wi;
@@ -3482,8 +3486,12 @@ window.W = {
       document.getElementById('nav-dash-sub').style.display='';
     }
     renderTabs();
-    if(wi===99) showBiz();
-    else { tcBuilt=false; rvBuilt=false; renderMain(); }
+    const sc = document.getElementById('sc');
+    if (sc) sc.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text3);font-size:13px">불러오는 중...</div>';
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      if(wi===99) showBiz();
+      else { tcBuilt=false; rvBuilt=false; renderMain(); }
+    }));
   },
   _setMonth(month) {
     curMonth=month; cw=-1;
