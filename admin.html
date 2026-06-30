@@ -110,26 +110,6 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
     <div class="alert alert-blue">⚠ 저장 버튼을 눌러야 현황판에 반영됩니다. 팀/직원 변경 시 기존 입력 데이터는 유지됩니다.</div>
 
     <!-- 기본 설정 -->
-    <!-- 결산 마감 -->
-    <div class="stitle">📊 결산 마감 & 아카이브</div>
-    <div class="section">
-      <div style="display:grid;grid-template-columns:1fr auto;gap:12px;align-items:end">
-        <div class="cfg-item">
-          <label>마감할 월 (YYYY-MM)</label>
-          <input class="cfg-inp" id="sales-archive-month" type="month" value="2026-06">
-        </div>
-        <div>
-          <button class="btn btn-primary" onclick="doSalesArchive()" style="padding:9px 20px;white-space:nowrap">
-            💾 결산 마감 저장
-          </button>
-        </div>
-      </div>
-      <div style="margin-top:10px;font-size:12px;color:var(--text3);line-height:1.8">
-        ✅ 저장 항목: 주차별 결산 실적 / 설정<br>
-        ⚠ 마감 후 새 달 설정으로 업데이트하세요.
-      </div>
-      <div id="sales-archive-list" style="margin-top:14px"></div>
-    </div>
 
     <!-- 영업일 일정 관리 -->
     <div class="stitle">📅 영업일 일정 관리</div>
@@ -305,7 +285,6 @@ function initFirebase() {
     document.getElementById('sd').className = 'sdot live';
     document.getElementById('sl').textContent = '연결됨';
     renderAll();
-    loadSalesArchiveList();
     loadBizArchiveList();
   });
 }
@@ -463,50 +442,6 @@ window.delMember = (ti,mi) => { CFG.teams[ti].members.splice(mi,1); renderTeams(
 window.addMember = ti => { CFG.teams[ti].members.push(''); renderTeams(); };
 
 // ── 저장 ─────────────────────────────────────────────
-window.doArchive = async () => {
-  const month = document.getElementById('archive-month').value;
-  if (!month) { alert('마감할 월을 선택해주세요'); return; }
-  if (!confirm(`${month} 데이터를 아카이브에 저장할까요?
-
-현재 sales2025 데이터가 archive/${month}에 저장됩니다.`)) return;
-
-  try {
-    // 현재 config + sales 데이터를 아카이브에 저장
-    const { ref: dbRef, set: dbSet } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js");
-    const arcMonthRef = dbRef(db, `archive/${month}`);
-    await dbSet(arcMonthRef, {
-      config: CFG,
-      sales: SALES_DATA,
-      archivedAt: new Date().toISOString()
-    });
-    alert(`✅ ${month} 데이터가 아카이브에 저장됐어요!
-
-현황판 사이드바 "월별 아카이브"에서 확인하세요.`);
-    loadSalesArchiveList();
-    loadBizArchiveList();
-  } catch(e) {
-    alert('저장 실패: ' + e.message);
-  }
-};
-
-async function loadSalesArchiveList() {
-  const { ref: dbRef, get } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js");
-  const snap = await get(dbRef(db, 'archive/sales'));
-  const data = snap.val() || {};
-  const keys = Object.keys(data).sort().reverse();
-  const el = document.getElementById('sales-archive-list');
-  if (!keys.length) { el.innerHTML = ''; return; }
-  el.innerHTML = '<div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">저장된 결산 아카이브</div>' +
-    keys.map(k => {
-      const d = data[k];
-      const label = d.label || k.replace(/_/g,'-');
-      const at = d.archivedAt ? new Date(d.archivedAt).toLocaleString('ko-KR') : '';
-      return `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--bg);border-radius:8px;margin-bottom:6px;font-size:12px">
-        <div><div style="font-weight:700">📊 ${label}</div><div style="color:var(--text3);margin-top:2px">${at}</div></div>
-        <button class="btn btn-red btn-sm" onclick="delSalesArchive('${k}')">삭제</button>
-      </div>`;
-    }).join('');
-}
 
 window.doBizArchive = async () => {
   const s = document.getElementById('biz-archive-start').value;
@@ -810,12 +745,6 @@ async function loadBizArchiveList() {
     }).join('');
 }
 
-window.delSalesArchive = async (key) => {
-  if (!confirm('삭제할까요?')) return;
-  const { ref: dbRef, remove } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js");
-  await remove(dbRef(db, 'archive/sales/' + key));
-  loadSalesArchiveList();
-};
 window.delBizArchive = async (key) => {
   if (!confirm('삭제할까요?')) return;
   const { ref: dbRef, remove } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js");
