@@ -2118,70 +2118,8 @@ function showDep() {
   document.getElementById('dc').style.display='';
   const today = todayStr();
 
-  // 고정키('fixed') 초기화 - 날짜 무관하게 항상 유지
-  let needSave = false;
+  // 고정키('fixed') — 읽기만, 자동 저장 없음
   if (!SCHEDULE['fixed']) SCHEDULE['fixed'] = {};
-
-  // ── 날짜가 바뀌면 완납 행 자동 삭제 ──────────────────────────────
-  const _lastDateKey = 'fixed_last_date';
-  const _lastDate = SCHEDULE[_lastDateKey] || null;
-  if (_lastDate && _lastDate !== today) {
-    // 날짜가 바뀐 경우: 금일/익일에서 완납된 행 삭제
-    ['금일','익일'].forEach(type => {
-      const rows = SCHEDULE['fixed'][type] || {};
-      Object.keys(rows).forEach(id => {
-        if (rows[id].완납 === true) {
-          delete SCHEDULE['fixed'][type][id];
-          needSave = true;
-        }
-      });
-    });
-  }
-  // 오늘 날짜 기록 (다음날 비교용)
-  if (SCHEDULE[_lastDateKey] !== today) {
-    SCHEDULE[_lastDateKey] = today;
-    needSave = true;
-  }
-  // ─────────────────────────────────────────────────────────────────
-
-  ['금일','익일'].forEach(type => {
-    if (!SCHEDULE['fixed'][type]) {
-      SCHEDULE['fixed'][type] = {};
-      for (let i = 0; i < 7; i++) {
-        const id = 'pre' + String(i).padStart(2,'0');
-        SCHEDULE['fixed'][type][id] = {_exists:true,멘토:'',이름:'',시간:'',금액:'',종류:'',결제방법:'',확률:'',특이사항:''};
-      }
-      needSave = true;
-    }
-  });
-  if (needSave) {
-    window._depRendering = true;
-    // 전체 덮어쓰기 방지 — 변경된 경로만 개별 update
-    const savePromises = [];
-    if (SCHEDULE[_lastDateKey]) {
-      savePromises.push(update(ref(db, 'schedule2025'), {[_lastDateKey]: today}));
-    }
-    // 완납 행 삭제는 remove로 개별 처리 (이미 위에서 delete됨)
-    ['금일','익일'].forEach(type => {
-      const rows = SCHEDULE['fixed']?.[type];
-      if (rows) {
-        Object.keys(rows).forEach(id => {
-          // 삭제된 행(완납)은 remove
-          savePromises.push(remove(ref(db, `schedule2025/fixed/${type}/${id}`)).catch(()=>{}));
-        });
-      }
-    });
-    // 초기 7행 생성도 개별 경로로
-    ['금일','익일'].forEach(type => {
-      if (SCHEDULE['fixed']?.[type]) {
-        Object.entries(SCHEDULE['fixed'][type]).forEach(([id, row]) => {
-          savePromises.push(update(ref(db, `schedule2025/fixed/${type}/${id}`), row));
-        });
-      }
-    });
-    Promise.all(savePromises).catch(e => console.error('schedule save err:', e));
-    setTimeout(() => { window._depRendering = false; }, 2000);
-  }
 
   let depLeftHtml = '';
   let schGumilHtml = '';
@@ -2341,8 +2279,9 @@ function renderSchPanel(date, type) {
   const panelId = 'sch-panel-' + type;
 
   let h = `<div class="dep-panel" id="${panelId}">
-    <div class="dep-panel-hdr" style="background:${hdrColor}">
+    <div class="dep-panel-hdr" style="background:${hdrColor};display:flex;align-items:center;justify-content:space-between">
       <span>${type==='금일'?'📅':'📆'} ${type} 예정건</span>
+      <button onclick="W._schReset('${type}')" style="font-size:10px;padding:2px 8px;border-radius:4px;border:1px solid rgba(255,255,255,0.4);background:rgba(255,255,255,0.15);color:#fff;cursor:pointer">🔄 초기화</button>
     </div>
     <div class="sch-summary" style="padding:9px 16px;background:${type==='금일'?'#EFF4FF':'#F5F3FF'};border-bottom:2px solid ${type==='금일'?'#93C5FD':'#C4B5FD'};display:flex;gap:16px;align-items:center;flex-wrap:wrap">
       <span style="font-size:13px;font-weight:900;color:${hdrColor};background:${type==='금일'?'#DBEAFE':'#EDE9FE'};padding:3px 10px;border-radius:20px">${filledRows.length}건</span>
@@ -3167,7 +3106,19 @@ window.W = {
   _depReset(date) {
     if(!confirm(`${date} 일별 입금파악 데이터를 초기화할까요?\n(금일예정건·익일예정건은 유지됩니다)`)) return;
     if(DEPOSIT[date]) delete DEPOSIT[date];
-    set(rDeposit, DEPOSIT);
+    update(ref(db, 'deposit2025'), {[date]: null});
+    showDep();
+  },
+  _schReset(type) {
+    if(!confirm(`${type} 예정건을 초기화하시겠습니까?\n(완납 포함 모든 행이 삭제되고 빈 7행으로 초기화됩니다)`)) return;
+    const newRows = {};
+    for (let i = 0; i < 7; i++) {
+      const id = 'pre' + String(i).padStart(2,'0');
+      newRows[id] = {_exists:true,멘토:'',이름:'',시간:'',금액:'',종류:'',결제방법:'',확률:'',특이사항:''};
+    }
+    if (!SCHEDULE['fixed']) SCHEDULE['fixed'] = {};
+    SCHEDULE['fixed'][type] = newRows;
+    set(ref(db, `schedule2025/fixed/${type}`), newRows);
     showDep();
   },
   _wlWeek(key) {
@@ -4867,10 +4818,53 @@ W._swBranch = () => {
   const sc=document.getElementById('sc'); if(sc)sc.style.display='';
   document.getElementById('nav-branch')?.classList.add('on');
   renderTabs();
-  showBranch();
+  if (!window._regRules) {
+    _regLoad().then(() => showBranch());
+  } else {
+    showBranch();
+  }
 };
 
 window._branchTab = 'regulation';
+
+
+// ── DB규정 Firebase 저장/수정/삭제 ──────────────────────────
+function autoResizeReg(el) {
+  el.style.height = 'auto';
+  el.style.height = (el.scrollHeight) + 'px';
+}
+
+W._regSaveRow = async function(secName, idx) {
+  const kEl = document.getElementById('rk_' + secName + '_' + idx);
+  const vEl = document.getElementById('rv_' + secName + '_' + idx);
+  const dEl = document.getElementById('rd_' + secName + '_' + idx);
+  if (!kEl || !vEl) return;
+  const row = {key: kEl.value.trim(), val: vEl.value.trim(), detail: dEl ? dEl.value.trim() : ''};
+  if (!window._regRules) window._regRules = {};
+  if (!window._regRules[secName]) window._regRules[secName] = [];
+  window._regRules[secName][idx] = row;
+  await update(ref(db, 'regulation2025/' + encodeRegKey(secName) + '/' + idx), row);
+};
+
+W._regDelRow = async function(secName, idx) {
+  if (!confirm('이 항목을 삭제하시겠습니까?')) return;
+  if (!window._regRules[secName]) return;
+  window._regRules[secName].splice(idx, 1);
+  await set(ref(db, 'regulation2025/' + encodeRegKey(secName)), window._regRules[secName]);
+  showBranch();
+};
+
+W._regAddRow = async function(secName) {
+  if (!window._regRules) window._regRules = {};
+  if (!window._regRules[secName]) window._regRules[secName] = [];
+  window._regRules[secName].push({key:'새 항목', val:'', detail:''});
+  await set(ref(db, 'regulation2025/' + encodeRegKey(secName)), window._regRules[secName]);
+  showBranch();
+};
+
+function encodeRegKey(secName) {
+  return secName.replace(/\//g,'_').replace(/ /g,'_').replace(/\(/g,'').replace(/\)/g,'');
+}
 
 // ── 지점운영 수정 권한 (비밀번호) ─────────────────────────
 const BRANCH_EDIT_PW = '1234'; // 팀장/부장 비밀번호
@@ -4916,128 +4910,156 @@ window.showBranch = function() {
   }
 };
 
+// ── DB규정 Firebase 데이터 구조 ──────────────────────────────
+const REG_DEFAULT = {
+  '신촌DB 턴 규정': [
+    {key:'공식', val:'기타를 제외한 URL유입 문의 / 토스'},
+    {key:'핵심', val:'대표 / 내사 / 네이버'},
+    {key:'단과', val:'이모티콘, AI(개발, 원화), 버추얼 캐릭터'},
+    {key:'행사', val:'SNS유입 DB (없는번호만 재배정 가능)', detail:'18:00~22:00 유입된 평일 행사디비는 [신촌평일당직행사] 소화\n10:00~19:00 유입된 주말 행사디비는 [신촌주말당직행사] 소화'},
+    {key:'기타', val:'지점에서 소화할 수 없는 과목 / 초3이하, 60세 이상', detail:'사업PM, 서버프로그래밍, 3D애니메이션, 도트디자인(픽셀아트), 메타버스, 웹드라마'},
+    {key:'착신정지', val:'고객의 요청으로 수신정지된 멘트가 나오는 DB / 원장턴'},
+    {key:'재배정', val:'모든 디비는 3일 안에 확인 되어야지 재배정 가능', detail:'단, 당직 디비는 당직 당일에 확인이 안 되면 재배정 불가능'},
+    {key:'당직 기타턴', val:'없는 과목 및 세미나 및 원데이클래스 (과목 미 체크, 위치조회 등은 공식)', detail:'당직기타턴 배정시 [신촌평일당직기타], [신촌주말당직기타] 로 기입'},
+    {key:'이모티콘', val:'이모티콘 단일 문의시 해당날 당직디비공식소화 (당직디비기타X)', detail:'저녁 22:00 ~ 오전 09:29 사이 들어온 디비 → 전날 당직자 소화'},
+  ],
+  'DB 생산 및 권한 규정': [
+    {key:'내사 (일주일 이내)', val:'평일+주말 DB기입 권한상 일주일 이내 내사 발생 시 기존 담당자 권한 인정'},
+    {key:'내사 (일주일 초과)', val:'기존 담당자에게 권한 요청 → 요청전화 2회 불응답시 권한상실', detail:'해당요일에 맞는 턴으로 배정 진행 (상담완료 DB: 상담완료시점 1달 인정, 이후 컨텍시 1주일씩 권한)'},
+    {key:'평일 내사 (휴무)', val:'휴무일 경우 다음턴 먼저 소화 후 해당턴 담당자는 이후 선배정', detail:'① 담당자와 연결한 경우: 기존 담당자 권한 인정\n② 이관DB로 담당자와 연락 없는 경우: 권한 인정X, 내사로 배정\n③ 날짜 미기입: 권한 인정X'},
+    {key:'주말당직 내사', val:'해당 시간 당직 지원 근무 중 상담 가능한 인원 중 제비뽑기 또는 룰렛', detail:'상담 중인 인원 및 먼저 DB를 받은 인원 제외'},
+    {key:'학부모/실수강생', val:'학부모 선유입 후 실수강생 유입 → 학부모DB 담당자 권한상실', detail:'단, 첫 컨텍시 실수강생 이름+번호 확인 시도 증거 있을 경우 재배정 가능\n실수강생 선유입 후 학부모DB 유입 → 선유입 실수강생DB 담당자에게 권한 양도 후 재배정'},
+    {key:'본인 아님', val:'홈페이지 통해서 문의한 적 없을 경우 → 신청 시간+과목 확인 필수', detail:'카카오톡 이름과 다른 경우 → 삭제요청 (유입 기준 3일 내 재배정 O)\n본인이 맞지만 남긴 적 없는 경우 → 재배정 불가능\n본인이 맞지만 실수로 남긴 경우 → 재배정 불가능'},
+    {key:'DB 생산 양식', val:'[내선][개인][문자] 양식 필수 · 날짜 미체크시 권한포기로 생산 가능', detail:'[내선]: 통화 내용 요약 입력\n[카톡]: 반드시 보낸 날짜와 내용이 나오도록 입력\n[문자]: 문자 보낸 내용을 요약해서 입력\n※ 양식 미사용 시 이후 실컨텍 기록 있더라도 권한 인정 안 함'},
+    {key:'DB 기입 권한 인정', val:'평일: 퇴근 후 컨텍 시 익일 오전 10시까지 일지 기입하면 권한 인정', detail:'주말: 주말동안 컨텍 시 월요일 오전 10시까지 일지 기입하면 권한 인정\n부득이한 사정으로 바로 권한 확인 불가능하면 확인 기점으로 1시간 권한 인정'},
+    {key:'전화안받음', val:'전일 오후 6시 이후 연락 된 경우 → 익일 오후 12시까지 기입시에만 권한인정', detail:'주말에 연락이 온 경우 → 월요일 오후 12시까지 기입시에만 권한인정 (개인, 추천 제외)\n문자콜백 수기작성 답변 인정 (9:30~18:00 해당 시간만 해당) / 자동거절멘트는 노인정'},
+    {key:'이관생 구DB 생산', val:'무료수강권 4개 이하 → 구DB 생산 가능 + 공식재유입시 사업부 더블처리', detail:'무료수강권 5개 이상 → 구DB 생산 불가능 + 공식재유입시 기존담당자 그대로 소화\n유료수강권 남아있는 경우 → 구DB 생산 불가능 + 공식재유입시 이관담당자 그대로 소화\n추등하여 수강권 남아있는 경우 (유료+무료 포함) → 구DB 생산 불가능\n권한없는 모든 구DB건 인원제한 없이 생산 가능 (단, 1인 1일 2회)'},
+    {key:'토스 기준', val:'신촌지점과 타지점 언급 시 신촌지점으로 유도하는 시도는 첫 컨텍 시 반드시 진행', detail:'그랬음에도 타지점 희망 → 토스\n신촌지점과 타지점 둘 다 고민 → 토스 X, 신촌지점에서 안내드리겠다 O'},
+    {key:'5분 중복', val:'공식·핵심 유입 후 5분 이내 기타·행사 들어올 경우 → 처음 온 DB 그대로 소화', detail:'기타·행사 유입 후 5분 이내 공식·핵심 들어올 경우 → 나중에 들어온 DB로 소화\n단, 5분 안에 컨택이 되었다면 그대로 소화 / 최대한 공식으로 소화하기 위함'},
+  ],
+  '근태 및 포상 규정': [
+    {key:'네이버 플레이스 리뷰', val:'기한: 매 결산일 기준(1일~말일) / 대상: 사업부 전체 경력이상(신입, 초경력 제외)', detail:'포상: 5만원 or 늦출권 1개\n조건: 최소조건 네이버 리뷰 3개 이상\n네이버리뷰 최소조건 3개 이상 달성되면 카카오나 구글, 지점홈페이지 리뷰도 횟수로 인정 O\n네이버 리뷰 작성시 필수조건: 영수증, 저장, 알림받기 설정'},
+    {key:'지각 규정', val:'주말 오전 10시 59초까지 인정, 10시 30분까지 도착 시 해당일 마지막 턴 배정', detail:'30분 이후 도착 시 해당일 DB배정 없음 (평일페북포함)\n지각으로 인해 당직 포기시 평일 공식 1턴 제한\n평일 대중교통 연착으로 인한 지각 시 기사화된 증빙자료 제출 시 정상참작\n기사화된 증빙자료 제출 제외 지각시 규정대로 진행 (1회 당 지각시 공식 1턴 제한)'},
+    {key:'점심시간', val:'결산기준 총매 4억 5천 달성시 유지 이하일 경우 1시간', detail:'4억 5천: 12시 ~ 13시 30분 / 4억 5천 미만: 12시 ~ 13시\n당직 4억 5천: 10시 30분 ~ 12시 / 당직 4억 5천 미만: 11시 ~ 12시'},
+    {key:'주말당직 포상', val:'토+일 = 매출 2,500만 이상 월요일 5시 퇴근 (60만원이상 기여자)', detail:'토+일 = 주말상담건 3건 이상시 → 월요일 통화량 10분 차감 (월요일만 해당)'},
+    {key:'휴무', val:'당일 휴무 신청시 공식 1턴 제한 (최소 전일 12시 이전 신청)', detail:'영업일내 정식휴무 + 포상휴무 이외에 늦출, 휴무 또는 조퇴시 공식 1턴 제한\n출근 후 공식 받고 퇴근시 다음 공식 제한\n휴무 소진 후 응급실, 신혼여행, 출산 등 피치못할 상황시 원장님 컨펌 후 면제'},
+  ],
+  '주말당직 규정': [
+    {key:'최소 인원', val:'주말당직 최소 인원은 4명으로 제한', detail:'지원 후 취소 시 최소 인원 4명 이하인 경우 대체자를 구한 상태에서 취소\n어떠한 경우라도 사업부방에 공유 (취소 가능 시간: 당직 근무시간 직전까지)'},
+    {key:'지각 처리', val:'출근시간 기준 30분 이내 출근 시 DB 마지막 순번 배정 및 못 받은 경우 페북DB 배정'},
+    {key:'추첨 규정 (10명 이내)', val:'네이버당첨차추첨 통해서 진행 · 번호순서는 DB순번에 맞춰서 진행', detail:'추첨 및 사다리타기 진행시 그날 당직자 중 가장 높은 직급의 담당자 확인 후 진행\n추첨시 반드시 타팀인원 1명 이상 관전해야 인정'},
+    {key:'추첨 규정 (10명 초과)', val:'네이버사다리타기 통해서 진행 · 번호순서는 DB순번에 맞춰서 진행'},
+    {key:'구DB 생산', val:'출근시 마감자 지원 & 마감 지원없을시 13시 마감자 뽑기', detail:'주말 출근시 구디비 상담 확보 2건시 바로 퇴근 (조기퇴근자 15시까지 디비 보장 / 마감자율)\nDB생산 & 본인구디비일 경우도 녹취본 및 자료증빙 필수\n사무실에 최소인원 2명 남을시 자동 당직마감'},
+  ],
+};
+
+// 초기 Firebase 데이터 로드 (없으면 기본값 저장)
+async function _regLoad() {
+  const snap = await get(ref(db, 'regulation2025'));
+  if (!snap.exists()) {
+    // 최초: 기본값을 인코딩된 키로 저장
+    const encoded = {};
+    Object.entries(REG_DEFAULT).forEach(([k,v]) => { encoded[encodeRegKey(k)] = v; });
+    await set(ref(db, 'regulation2025'), encoded);
+    window._regRules = JSON.parse(JSON.stringify(REG_DEFAULT));
+  } else {
+    // Firebase에서 받아온 데이터 → 원래 섹션명으로 매핑
+    const raw = snap.val();
+    const secNames = ['신촌DB 턴 규정','DB 생산 및 권한 규정','근태 및 포상 규정','주말당직 규정'];
+    window._regRules = {};
+    secNames.forEach(sec => {
+      const key = encodeRegKey(sec);
+      const val = raw[key];
+      if (val) {
+        // object→array 변환 (Firebase는 배열을 객체로 저장할 수 있음)
+        window._regRules[sec] = Array.isArray(val) ? val : Object.values(val);
+      } else {
+        window._regRules[sec] = REG_DEFAULT[sec] || [];
+      }
+    });
+  }
+}
+
 function buildRegulationPage() {
   const rData = window._regData || {};
   const history = rData.history || [];
+  const rules = window._regRules || REG_DEFAULT;
+  const em = window._branchEditMode;
 
-  function row(tagTxt, text, detail) {
+  function row(r, secName, idx) {
+    const detailLines = r.detail ? r.detail.split('\n') : [];
+    const detailHtml = detailLines.length
+      ? '<div style="font-size:12px;color:var(--text);margin-top:6px;line-height:1.8;background:var(--bg2);border-radius:6px;padding:6px 10px">' +
+        detailLines.join('<br>') + '</div>'
+      : '';
+
+    if (em) {
+      // 수정 모드: 클릭하면 바로 수정
+      const safeSecName = secName.replace(/'/g, "\'");
+      return `<tr style="border-bottom:0.5px solid var(--border)">
+        <td style="padding:8px 10px;width:96px;vertical-align:top;cursor:text" title="클릭해서 수정">
+          <input id="rk_${secName}_${idx}" value="${r.key.replace(/"/g,'&quot;')}"
+            style="width:100%;font-size:12px;font-weight:500;color:var(--text);background:transparent;border:none;outline:none;padding:2px 4px;border-radius:4px;font-family:inherit"
+            onfocus="this.style.background='var(--bg-accent)';this.style.border='0.5px solid #378ADD'"
+            onblur="this.style.background='transparent';this.style.border='none';W._regSaveRow('${safeSecName}',${idx})"
+            onchange="W._regSaveRow('${safeSecName}',${idx})">
+        </td>
+        <td style="padding:8px 10px;font-size:13px;color:var(--text);line-height:1.7;vertical-align:top;border-left:0.5px solid var(--border);cursor:text">
+          <textarea id="rv_${secName}_${idx}" rows="1"
+            style="width:100%;font-size:13px;color:var(--text);background:transparent;border:none;outline:none;resize:none;font-family:inherit;line-height:1.7;overflow:hidden"
+            onfocus="this.style.background='var(--bg-accent)';this.style.border='0.5px solid #378ADD';autoResizeReg(this)"
+            onblur="this.style.background='transparent';this.style.border='none';W._regSaveRow('${safeSecName}',${idx})"
+            oninput="autoResizeReg(this)">${r.val}</textarea>
+          <textarea id="rd_${secName}_${idx}" rows="${detailLines.length||1}" placeholder="세부 내용 (줄바꿈으로 구분)"
+            style="width:100%;font-size:12px;color:var(--text2);background:var(--bg2);border:0.5px solid var(--border);border-radius:6px;padding:5px 8px;margin-top:4px;resize:none;font-family:inherit;line-height:1.8;outline:none;overflow:hidden"
+            onfocus="autoResizeReg(this)"
+            onblur="W._regSaveRow('${safeSecName}',${idx})"
+            oninput="autoResizeReg(this)">${r.detail||''}</textarea>
+        </td>
+        <td style="padding:8px 6px;vertical-align:top;width:28px">
+          <button onclick="W._regDelRow('${safeSecName}',${idx})" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:14px;padding:2px" title="삭제">
+            <i class="ti ti-x" aria-hidden="true"></i>
+          </button>
+        </td>
+      </tr>`;
+    }
+
+    // 읽기 모드
     return '<tr style="border-bottom:0.5px solid var(--border)">' +
       '<td style="padding:10px 12px;width:96px;vertical-align:top;white-space:nowrap">' +
-        '<span style="font-size:12px;font-weight:500;color:var(--text);background:var(--bg2);border:0.5px solid var(--border);border-radius:4px;padding:3px 9px;display:inline-block">' + tagTxt + '</span>' +
+        '<span style="font-size:12px;font-weight:500;color:var(--text);background:var(--bg2);border:0.5px solid var(--border);border-radius:4px;padding:3px 9px;display:inline-block">' + r.key + '</span>' +
       '</td>' +
       '<td style="padding:10px 12px;font-size:13px;color:var(--text);line-height:1.7;vertical-align:top;border-left:0.5px solid var(--border)">' +
-        text +
-        (detail ? '<div style="font-size:12px;color:var(--text);margin-top:6px;line-height:1.8;background:var(--bg2);border-radius:6px;padding:6px 10px">' + detail + '</div>' : '') +
+        r.val + detailHtml +
       '</td></tr>';
   }
   if (!window._regOpen) window._regOpen = {'신촌DB 턴 규정':true,'DB 생산 및 권한 규정':true,'근태 및 포상 규정':true,'주말당직 규정':true};
-  function panel(icon, title, rows) {
-    const isOpen = window._regOpen[title] !== false;
+
+  const ICONS = {'신촌DB 턴 규정':'database','DB 생산 및 권한 규정':'clipboard-list','근태 및 포상 규정':'award','주말당직 규정':'calendar-week'};
+
+  function panel(secName, rowsHtml) {
+    const icon = ICONS[secName] || 'list';
+    const isOpen = window._regOpen[secName] !== false;
+    const sn = secName.replace(/'/g,"\\'");
+    const addBtn = em
+      ? `<button onclick="W._regAddRow('${sn}');event.stopPropagation()" style="font-size:11px;padding:2px 9px;border-radius:4px;border:0.5px solid var(--border);background:var(--bg);color:var(--text3);cursor:pointer;margin-left:8px">+ 항목 추가</button>`
+      : '';
     return '<div style="margin-bottom:10px;border:0.5px solid var(--border);border-radius:8px;overflow:hidden">' +
-      '<div onclick="window._regOpen[\''+title+'\']=' + '!' + 'window._regOpen[\''+title+'\'];showBranch()" style="cursor:pointer;font-size:14px;font-weight:500;padding:11px 14px;background:'+(isOpen?'var(--bg)':'var(--bg2)')+';border-left:'+(isOpen?'3px solid #378ADD':'3px solid transparent')+';display:flex;align-items:center;gap:8px;user-select:none">' +
+      '<div onclick="window._regOpen[\''+secName+'\']=' + '!' + 'window._regOpen[\''+secName+'\'];showBranch()" style="cursor:pointer;font-size:14px;font-weight:500;padding:11px 14px;background:'+(isOpen?'var(--bg)':'var(--bg2)')+';border-left:'+(isOpen?'3px solid #378ADD':'3px solid transparent')+';display:flex;align-items:center;gap:8px;user-select:none">' +
       '<i class="ti ti-'+icon+'" style="font-size:15px;color:'+(isOpen?'#378ADD':'var(--text3)')+'" aria-hidden="true"></i>' +
-      '<span style="flex:1;color:'+(isOpen?'#185FA5':'var(--text)')+'">'+title+'</span>' +
+      '<span style="flex:1;color:'+(isOpen?'#185FA5':'var(--text)')+'">'+secName+'</span>' +
+      addBtn +
       '<i class="ti ti-chevron-'+(isOpen?'up':'down')+'" style="font-size:13px;color:'+(isOpen?'#378ADD':'var(--text3)')+'" aria-hidden="true"></i>' +
       '</div>' +
-      (isOpen ? '<table style="width:100%;border-collapse:collapse;border-top:0.5px solid var(--border)">'+rows+'</table>' : '') +
+      (isOpen ? '<table style="width:100%;border-collapse:collapse;border-top:0.5px solid var(--border)">'+rowsHtml+'</table>' : '') +
       '</div>';
   }
 
-  const dbTurn = panel('database', '신촌DB 턴 규정',
-    row('공식', '기타를 제외한 URL유입 문의 / 토스') +
-    row('핵심', '대표 / 내사 / 네이버') +
-    row('단과', '이모티콘, AI(개발, 원화), 버추얼 캐릭터') +
-    row('행사', 'SNS유입 DB (없는번호만 재배정 가능)',
-      '18:00~22:00 유입된 평일 행사디비는 [신촌평일당직행사] 소화<br>' +
-      '10:00~19:00 유입된 주말 행사디비는 [신촌주말당직행사] 소화') +
-    row('기타', '지점에서 소화할 수 없는 과목 / 초3이하, 60세 이상',
-      '사업PM, 서버프로그래밍, 3D애니메이션, 도트디자인(픽셀아트), 메타버스, 웹드라마') +
-    row('착신정지', '고객의 요청으로 수신정지된 멘트가 나오는 DB / 원장턴') +
-    row('재배정', '모든 디비는 3일 안에 확인 되어야지 재배정 가능',
-      '단, 당직 디비는 당직 당일에 확인이 안 되면 재배정 불가능') +
-    row('당직 기타턴', '없는 과목 및 세미나 및 원데이클래스 (과목 미 체크, 위치조회 등은 공식)',
-      '당직기타턴 배정시 [신촌평일당직기타], [신촌주말당직기타] 로 기입') +
-    row('이모티콘', '이모티콘 단일 문의시 해당날 당직디비공식소화 (당직디비기타X)',
-      '저녁 22:00 ~ 오전 09:29 사이 들어온 디비 → 전날 당직자 소화')
-  );
-
-  const dbProd = panel('clipboard-list', 'DB 생산 및 권한 규정',
-    row('내사 (일주일 이내)', '평일+주말 DB기입 권한상 일주일 이내 내사 발생 시 기존 담당자 권한 인정') +
-    row('내사 (일주일 초과)', '기존 담당자에게 권한 요청 → 요청전화 2회 불응답시 권한상실',
-      '해당요일에 맞는 턴으로 배정 진행 (상담완료 DB: 상담완료시점 1달 인정, 이후 컨텍시 1주일씩 권한)') +
-    row('평일 내사 (휴무)', '휴무일 경우 다음턴 먼저 소화 후 해당턴 담당자는 이후 선배정',
-      '① 담당자와 연결한 경우: 기존 담당자 권한 인정<br>' +
-      '② 이관DB로 담당자와 연락 없는 경우: 권한 인정X, 내사로 배정<br>' +
-      '③ 날짜 미기입: 권한 인정X') +
-    row('주말당직 내사', '해당 시간 당직 지원 근무 중 상담 가능한 인원 중 제비뽑기 또는 룰렛',
-      '상담 중인 인원 및 먼저 DB를 받은 인원 제외') +
-    row('학부모/실수강생', '학부모 선유입 후 실수강생 유입 → 학부모DB 담당자 권한상실',
-      '단, 첫 컨텍시 실수강생 이름+번호 확인 시도 증거 있을 경우 재배정 가능<br>' +
-      '실수강생 선유입 후 학부모DB 유입 → 선유입 실수강생DB 담당자에게 권한 양도 후 재배정') +
-    row('본인 아님', '홈페이지 통해서 문의한 적 없을 경우 → 신청 시간+과목 확인 필수',
-      '카카오톡 이름과 다른 경우 → 삭제요청 (유입 기준 3일 내 재배정 O)<br>' +
-      '본인이 맞지만 남긴 적 없는 경우 → 재배정 불가능<br>' +
-      '본인이 맞지만 실수로 남긴 경우 → 재배정 불가능') +
-    row('DB 생산 양식', '[내선][개인][문자] 양식 필수 · 날짜 미체크시 권한포기로 생산 가능',
-      '[내선]: 통화 내용 요약 입력<br>' +
-      '[카톡]: 반드시 보낸 날짜와 내용이 나오도록 입력<br>' +
-      '[문자]: 문자 보낸 내용을 요약해서 입력<br>' +
-      '※ 양식 미사용 시 이후 실컨텍 기록 있더라도 권한 인정 안 함') +
-    row('DB 기입 권한 인정', '평일: 퇴근 후 컨텍 시 익일 오전 10시까지 일지 기입하면 권한 인정',
-      '주말: 주말동안 컨텍 시 월요일 오전 10시까지 일지 기입하면 권한 인정<br>' +
-      '부득이한 사정으로 바로 권한 확인 불가능하면 확인 기점으로 1시간 권한 인정') +
-    row('전화안받음', '전일 오후 6시 이후 연락 된 경우 → 익일 오후 12시까지 기입시에만 권한인정',
-      '주말에 연락이 온 경우 → 월요일 오후 12시까지 기입시에만 권한인정 (개인, 추천 제외)<br>' +
-      '문자콜백 수기작성 답변 인정 (9:30~18:00 해당 시간만 해당) / 자동거절멘트는 노인정') +
-    row('이관생 구DB 생산', '무료수강권 4개 이하 → 구DB 생산 가능 + 공식재유입시 사업부 더블처리',
-      '무료수강권 5개 이상 → 구DB 생산 불가능 + 공식재유입시 기존담당자 그대로 소화<br>' +
-      '유료수강권 남아있는 경우 → 구DB 생산 불가능 + 공식재유입시 이관담당자 그대로 소화<br>' +
-      '추등하여 수강권 남아있는 경우 (유료+무료 포함) → 구DB 생산 불가능<br>' +
-      '권한없는 모든 구DB건 인원제한 없이 생산 가능 (단, 1인 1일 2회)') +
-    row('토스 기준', '신촌지점과 타지점 언급 시 신촌지점으로 유도하는 시도는 첫 컨텍 시 반드시 진행',
-      '그랬음에도 타지점 희망 → 토스<br>' +
-      '신촌지점과 타지점 둘 다 고민 → 토스 X, 신촌지점에서 안내드리겠다 O') +
-    row('5분 중복', '공식·핵심 유입 후 5분 이내 기타·행사 들어올 경우 → 처음 온 DB 그대로 소화',
-      '기타·행사 유입 후 5분 이내 공식·핵심 들어올 경우 → 나중에 들어온 DB로 소화<br>' +
-      '단, 5분 안에 컨택이 되었다면 그대로 소화 / 최대한 공식으로 소화하기 위함')
-  );
-
-  const attend = panel('award', '근태 및 포상 규정',
-    row('네이버 플레이스 리뷰', '기한: 매 결산일 기준(1일~말일) / 대상: 사업부 전체 경력이상(신입, 초경력 제외)',
-      '포상: 5만원 or 늦출권 1개<br>' +
-      '조건: 최소조건 네이버 리뷰 3개 이상<br>' +
-      '네이버리뷰 최소조건 3개 이상 달성되면 카카오나 구글, 지점홈페이지 리뷰도 횟수로 인정 O<br>' +
-      '네이버 리뷰 작성시 필수조건: 영수증, 저장, 알림받기 설정') +
-    row('지각 규정', '주말 오전 10시 59초까지 인정, 10시 30분까지 도착 시 해당일 마지막 턴 배정',
-      '30분 이후 도착 시 해당일 DB배정 없음 (평일페북포함)<br>' +
-      '지각으로 인해 당직 포기시 평일 공식 1턴 제한<br>' +
-      '평일 대중교통 연착으로 인한 지각 시 기사화된 증빙자료 제출 시 정상참작<br>' +
-      '기사화된 증빙자료 제출 제외 지각시 규정대로 진행 (1회 당 지각시 공식 1턴 제한)') +
-    row('점심시간', '결산기준 총매 4억 5천 달성시 유지 이하일 경우 1시간',
-      '4억 5천: 12시 ~ 13시 30분 / 4억 5천 미만: 12시 ~ 13시<br>' +
-      '당직 4억 5천: 10시 30분 ~ 12시 / 당직 4억 5천 미만: 11시 ~ 12시') +
-    row('주말당직 포상', '토+일 = 매출 2,500만 이상 월요일 5시 퇴근 (60만원이상 기여자)',
-      '토+일 = 주말상담건 3건 이상시 → 월요일 통화량 10분 차감 (월요일만 해당)') +
-    row('휴무', '당일 휴무 신청시 공식 1턴 제한 (최소 전일 12시 이전 신청)',
-      '영업일내 정식휴무 + 포상휴무 이외에 늦출, 휴무 또는 조퇴시 공식 1턴 제한<br>' +
-      '출근 후 공식 받고 퇴근시 다음 공식 제한<br>' +
-      '휴무 소진 후 응급실, 신혼여행, 출산 등 피치못할 상황시 원장님 컨펌 후 면제')
-  );
-
-  const weekend = panel('calendar-week', '주말당직 규정',
-    row('최소 인원', '주말당직 최소 인원은 4명으로 제한',
-      '지원 후 취소 시 최소 인원 4명 이하인 경우 대체자를 구한 상태에서 취소<br>' +
-      '어떠한 경우라도 사업부방에 공유 (취소 가능 시간: 당직 근무시간 직전까지)') +
-    row('지각 처리', '출근시간 기준 30분 이내 출근 시 DB 마지막 순번 배정 및 못 받은 경우 페북DB 배정') +
-    row('추첨 규정 (10명 이내)', '네이버당첨차추첨 통해서 진행 · 번호순서는 DB순번에 맞춰서 진행',
-      '추첨 및 사다리타기 진행시 그날 당직자 중 가장 높은 직급의 담당자 확인 후 진행<br>' +
-      '추첨시 반드시 타팀인원 1명 이상 관전해야 인정') +
-    row('추첨 규정 (10명 초과)', '네이버사다리타기 통해서 진행 · 번호순서는 DB순번에 맞춰서 진행') +
-    row('구DB 생산', '출근시 마감자 지원 & 마감 지원없을시 13시 마감자 뽑기',
-      '주말 출근시 구디비 상담 확보 2건시 바로 퇴근 (조기퇴근자 15시까지 디비 보장 / 마감자율)<br>' +
-      'DB생산 & 본인구디비일 경우도 녹취본 및 자료증빙 필수<br>' +
-      '사무실에 최소인원 2명 남을시 자동 당직마감')
-  );
+  const secNames = ['신촌DB 턴 규정','DB 생산 및 권한 규정','근태 및 포상 규정','주말당직 규정'];
+  const [dbTurn, dbProd, attend, weekend] = secNames.map(secName => {
+    const rows = (rules[secName] || []);
+    return panel(secName, rows.map((r, idx) => row(r, secName, idx)).join(''));
+  });
 
   let histHtml = '';
   if (history.length === 0) {
