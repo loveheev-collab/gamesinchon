@@ -408,9 +408,6 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
   <hr class="sb-divider">
   <div class="sb-sec">
     <div class="sb-sec-lbl">아카이브</div>
-    <div style="font-size:10px;font-weight:700;color:#B0BEC5;padding:2px 8px 3px;letter-spacing:.5px">결산</div>
-    <div id="sb-months"><div style="font-size:11px;color:#B0BEC5;padding:4px 8px">저장된 월 없음</div></div>
-    <div style="font-size:10px;font-weight:700;color:#B0BEC5;padding:6px 8px 3px;letter-spacing:.5px">영업</div>
     <div id="sb-biz-arc"><div style="font-size:11px;color:#B0BEC5;padding:4px 8px">저장된 영업 없음</div></div>
   </div>
   <div class="sb-footer">
@@ -631,7 +628,6 @@ onValue(rLinks, snap => {
 
 onValue(rArchive, snap => {
   ARCHIVE = snap.val() || {};
-  renderSbMonths();
   renderSbBizArc();
 });
 
@@ -787,17 +783,6 @@ function renderTabs() {
     else if (cw === 99) pt.textContent = '영업현황판';
     else pt.textContent = (WEEKS[cw]?.label||'') + ' 매출 현황';
   }
-}
-
-function renderSbMonths() {
-  const el = document.getElementById('sb-months'); if (!el) return;
-  const salesArc = ARCHIVE.sales || {};
-  const months = Object.keys(salesArc).sort().reverse();
-  if (!months.length) { el.innerHTML = '<div style="font-size:11px;color:#B0BEC5;padding:4px 8px">저장된 월 없음</div>'; return; }
-  el.innerHTML = months.map(m => {
-    const lbl = m.replace(/_/g,'-');
-    return '<div class="sb-sub-item' + (curMonth==='sales/'+m?' on':'') + '" onclick="W._setMonth(\'sales/' + m + '\')">' + lbl + '</div>';
-  }).join('');
 }
 
 function renderSbBizArc() {
@@ -3503,7 +3488,7 @@ window.W = {
     if(nbSub) nbSub.style.display='none';
     if(ndSub) ndSub.style.display='none';
     ['nav-dash','nav-biz','nav-staff','nav-dep'].forEach(id=>document.getElementById(id)?.classList.remove('on'));
-    window._arcBizTab = '영업데이터'; renderTabs(); renderSbMonths(); renderSbBizArc(); renderArchiveView(month);
+    window._arcBizTab = '영업데이터'; renderTabs(); renderSbBizArc(); renderArchiveView(month);
   },
   _arcTab(month, tab) {
     arcSubTab=tab; renderArchiveView(month);
