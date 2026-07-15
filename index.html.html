@@ -2118,64 +2118,7 @@ function showDep() {
   document.getElementById('dc').style.display='';
   const today = todayStr();
 
-  // 예정건 행 초기 세팅 및 초과 빈행 정리
-  const initRows = {금일: 7, 익일: 7};
-  let needSave = false;
-
-  // ── 어제 익일 → 오늘 금일 자동 이전 (carry-over) ──────────────────
-  // 어제 날짜 계산
-  const _todayD = new Date(); _todayD.setHours(0,0,0,0);
-  const _yestD  = new Date(_todayD); _yestD.setDate(_yestD.getDate() - 1);
-  const yestStr = `${_yestD.getFullYear()}-${String(_yestD.getMonth()+1).padStart(2,'0')}-${String(_yestD.getDate()).padStart(2,'0')}`;
-  const _carryFlag = `carried_${yestStr}_to_${today}`;
-
-  if (!SCHEDULE[_carryFlag]) {
-    // 아직 이전 안 된 경우에만 실행
-    const yestIkil = SCHEDULE[yestStr]?.익일 || {};
-    const filledYestIkil = Object.entries(yestIkil).filter(([,r]) => r.멘토 || r.이름 || r.금액);
-    if (filledYestIkil.length > 0) {
-      if (!SCHEDULE[today]) SCHEDULE[today] = {};
-      if (!SCHEDULE[today].금일) SCHEDULE[today].금일 = {};
-      filledYestIkil.forEach(([, r]) => {
-        const newId = 'cy' + Date.now() + '_' + Math.random().toString(36).slice(2,6);
-        // 완납/미납 상태는 초기화하여 오늘 처리 대기 상태로
-        SCHEDULE[today].금일[newId] = { ...r, 완납: false, 미납: false };
-      });
-      needSave = true;
-    }
-    // 이전 완료 표시 (중복 실행 방지)
-    SCHEDULE[_carryFlag] = today;
-    needSave = true;
-  }
-  // ────────────────────────────────────────────────────────────────────
-
-  ['금일','익일'].forEach(type => {
-    if (!SCHEDULE[today]) SCHEDULE[today] = {};
-    if (!SCHEDULE[today][type]) SCHEDULE[today][type] = {};
-    const keys = Object.keys(SCHEDULE[today][type]);
-    const cur = keys.length;
-    const target = initRows[type];
-    if (cur === 0) {
-      // 완전 비어있으면 초기 세팅
-      for (let i = 0; i < target; i++) {
-        const id = 'pre' + String(i).padStart(2,'0');
-        SCHEDULE[today][type][id] = {멘토:'',이름:'',시간:'',금액:'',종류:'',결제방법:'',확률:'',특이사항:''};
-      }
-      needSave = true;
-    } else if (type === '익일' && cur > target) {
-      // 익일만 초과 빈 행 삭제 (금일은 이동한 행이 있을 수 있으므로 건드리지 않음)
-      const emptyKeys = keys.filter(k => {
-        const r = SCHEDULE[today][type][k];
-        return !r.멘토 && !r.이름 && !r.시간 && !r.금액 && !r.특이사항;
-      });
-      const excess = cur - target;
-      if (emptyKeys.length > 0) {
-        emptyKeys.slice(0, excess).forEach(k => delete SCHEDULE[today][type][k]);
-        needSave = true;
-      }
-    }
-  });
-  if (needSave) set(rSchedule, SCHEDULE);
+  // 자동 초기화 로직 완전 제거 — 읽기만, 수동 초기화 버튼으로만 처리
   setTimeout(() => { window._depRendering = false; }, 1500);
 
   let depLeftHtml = '';
@@ -2343,9 +2286,11 @@ function renderSchPanel(today, type) {
       // 빈 행을 잘라서 max에 맞춤
       const toDelete = emptyKeys.slice(0, keys.length - max);
       if (toDelete.length > 0) {
-        toDelete.forEach(k => delete SCHEDULE[today][type][k]);
+        toDelete.forEach(k => {
+          delete SCHEDULE[today][type][k];
+          remove(ref(db, `schedule2025/${today}/${type}/${k}`));
+        });
         window._depRendering = true;
-        set(rSchedule, SCHEDULE);
         setTimeout(() => { window._depRendering = false; }, 1500);
       }
     }
@@ -2364,6 +2309,7 @@ function renderSchPanel(today, type) {
   let h = `<div class="dep-panel" id="${panelId}">
     <div class="dep-panel-hdr" style="background:${hdrColor}">
       <span>${type==='금일'?'📅':'📆'} ${type} 예정건</span>
+      <button onclick="W._schReset('${today}','${type}')" style="font-size:11px;padding:3px 10px;border-radius:5px;border:1px solid rgba(255,255,255,0.35);background:rgba(255,255,255,0.15);color:#fff;cursor:pointer">🔄 초기화</button>
     </div>
     <div class="sch-summary" style="padding:9px 16px;background:${type==='금일'?'#EFF4FF':'#F5F3FF'};border-bottom:2px solid ${type==='금일'?'#93C5FD':'#C4B5FD'};display:flex;gap:16px;align-items:center;flex-wrap:wrap">
       <span style="font-size:13px;font-weight:900;color:${hdrColor};background:${type==='금일'?'#DBEAFE':'#EDE9FE'};padding:3px 10px;border-radius:20px">${filledRows.length}건</span>
@@ -3187,6 +3133,18 @@ window.W = {
       }
     });
   },
+  _schReset(date, type) {
+    if(!confirm(`${type} 예정건을 초기화하시겠습니까?\n(모든 행이 삭제되고 빈 7행으로 초기화됩니다)`)) return;
+    const newRows = {};
+    for (let i = 0; i < 7; i++) {
+      const id = 'pre' + String(i).padStart(2,'0');
+      newRows[id] = {멘토:'',이름:'',시간:'',금액:'',종류:'',결제방법:'',확률:'',특이사항:''};
+    }
+    if (!SCHEDULE[date]) SCHEDULE[date] = {};
+    SCHEDULE[date][type] = newRows;
+    set(ref(db, `schedule2025/${date}/${type}`), newRows);
+    showDep();
+  },
   _depReset(date) {
     if(!confirm(`${date} 일별 입금파악 데이터를 초기화할까요?\n(금일예정건·익일예정건은 유지됩니다)`)) return;
     if(DEPOSIT[date]) delete DEPOSIT[date];
@@ -3273,7 +3231,7 @@ window.W = {
     // 완납 시 미납 해제
     if(checked) SCHEDULE[date][type][id].미납 = false;
     window._depRendering = true;
-    set(rSchedule, SCHEDULE);
+    update(ref(db, `schedule2025/${date}/${type}/${id}`), {완납: checked, 미납: checked ? false : (SCHEDULE[date][type][id].미납||false)});
     setTimeout(() => { window._depRendering = false; }, 1500);
     W._updateSchSummary(date, type);
     const tr = document.querySelector(`[onclick*="_schDel('${date}','${type}','${id}')"]`)?.closest('tr');
@@ -3342,7 +3300,7 @@ window.W = {
     SCHEDULE[date].금일[id].미납 = checked;
     if(checked) SCHEDULE[date].금일[id].완납 = false;
     window._depRendering = true;
-    set(rSchedule, SCHEDULE);
+    update(ref(db, `schedule2025/${date}/금일/${id}`), {미납: checked, 완납: checked ? false : (SCHEDULE[date].금일[id].완납||false)});
     setTimeout(() => { window._depRendering = false; }, 1500);
     W._updateSchSummary(date, '금일');
     const tr = document.querySelector(`[onclick*="_schDel('${date}','금일','${id}')"]`)?.closest('tr');
@@ -3377,7 +3335,10 @@ window.W = {
     const newId = 'mv' + Date.now();
     SCHEDULE[date].금일[newId] = row;
     delete SCHEDULE[date].익일[id];
-    set(rSchedule, SCHEDULE);
+    window._depRendering = true;
+    update(ref(db, `schedule2025/${date}/금일`), {[newId]: row});
+    remove(ref(db, `schedule2025/${date}/익일/${id}`));
+    setTimeout(() => { window._depRendering = false; }, 1500);
     showDep();
   },
   _schTab(e, el) {
@@ -3398,7 +3359,7 @@ window.W = {
     SCHEDULE[date][type][id][field] = val;
     // 저장만 하고 리렌더 안 함 (Tab 포커스 유지)
     window._depRendering = true;
-    set(rSchedule, SCHEDULE);
+    update(ref(db, `schedule2025/${date}/${type}/${id}`), {[field]: val});
     setTimeout(() => { window._depRendering = false; }, 2000);
     // 헤더 건수/금액만 업데이트
     const panelId = 'sch-panel-' + type;
@@ -3423,15 +3384,18 @@ window.W = {
     if(!SCHEDULE[date]) SCHEDULE[date]={};
     if(!SCHEDULE[date][type]) SCHEDULE[date][type]={};
     const id = Math.random().toString(36).slice(2,9);
-    SCHEDULE[date][type][id] = {멘토:'',이름:'',시간:'',금액:'',종류:'',결제방법:'',확률:'',특이사항:''};
-    set(rSchedule, SCHEDULE);
+    const newRow = {멘토:'',이름:'',시간:'',금액:'',종류:'',결제방법:'',확률:'',특이사항:''};
+    SCHEDULE[date][type][id] = newRow;
+    window._depRendering = true;
+    update(ref(db, `schedule2025/${date}/${type}`), {[id]: newRow});
+    setTimeout(() => { window._depRendering = false; }, 1500);
     showDep();
   },
   _schDel(date, type, id) {
     if(!SCHEDULE[date]?.[type]?.[id]) return;
     delete SCHEDULE[date][type][id];
     window._depRendering = true;
-    set(rSchedule, SCHEDULE);
+    remove(ref(db, `schedule2025/${date}/${type}/${id}`));
     setTimeout(() => { window._depRendering = false; }, 1500);
     // 삭제 후 행 보충 없이 DOM에서만 해당 행 제거
     const tr = document.querySelector(`[onclick*="_schDel('${date}','${type}','${id}')"]`)?.closest('tr');
