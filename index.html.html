@@ -1581,8 +1581,9 @@ function renderAddListTab() {
     if (!filledRows.length && af !== 'all') return; // 필터 시 빈 팀 숨김
     const totalAmt = teamRows.reduce((s,[,row]) => s + N(row.expectedAmount||0), 0);
     h += `<div class="unpaid-team-block" style="margin-bottom:14px">
-      <div class="unpaid-team-hdr" style="background:${t.color}">
+      <div class="unpaid-team-hdr" style="background:${t.color};display:flex;align-items:center;justify-content:space-between">
         <span>${t.name} <span style="font-size:12px;font-weight:400;opacity:.9;margin-left:8px">${filledRows.length}건 · 합계 ${F(totalAmt)}원</span></span>
+        <button onclick="W._alResetTeam('${t.name}');event.stopPropagation()" style="font-size:11px;padding:3px 10px;border-radius:5px;border:1px solid rgba(255,255,255,0.35);background:rgba(255,255,255,0.15);color:#fff;cursor:pointer">🔄 초기화</button>
       </div>
       <div style="overflow-x:auto">
       <table class="addlist-tbl">
@@ -3586,15 +3587,17 @@ window.W = {
   _ca(date) {
     if(!CONSULT[date]) CONSULT[date]={};
     const id=Math.random().toString(36).slice(2,10);
-    CONSULT[date][id]={mentor:'',student:'',subject:'',status:'상담',result:'',paid:'',expected:'',note:''};
-    set(rConsult,CONSULT); showBiz();
+    const newRow={mentor:'',student:'',subject:'',status:'상담',result:'',paid:'',expected:'',note:''};
+    CONSULT[date][id]=newRow;
+    update(ref(db,`consult2025/${date}`),{[id]:newRow}); showBiz();
   },
   _cad() {
     const date=document.getElementById('cdi')?.value; if(!date) return;
     if(!CONSULT[date]) CONSULT[date]={};
     const id=Math.random().toString(36).slice(2,10);
-    CONSULT[date][id]={mentor:'',student:'',subject:'',status:'상담',result:'',paid:'',expected:'',note:''};
-    cCol[date]=false; set(rConsult,CONSULT); showBiz();
+    const newRow={mentor:'',student:'',subject:'',status:'상담',result:'',paid:'',expected:'',note:''};
+    CONSULT[date][id]=newRow;
+    cCol[date]=false; update(ref(db,`consult2025/${date}`),{[id]:newRow}); showBiz();
   },
   _cd(date,rid) {
     // 이미 확인 단계 진행 중이면 무시
@@ -3631,7 +3634,7 @@ window.W = {
     // Firebase 반영
     delete CONSULT[date][rid];
     if(CONSULT[date] && !Object.keys(CONSULT[date]).length) delete CONSULT[date];
-    set(rConsult, CONSULT);
+    remove(ref(db,`consult2025/${date}/${rid}`));
     // 다음 프레임에 KPI 헤더(합계)만 조용히 업데이트
     requestAnimationFrame(() => {
       const searchKw = document.getElementById('consult-search')?.value || '';
@@ -3702,6 +3705,16 @@ window.W = {
     ADDLIST[id] = {team:teamName,mentor:'',student:'',age:'',subject:'',remaining:'',interviewDate:'',availableDate:'',expectedAmount:'',status:'진행중',note:''};
     set(rAddList, ADDLIST);
     if(cw===99 && bst==='추가리스트') showBiz();
+  },
+  _alResetTeam(teamName) {
+    if (!confirm(`${teamName}의 추가리스트를 전체 초기화할까요?\n(해당 팀의 모든 항목이 삭제됩니다)`)) return;
+    const targets = Object.entries(ADDLIST).filter(([,r]) => r.team === teamName);
+    if (!targets.length) { alert('삭제할 항목이 없어요'); return; }
+    const promises = targets.map(([id]) => {
+      delete ADDLIST[id];
+      return remove(ref(db, `addlist2025/${id}`));
+    });
+    Promise.all(promises).then(() => showBiz()).catch(e => console.error(e));
   },
   _alDel(id) {
     if(window._alDelPending === id) return;
