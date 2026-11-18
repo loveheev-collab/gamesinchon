@@ -2952,6 +2952,7 @@ function renderConsult(searchKw='') {
 
 // ── 전역 핸들러 W ─────────────────────────────────────
 // 입력값 콤마 포맷
+window.formatBizInp = formatBizInp;
 function formatBizInp(el) {
   const n = N(el.value);
   const pos = el.selectionStart;
@@ -4447,8 +4448,9 @@ window.W = {
       if(netEl2) netEl2.textContent = F(tTM-tRef);
       if(goalEl) goalEl.textContent = F(tGoalSum);
     }
-    // TM_CFG에 없는 팀 데이터도 보존하며 저장
-    set(rBiz, BIZ); updBizKPI();
+    // 바뀐 칸 하나만 저장 (다른 사람이 입력한 값을 덮어쓰지 않도록)
+    update(ref(db, 'biz2025/' + team + '/' + member), {[field]: n}).catch(err => alert('저장 실패: ' + err.message));
+    updBizKPI();
   },
   _cc(date) {
     cCol[date] = !cCol[date];
