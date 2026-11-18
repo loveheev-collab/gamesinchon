@@ -635,7 +635,47 @@ const _loaded = {config:false, sales:false, daily:false, biz:false, consult:fals
 function _checkInitRender() {
   if (Object.values(_loaded).every(Boolean) && cw === -1 && curMonth === 'current') {
     tcBuilt = false; rvBuilt = false; renderMain();
+    setTimeout(() => { try { _goalCheck(); } catch(e) {} }, 1200);
   }
+}
+
+// ── 목표매출 미입력 알림 ──
+function _isNewbie(m) { return String((window._MR && window._MR[m]) || '').indexOf('신입') >= 0; }
+function _goalMissing() {
+  if (window._bizIsFuture || BIZ_PERIOD.e < todayStr() || BIZ_PERIOD.s > todayStr()) return [];
+  const out = [];
+  TM_CFG.forEach(t => t.members.forEach(m => {
+    if (_isNewbie(m)) return;
+    let bd = (BIZ[t.name]||{})[m];
+    if (!bd) { for (const k of Object.keys(BIZ)) { if (BIZ[k] && BIZ[k][m]) { bd = BIZ[k][m]; break; } } }
+    if (!bd || !N(bd.goal)) out.push({team: t.name, name: m});
+  }));
+  return out;
+}
+function _goalCheck() {
+  if (document.getElementById('goal-modal')) return;
+  const miss = _goalMissing(); if (!miss.length) return;
+  const key = 'goalSkip_' + BIZ_PERIOD.s + '_' + todayStr();
+  try { if (localStorage.getItem(key) === '1') return; } catch(e) {}
+  const by = {}; miss.forEach(x => { (by[x.team] = by[x.team] || []).push(x.name); });
+  const el = document.createElement('div');
+  el.id = 'goal-modal';
+  el.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:9999;display:flex;align-items:center;justify-content:center';
+  el.innerHTML = '<div style="background:#fff;border-radius:14px;padding:22px 24px;width:min(420px,92vw);box-shadow:0 12px 40px rgba(0,0,0,.25)">'
+    + '<div style="font-size:16px;font-weight:800;margin-bottom:6px">🎯 목표매출 입력이 필요해요</div>'
+    + '<div style="font-size:12.5px;color:#64748B;margin-bottom:12px">' + _bizLabel() + ' · 아직 입력 안 된 직원 ' + miss.length + '명</div>'
+    + '<div style="max-height:240px;overflow:auto;font-size:13px;line-height:1.8;background:#F8FAFC;border-radius:8px;padding:10px 12px">'
+    + Object.entries(by).map(([t, ns]) => '<div><b>' + t + '</b> · ' + ns.join(', ') + '</div>').join('') + '</div>'
+    + '<div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end;flex-wrap:wrap">'
+    + '<button id="gm-skip" style="padding:7px 12px;border:1px solid #E2E8F0;background:#fff;border-radius:8px;font-size:12px;cursor:pointer;color:#64748B;font-family:inherit">오늘 하루 안 보기</button>'
+    + '<button id="gm-close" style="padding:7px 12px;border:1px solid #E2E8F0;background:#fff;border-radius:8px;font-size:12px;cursor:pointer;font-family:inherit">닫기</button>'
+    + '<button id="gm-go" style="padding:7px 14px;border:none;background:#1E3A5F;color:#fff;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">입력하러 가기</button>'
+    + '</div></div>';
+  document.body.appendChild(el);
+  const close = () => el.remove();
+  el.querySelector('#gm-close').onclick = close;
+  el.querySelector('#gm-skip').onclick = () => { try { localStorage.setItem(key, '1'); } catch(e) {} close(); };
+  el.querySelector('#gm-go').onclick = () => { close(); W._swDashData(); };
 }
 
 // 초기화
@@ -2257,6 +2297,9 @@ function showBiz() {
   const avgRate = validCnt > 0 ? (sumRate/validCnt*100).toFixed(1)+'%' : '0.0%';
 
   let h = nav + monthNav;
+  if (!window._bizIsFuture && !_isPastBizView) {
+    h += '<div style="display:flex;justify-content:flex-end;margin:-4px 0 10px"><button onclick="W._bizReset()" title="영업총매출·환불·목표매출·문의 입력값을 0으로 비워요 (전달 값은 자동 백업)" style="padding:4px 12px;border:1px solid var(--border);border-radius:14px;background:var(--bg);color:var(--text2);font-size:11.5px;cursor:pointer;font-family:inherit">↺ 새 영업월 시작 · 입력값 초기화</button></div>';
+  }
   h += `<div class="kg" style="margin-bottom:16px">
     <div class="kc a"><div class="klbl">누적 완납</div><div class="kval">${F(totWan)}</div><div class="ksub">원</div></div>
     <div class="kc go"><div class="klbl">누적 미납</div><div class="kval">${F(totMi)}</div><div class="ksub">원</div></div>
@@ -2313,9 +2356,9 @@ function showBiz() {
         <td class="nr">${s.등록}</td>
         <td class="nr">${s.미등록}</td>
         <td class="nr">${s.취소}</td>
-        <td><input class="binp" type="text" inputmode="numeric" value="${bd.goal?F(bd.goal):''}" placeholder="0"
-          oninput="W._bm('${t.name}','${m}','goal',this.value);formatBizInp(this)"
-          style="border-color:${t.color}44;color:var(--text);width:100%"></td>
+        <td><input class="binp" type="text" inputmode="numeric" value="${bd.goal?F(bd.goal):''}" placeholder="${(bd.goal||_isNewbie(m))?'0':'입력'}"
+          oninput="W._bm('${t.name}','${m}','goal',this.value);formatBizInp(this);this.style.borderColor=this.value?'${t.color}44':'#DC2626'"
+          style="border-color:${(!bd.goal && !_isNewbie(m) && !window._bizIsFuture && !_isPastBizView)?'#DC2626':t.color+'44'};color:var(--text);width:100%"></td>
         <td><input class="binp" type="text" inputmode="numeric" value="${bd.totalSales?F(bd.totalSales):''}" placeholder="0"
           oninput="W._bm('${t.name}','${m}','totalSales',this.value);formatBizInp(this)"
           style="border-color:${t.color}44;color:var(--text);font-weight:700;width:100%"></td>
@@ -4338,6 +4381,32 @@ window.W = {
     DATA[team][cw][field]=val; set(rSales,DATA); updTStats(); renderKPI(); renderSum(); renderMsg();
   },
   _rv(team,field,val) { REVIEW[team][field]=val; set(rReview,REVIEW); },
+  async _bizReset() {
+    if (!_bdAuth()) return;
+    const sch = [...(BIZ_SCHEDULE_ALL||[])].sort((x,y)=>x.start.localeCompare(y.start));
+    const prev = sch.filter(x => x.start < BIZ_PERIOD.s).pop();
+    if (!confirm('영업총매출·환불·목표매출·문의 입력값을 전부 0으로 비울까요?\n\n비우기 전에 현재 값은 자동 백업돼요.' + (prev ? '\n(전달 ' + prev.start + ' ~ ' + prev.end + ' 영업월 아카이브에도 저장)' : ''))) return;
+    try {
+      const snap = JSON.parse(JSON.stringify(BIZ));
+      const ts = new Date().toISOString().replace(/[:.]/g,'-');
+      await set(ref(db, 'bizResetBackup/' + ts), {at: new Date().toISOString(), period: {s: BIZ_PERIOD.s, e: BIZ_PERIOD.e}, biz: snap});
+      if (prev) {
+        const key = prev.start.slice(0,7).replace('-','_');
+        if (!((ARCHIVE.biz||{})[key])) {
+          const cons = {};
+          Object.entries(CONSULT).forEach(([d, rows]) => { if (d >= prev.start && d <= prev.end) cons[d] = rows; });
+          await set(ref(db, 'archive/biz/' + key), {label: prev.start + ' ~ ' + prev.end, period: {s: prev.start, e: prev.end}, biz: snap, consult: cons, config: {tmCfg: JSON.parse(JSON.stringify(TM_CFG))}, archivedAt: new Date().toISOString()});
+        }
+      }
+      const upd = {};
+      Object.keys(BIZ).forEach(tk => Object.keys(BIZ[tk]||{}).forEach(m => {
+        ['inquiry','goal','totalSales','refund'].forEach(f => { if (BIZ[tk][m] && BIZ[tk][m][f]) { BIZ[tk][m][f] = 0; upd[tk + '/' + m + '/' + f] = 0; } });
+      }));
+      if (Object.keys(upd).length) await update(ref(db, 'biz2025'), upd);
+      showBiz();
+      alert('초기화 완료! 새 영업월 값을 입력해 주세요.');
+    } catch (err) { alert('초기화 실패: ' + err.message); }
+  },
   _bst(tab) {
     bst=tab;
     ['nav-biz-sum','nav-biz-cal','nav-biz-con','nav-biz-unp','nav-biz-add'].forEach(id=>document.getElementById(id)?.classList.remove('on'));
