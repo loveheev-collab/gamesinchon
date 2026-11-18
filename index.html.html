@@ -394,6 +394,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .sidebar .sb-divider{width:1px;height:16px;margin:0 8px;border:none;background:rgba(255,255,255,.25);flex-shrink:0}
 .sb-sub{position:fixed;top:var(--gnb-h);left:0;right:0;height:var(--gsub-h);padding:0 16px;margin:0;background:#F5F7FA;border-bottom:1px solid #E8ECF0;align-items:center;gap:6px;z-index:199;display:none!important}
 body.gsub-on .sb-sub#nav-biz-sub{display:flex!important}
+body.gsub-dash .sb-sub#nav-dash-sub{display:flex!important}
 .sb-sub .sb-sub-item{padding:5px 14px;border-radius:14px;border-left:none;margin:0;font-size:12.5px;color:#5A6785;background:#fff;border:1px solid #E8ECF0}
 .sb-sub .sb-sub-item:hover{color:#1A2340;background:#fff;border-color:#CBD5E1}
 .sb-sub .sb-sub-item.on{background:#1E3A5F;color:#fff;border-color:#1E3A5F;font-weight:700}
@@ -406,7 +407,7 @@ body.gsub-on .sb-sub#nav-biz-sub{display:flex!important}
 .sb-footer div br{display:none}
 .sb-footer div,.sb-footer span{color:#C9D6E8!important}
 .content-wrap{margin-left:0;padding-top:var(--gnb-h)}
-body.gsub-on .content-wrap{padding-top:calc(var(--gnb-h) + var(--gsub-h))}
+body.gsub-on .content-wrap,body.gsub-dash .content-wrap{padding-top:calc(var(--gnb-h) + var(--gsub-h))}
 .hdr{display:none!important}
 #dash-tp .tp-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:0}
 @media(max-width:1500px){#dash-tp .tp-grid{grid-template-columns:repeat(auto-fit,minmax(215px,1fr))}}
@@ -440,9 +441,12 @@ body.gsub-on .content-wrap{padding-top:calc(var(--gnb-h) + var(--gsub-h))}
     <div class="sb-sec-lbl">메뉴</div>
     <div class="sb-item" id="nav-dash" onclick="W._swDash()"><i class="ti ti-layout-dashboard ico" aria-hidden="true"></i> 대시보드</div>
     <div class="sb-item" id="nav-dep" onclick="W._swDep()"><i class="ti ti-credit-card ico" aria-hidden="true"></i> 입금 파악</div>
-    <div class="sb-item" id="nav-biz" onclick="W._swBiz('요약')"><i class="ti ti-chart-bar ico" aria-hidden="true"></i> 영업현황 <span id="nav-biz-arrow" style="margin-left:auto;font-size:10px;transition:transform .2s">▼</span></div>
+    <div class="sb-item" id="nav-biz" onclick="W._swBiz('상담캘린더')"><i class="ti ti-chart-bar ico" aria-hidden="true"></i> 영업현황 <span id="nav-biz-arrow" style="margin-left:auto;font-size:10px;transition:transform .2s">▼</span></div>
+    <div class="sb-sub" id="nav-dash-sub" style="display:none">
+      <div class="sb-sub-item on" id="nav-dash-home" onclick="W._swDash()">대시보드 현황</div>
+      <div class="sb-sub-item" id="nav-dash-data" onclick="W._swDashData()">영업 데이터</div>
+    </div>
     <div class="sb-sub" id="nav-biz-sub" style="display:none">
-      <div class="sb-sub-item" id="nav-biz-sum" onclick="W._swBiz('요약')">영업 데이터</div>
       <div class="sb-sub-item" id="nav-biz-cal" onclick="W._swBiz('상담캘린더')">상담 내역</div>
       <div class="sb-sub-item" id="nav-biz-unp" onclick="W._swBiz('미납리스트')">미납 리스트</div>
       <div class="sb-sub-item" id="nav-biz-add" onclick="W._swBiz('추가리스트')">추가 리스트</div>
@@ -879,7 +883,7 @@ function renderArchiveView(arcKey) {
 
     // KPI 집계
     const consultEntries = Object.values(consultData).flatMap(d=>Object.values(d||{}));
-    const tot등록 = consultEntries.filter(e=>['완납','COD','미등록회수'].includes(e.result)).length;
+    const tot등록 = consultEntries.filter(e=>e.kind!=='관리면담' && e.kind!=='추가면담' && ['완납','COD','미등록회수'].includes(e.result)).length;
     const tot취소 = consultEntries.filter(e=>e.result==='취소').length;
     const tot미납 = consultEntries.filter(e=>e.result==='미납').length;
     let totTM=0, totRef=0, totInq=0, totGoal=0;
@@ -922,7 +926,8 @@ function renderArchiveView(arcKey) {
         const m = r.mentor; if (!m) return;
         if (!mConsult[m]) mConsult[m] = 0;
         if (!mReg[m]) mReg[m] = 0;
-        if (_isSang(cdate, r) || (r.result && r.result !== '취소')) mConsult[m]++;
+        if (r.kind==='관리면담' || r.kind==='추가면담') return;
+        if (_isSang(cdate, r)) mConsult[m]++;
         if (['완납','COD','미등록회수'].includes(r.result)) mReg[m]++;
       }));
 
@@ -2673,12 +2678,14 @@ function _pfAgg() {
     if (arc && arc.consult) src = arc.consult;
   }
   Object.entries(src).forEach(([d, day]) => {
-    if (d < BIZ_PERIOD.s || d > BIZ_PERIOD.e) return;
+    const dIn = d >= BIZ_PERIOD.s && d <= BIZ_PERIOD.e;
     Object.values(day||{}).forEach(r => {
       const p = per[r.mentor]; if (!p) return;
+      const pIn = _payIn(d, r);
+      if (!dIn && !pIn) return;
       if (r.kind==='관리면담' || r.kind==='추가면담') return;
-      if (_isSang(d, r)) p.sang++;
-      if (r.result==='완납' || r.result==='COD' || r.result==='미등록회수') { p.reg++; p.paid += N(r.paid); }
+      if (dIn && _isSang(d, r)) p.sang++;
+      if (pIn && (r.result==='완납' || r.result==='COD' || r.result==='미등록회수')) { p.reg++; p.paid += N(r.paid); }
     });
   });
   return per;
@@ -3972,7 +3979,7 @@ window.W = {
       document.getElementById('nav-staff-sub')?.style && (document.getElementById('nav-staff-sub').style.display = 'none');
       const sa = document.getElementById('nav-staff-arrow');
       if (sa) sa.style.transform = 'rotate(0deg)';
-      if (cw !== 99) W._swBiz('요약');
+      if (cw !== 99) W._swBiz('상담캘린더');
     }
   },
   _toggleStaff() {
@@ -4252,9 +4259,21 @@ window.W = {
     if(sa) sa.style.transform='rotate(0deg)';
     ['nav-dash','nav-w0','nav-w1','nav-w2','nav-w3','nav-biz','nav-biz-sum','nav-biz-con','nav-staff','nav-dep'].forEach(id=>document.getElementById(id)?.classList.remove('on'));
     document.getElementById('nav-dash')?.classList.add('on');
+    document.getElementById('nav-dash-home')?.classList.add('on');
+    document.getElementById('nav-dash-data')?.classList.remove('on');
     const pt=document.getElementById('page-title');
     if(pt) pt.textContent='대시보드';
     renderMain();
+  },
+  _swDashData() {
+    W._swBiz('요약');
+    document.getElementById('nav-biz-sub').style.display='none';
+    document.getElementById('nav-biz')?.classList.remove('on');
+    document.getElementById('nav-dash')?.classList.add('on');
+    document.getElementById('nav-dash-home')?.classList.remove('on');
+    document.getElementById('nav-dash-data')?.classList.add('on');
+    const pt=document.getElementById('page-title');
+    if(pt) pt.textContent='영업 데이터';
   },
   _swBiz(tab) {
     curMonth='current'; cw=99; bst=tab;
@@ -6431,8 +6450,8 @@ try {
 </script>
 <script>
 (function(){
-  function sync(){var e=document.getElementById('nav-biz-sub');if(!e)return;document.body.classList.toggle('gsub-on',e.style.display!=='none');}
-  document.addEventListener('DOMContentLoaded',function(){var gb=document.getElementById('goal-badge'),sb=document.querySelector('.sidebar'),ar=document.querySelector('.sb-arc');if(gb&&sb&&ar)sb.insertBefore(gb,ar);var e=document.getElementById('nav-biz-sub');if(!e)return;new MutationObserver(sync).observe(e,{attributes:true,attributeFilter:['style']});sync();});
+  function sync(){var e=document.getElementById('nav-biz-sub');if(!e)return;document.body.classList.toggle('gsub-on',e.style.display!=='none');var d=document.getElementById('nav-dash');document.body.classList.toggle('gsub-dash',!!(d&&d.classList.contains('on')));}
+  document.addEventListener('DOMContentLoaded',function(){var gb=document.getElementById('goal-badge'),sb=document.querySelector('.sidebar'),ar=document.querySelector('.sb-arc');if(gb&&sb&&ar)sb.insertBefore(gb,ar);var e=document.getElementById('nav-biz-sub');if(!e)return;new MutationObserver(sync).observe(e,{attributes:true,attributeFilter:['style']});var dn=document.getElementById('nav-dash');if(dn)new MutationObserver(sync).observe(dn,{attributes:true,attributeFilter:['class']});sync();});
 })();
 </script>
 </body>
