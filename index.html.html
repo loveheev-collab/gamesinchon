@@ -1136,7 +1136,7 @@ function renderStaffTbl() {
   }
   let rows = [];
   TM_CFG.forEach(t => t.members.forEach(m => {
-    let bd = (BIZ[t.name]||{})[m];
+    let bd = _pastBizPick(t.name, m) || (BIZ[t.name]||{})[m];
     if (!bd) { for (const k of Object.keys(BIZ)) { if (BIZ[k] && BIZ[k][m]) { bd = BIZ[k][m]; break; } } }
     bd = bd || {};
     const c = cnt[m], net = (bd.totalSales||0) - (bd.refund||0), goal = bd.goal||0, inq = bd.inquiry||0, reg = c.wan + c.cod;
@@ -1442,6 +1442,7 @@ function renderAllDashboard() {
   const _dashGetBd = (m) => {
     // 1순위: TM_CFG에서 이 멤버가 속한 팀 이름으로 직접 접근
     const myTeam = TM_CFG.find(t => t.members.includes(m));
+    { const pb = _pastBizPick(myTeam ? myTeam.name : '', m); if (pb) return pb; }
     if (myTeam && BIZ[myTeam.name]?.[m]) return BIZ[myTeam.name][m];
     // 2순위: 전체 BIZ 탐색 (fallback)
     for (const tKey of Object.keys(BIZ)) {
@@ -1794,6 +1795,15 @@ function renderNoticeBar() {
 // ── 미납 리스트: 필터 / 완납 처리 ──
 const _UNP = {team:'', mem:''};
 // 미납 건을 나중에 완납 처리한 경우(paidDate), 입금일이 속한 영업월 매출로 집계
+// 지난 영업월이면 아카이브의 영업 입력값(목표·총매출·환불·문의)을 쓰고, 없으면 빈 값 (현재 입력값이 섞이지 않게)
+function _pastBizPick(team, m) {
+  if (!(BIZ_PERIOD.e < todayStr())) return null;
+  const arc = Object.values((ARCHIVE.biz)||{}).find(v => v.period && v.period.s===BIZ_PERIOD.s && v.period.e===BIZ_PERIOD.e);
+  const ab = (arc && arc.biz) || {};
+  if (ab[team] && ab[team][m]) return ab[team][m];
+  for (const k of Object.keys(ab)) { if (ab[k] && ab[k][m]) return ab[k][m]; }
+  return {sales:0,inquiry:0,totalSales:0,refund:0,goal:0};
+}
 function _payIn(date, r) {
   const d = (r.result === '완납' && r.paidDate) ? r.paidDate : date;
   return d >= BIZ_PERIOD.s && d <= BIZ_PERIOD.e;
@@ -2231,6 +2241,7 @@ function showBiz() {
   // 팀 이름이 바뀌었을 수 있으므로 멤버 이름으로 전체 탐색
   const getBd = (team, m) => {
     if (window._bizIsFuture) return _emptyBd;
+    { const pb = _pastBizPick(team, m); if (pb) return pb; }
     // 1) 라이브 BIZ에서 팀+멤버 직접 조회
     if (BIZ[team]?.[m]) return BIZ[team][m];
     // 2) 라이브 BIZ 전체에서 멤버 탐색
@@ -2414,6 +2425,7 @@ function updBizKPI() {
   })();
   const _gb=(team,m)=>{
     if(window._bizIsFuture) return _eb;
+    { const pb = _pastBizPick(team, m); if (pb) return pb; }
     if(BIZ[team]?.[m]) return BIZ[team][m];
     for(const k of Object.keys(BIZ)){ if(BIZ[k]?.[m]) return BIZ[k][m]; }
     if(_kpiArcBiz){
@@ -2449,6 +2461,7 @@ function _cvMan(v){ const n=N(v); return n? (Math.round(n/10000*10)/10)+'만' : 
 function _cvBizOf(m){
   let bd = null;
   const t = getTeam(m);
+  { const pb = _pastBizPick(t ? t.name : '', m); if (pb) return pb; }
   if (t && BIZ[t.name] && BIZ[t.name][m]) bd = BIZ[t.name][m];
   if (!bd) { for (const k of Object.keys(BIZ)) { if (BIZ[k] && BIZ[k][m]) { bd = BIZ[k][m]; break; } } }
   return bd || {};
@@ -2703,6 +2716,7 @@ const _PF = {team:'전체', key:'net', dir:-1};
 function _pfBiz(m) {
   if (window._bizIsFuture) return {};
   const t = getTeam(m);
+  { const pb = _pastBizPick(t ? t.name : '', m); if (pb) return pb; }
   if (t && BIZ[t.name] && BIZ[t.name][m]) return BIZ[t.name][m];
   for (const k of Object.keys(BIZ)) { if (BIZ[k] && BIZ[k][m]) return BIZ[k][m]; }
   if (BIZ_PERIOD.e < todayStr()) {
@@ -4423,8 +4437,32 @@ window.W = {
     if (sc3) sc3.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text3);font-size:13px">불러오는 중...</div>';
     requestAnimationFrame(() => requestAnimationFrame(showBiz));
   },
+  _bmPast(team,member,field,n) {
+    const ent = Object.entries((ARCHIVE.biz)||{}).find(([k,v]) => v && v.period && v.period.s===BIZ_PERIOD.s && v.period.e===BIZ_PERIOD.e);
+    if (!ent) { alert('이 영업월은 아카이브가 없어서 수정할 수 없어요.'); return; }
+    const [key, arc] = ent;
+    if (!arc.biz) arc.biz = {};
+    let tk = team;
+    for (const k of Object.keys(arc.biz)) { if (arc.biz[k] && arc.biz[k][member]) { tk = k; break; } }
+    if (!arc.biz[tk]) arc.biz[tk] = {};
+    if (!arc.biz[tk][member]) arc.biz[tk][member] = {sales:0,inquiry:0,totalSales:0,refund:0,goal:0};
+    arc.biz[tk][member][field] = n;
+    update(ref(db, 'archive/biz/' + key + '/biz/' + tk + '/' + member), {[field]: n}).catch(err => alert('저장 실패: ' + err.message));
+    const bd = _pastBizPick(team, member) || {};
+    const netEl = document.getElementById('biz-net-' + team + '-' + member);
+    if (netEl) netEl.textContent = F((bd.totalSales||0) - (bd.refund||0));
+    const teamCfg = TM_CFG.find(t => t.name === team);
+    if (teamCfg) {
+      const g = f => teamCfg.members.reduce((x,m) => x + ((_pastBizPick(team, m)||{})[f]||0), 0);
+      const tTM = g('totalSales'), tRef = g('refund'), tGoal = g('goal');
+      const set_ = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = F(v); };
+      set_('biz-tm-' + team, tTM); set_('biz-ref-' + team, tRef); set_('biz-net-' + team + '-team', tTM - tRef); set_('biz-goal-' + team, tGoal);
+    }
+    updBizKPI();
+  },
   _bm(team,member,field,val) {
     const n=N(val);
+    if (BIZ_PERIOD.e < todayStr()) { W._bmPast(team,member,field,n); return; }
     if(!BIZ[team]) BIZ[team]={};
     if(!BIZ[team][member]) BIZ[team][member]={sales:0,inquiry:0,totalSales:0,refund:0};
     BIZ[team][member][field]=n;
