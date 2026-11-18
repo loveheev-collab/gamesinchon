@@ -77,6 +77,11 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .wtab.biz.on{color:var(--purple);border-bottom-color:var(--purple)}
 .per{font-size:11px;font-weight:400;opacity:.8;margin-left:4px}
 .main{max-width:1400px;margin:0 auto;padding:20px}
+.dash-top{display:grid;grid-template-columns:minmax(0,6fr) minmax(0,7fr);gap:14px;align-items:start;margin-bottom:12px}.dash-left,.dash-right{min-width:0}@media(max-width:1150px){.dash-top{grid-template-columns:1fr}}
+.dash-left .kg-highlight{grid-template-columns:repeat(4,minmax(0,1fr));margin-bottom:0}
+.dash-left .kc-hl{padding:12px 12px}.dash-left .kc-hl .kval{font-size:17px;letter-spacing:-1px;white-space:nowrap}.dash-left .kc-hl .klbl{font-size:10px;white-space:nowrap}
+.dash-left *{white-space:nowrap}
+.dash-left .dcalc{grid-template-columns:1fr}.dash-left .dcc{white-space:nowrap;gap:10px}.dash-left .dcc span{white-space:nowrap}
 .stitle{font-size:13px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:7px;color:var(--text)}
 .stitle::before{content:'';display:inline-block;width:3px;height:14px;background:var(--accent);border-radius:2px}
 /* KPI */
@@ -275,7 +280,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .unpaid-team-hdr{padding:8px 13px;color:#fff;font-weight:900;font-size:13px;display:flex;align-items:center;justify-content:space-between}
 .unpaid-tbl{width:100%;border-collapse:collapse;background:var(--bg2);table-layout:fixed}
 .unpaid-tbl th{padding:7px 9px;font-size:11px;font-weight:700;color:var(--text3);text-align:left;background:var(--bg);border-bottom:1px solid var(--border);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.unpaid-tbl td{padding:7px 9px;border-bottom:1px solid var(--border);font-size:12px;vertical-align:top;overflow:hidden;word-break:keep-all;overflow-wrap:break-word}
+.unpaid-tbl td{white-space:nowrap;text-overflow:ellipsis;padding:7px 9px;border-bottom:1px solid var(--border);font-size:12px;vertical-align:top;overflow:hidden;word-break:keep-all;overflow-wrap:break-word}
 .unpaid-tbl tr:last-child td{border-bottom:none}
 .unpaid-tbl .member-row{background:var(--bg)}
 .unpaid-tbl .member-row td{font-weight:700;font-size:11px;color:var(--text3);padding:4px 9px}
@@ -372,6 +377,55 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .dep-sum-item{font-size:11px;font-weight:700}
 .dep-sum-item span{font-family:'Roboto',monospace;font-size:13px;font-weight:900}
 </style>
+<style id="gnb-css">
+:root{--gnb-h:48px;--gsub-h:40px}
+.layout{display:block}
+.sidebar{width:100%;height:var(--gnb-h);bottom:auto;right:0;flex-direction:row;align-items:center;background:#1E3A5F;border-right:none;overflow:visible;padding:0 16px;gap:0;flex-wrap:nowrap}
+.sb-logo{padding:0 18px 0 0;border:none;white-space:nowrap}
+.sb-logo-txt{color:#fff;font-size:15px;font-weight:700}
+.sb-logo-sub{display:none}
+.sidebar>.sb-sec{padding:0;display:flex;align-items:center;gap:2px;flex-shrink:0}
+.sb-sec-lbl{display:none}
+.sidebar .sb-item{width:auto;margin:0;padding:7px 11px;white-space:nowrap;color:#C9D6E8;font-size:13px;border-radius:7px}
+.sidebar .sb-item:hover{background:rgba(255,255,255,.1);color:#fff}
+.sidebar .sb-item.on{background:rgba(255,255,255,.18);color:#fff;font-weight:700}
+.sidebar .sb-item .ico{width:auto;font-size:15px}
+#nav-biz-arrow{display:none}
+.sidebar .sb-divider{width:1px;height:16px;margin:0 8px;border:none;background:rgba(255,255,255,.25);flex-shrink:0}
+.sb-sub{position:fixed;top:var(--gnb-h);left:0;right:0;height:var(--gsub-h);padding:0 16px;margin:0;background:#F5F7FA;border-bottom:1px solid #E8ECF0;align-items:center;gap:6px;z-index:199;display:none!important}
+body.gsub-on .sb-sub#nav-biz-sub{display:flex!important}
+.sb-sub .sb-sub-item{padding:5px 14px;border-radius:14px;border-left:none;margin:0;font-size:12.5px;color:#5A6785;background:#fff;border:1px solid #E8ECF0}
+.sb-sub .sb-sub-item:hover{color:#1A2340;background:#fff;border-color:#CBD5E1}
+.sb-sub .sb-sub-item.on{background:#1E3A5F;color:#fff;border-color:#1E3A5F;font-weight:700}
+.sidebar>.sb-sec.sb-arc{position:relative}
+.sidebar>.sb-sec.sb-arc::before{content:'아카이브 ▾';font-size:12px;color:#C9D6E8;padding:7px 10px;cursor:pointer;white-space:nowrap}
+#sb-biz-arc{display:none;position:fixed;top:calc(var(--gnb-h) - 4px);right:12px;width:220px;max-height:60vh;overflow-y:auto;background:#fff;border:1px solid #E8ECF0;border-radius:10px;padding:8px;box-shadow:0 8px 24px rgba(0,0,0,.14);z-index:300}
+.sidebar>.sb-sec.sb-arc:hover #sb-biz-arc{display:block}
+.sb-footer{border:none;margin:0 0 0 12px;padding:0;color:#C9D6E8;white-space:nowrap}
+.sb-footer div{display:flex;gap:8px;align-items:center;line-height:1!important}
+.sb-footer div br{display:none}
+.sb-footer div,.sb-footer span{color:#C9D6E8!important}
+.content-wrap{margin-left:0;padding-top:var(--gnb-h)}
+body.gsub-on .content-wrap{padding-top:calc(var(--gnb-h) + var(--gsub-h))}
+.hdr{display:none!important}
+#dash-tp .tp-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:0}
+@media(max-width:1500px){#dash-tp .tp-grid{grid-template-columns:repeat(auto-fit,minmax(215px,1fr))}}
+#dash-tp .tp-card-hdr{padding:10px 12px 0}
+#dash-tp .tp-card-body{padding:0 12px 10px}
+#dash-tp .tp-bar-wrap{padding:8px 12px 8px}
+#dash-tp .tp-rate-big{font-size:22px}
+#dash-tp .tp-mbr-row{margin-bottom:5px}
+#dash-tp .tp-divider{margin:5px 0}
+#dash-tp .tp-rate-item .r-val{font-size:14px}
+#dash-tp .kg-highlight-label{margin:10px 0 6px}
+#dash-tp .tp-card{min-width:0}
+#dash-tp .tp-mbr-sales{font-size:11px}
+#goal-badge{margin-left:auto;background:rgba(255,255,255,.14)!important;color:#fff!important;border:none!important;font-size:12px;padding:4px 12px;border-radius:14px;white-space:nowrap}
+.sidebar>.sb-sec.sb-arc{margin-left:8px;position:relative}
+.sidebar>hr.sb-divider:nth-of-type(2){display:none}
+.bsn{display:none!important}
+@media(max-width:1100px){.sidebar{overflow-x:auto}.sb-footer{display:none}}
+</style>
 </head>
 <body>
 <div class="layout">
@@ -386,14 +440,14 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
     <div class="sb-sec-lbl">메뉴</div>
     <div class="sb-item" id="nav-dash" onclick="W._swDash()"><i class="ti ti-layout-dashboard ico" aria-hidden="true"></i> 대시보드</div>
     <div class="sb-item" id="nav-dep" onclick="W._swDep()"><i class="ti ti-credit-card ico" aria-hidden="true"></i> 입금 파악</div>
-    <div class="sb-item" id="nav-biz" onclick="W._toggleBiz()"><i class="ti ti-chart-bar ico" aria-hidden="true"></i> 영업현황 <span id="nav-biz-arrow" style="margin-left:auto;font-size:10px;transition:transform .2s">▼</span></div>
+    <div class="sb-item" id="nav-biz" onclick="W._swBiz('요약')"><i class="ti ti-chart-bar ico" aria-hidden="true"></i> 영업현황 <span id="nav-biz-arrow" style="margin-left:auto;font-size:10px;transition:transform .2s">▼</span></div>
     <div class="sb-sub" id="nav-biz-sub" style="display:none">
       <div class="sb-sub-item" id="nav-biz-sum" onclick="W._swBiz('요약')">영업 데이터</div>
-      <div class="sb-sub-item" id="nav-biz-con" onclick="W._swBiz('상담내역')">상담 내역</div>
+      <div class="sb-sub-item" id="nav-biz-cal" onclick="W._swBiz('상담캘린더')">상담 내역</div>
       <div class="sb-sub-item" id="nav-biz-unp" onclick="W._swBiz('미납리스트')">미납 리스트</div>
       <div class="sb-sub-item" id="nav-biz-add" onclick="W._swBiz('추가리스트')">추가 리스트</div>
     </div>
-    <div class="sb-item" id="nav-class" onclick="W._swClass()"><i class="ti ti-layout-list ico" aria-hidden="true"></i> 클래스관리</div>
+    <div class="sb-item" id="nav-class" onclick="W._swClass()"><i class="ti ti-layout-list ico" aria-hidden="true"></i> 게시판</div>
     <div class="sb-item" id="nav-blog" onclick="W._swBlog()"><i class="ti ti-checklist ico" aria-hidden="true"></i> 업무량</div>
     <div class="sb-item" id="nav-rvstat" onclick="W._swRvStat()"><i class="ti ti-star ico" aria-hidden="true"></i> 리뷰작성현황</div>
     <div class="sb-item" id="nav-links" onclick="W._swLinks()"><i class="ti ti-link ico" aria-hidden="true"></i> 링크모음</div>
@@ -406,7 +460,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
     <a class="sb-item" href="admin.html"><i class="ti ti-settings ico" aria-hidden="true"></i> 설정</a>
   </div>
   <hr class="sb-divider">
-  <div class="sb-sec">
+  <div class="sb-sec sb-arc">
     <div class="sb-sec-lbl">아카이브</div>
     <div id="sb-biz-arc"><div style="font-size:11px;color:#B0BEC5;padding:4px 8px">저장된 영업 없음</div></div>
   </div>
@@ -473,8 +527,8 @@ const rRvStat  = ref(db,'rvstat2026');   // 리뷰작성현황
 const rTuition = ref(db,'tuition2026');  // 수강료표
 
 // ── 설정 ─────────────────────────────────────────────
-const STS = ['상담','추가'];
-const RES = ['완납','미납','추가','미등록회수','취소','COD'];
+const STS = ['상담','추가','면담'];
+const RES = ['완납','미납','추가','미등록회수','취소','COD','면담완료'];
 let WEEKS = [
   {label:'1주차',period:'',startDate:'',endDate:'',total:0},
   {label:'2주차',period:'',startDate:'',endDate:'',total:0},
@@ -864,11 +918,11 @@ function renderArchiveView(arcKey) {
     if (curTab === '영업데이터') {
       // 직원별 상담/등록 집계
       const mConsult = {}, mReg = {};
-      Object.values(consultData).forEach(day => Object.values(day||{}).forEach(r => {
+      Object.entries(consultData).forEach(([cdate, day]) => Object.values(day||{}).forEach(r => {
         const m = r.mentor; if (!m) return;
         if (!mConsult[m]) mConsult[m] = 0;
         if (!mReg[m]) mReg[m] = 0;
-        if (r.status === '상담' || r.result) mConsult[m]++;
+        if (_isSang(cdate, r) || (r.result && r.result !== '취소')) mConsult[m]++;
         if (['완납','COD','미등록회수'].includes(r.result)) mReg[m]++;
       }));
 
@@ -1004,6 +1058,290 @@ function renderArchiveView(arcKey) {
 }
 
 // ── 결산 메인 ─────────────────────────────────────────
+// ── 대시보드 직원 현황 (순위 / 비율 전환) ──
+const _STF = {team:'전체', key:'net', dir:-1, view:'rank'};
+function _stfSet(k,v){
+  if (k==='team') _STF.team = v;
+  else if (k==='view') { _STF.view = v; _STF.key = 'net'; _STF.dir = -1; }
+  else { if (_STF.key===v) _STF.dir = -_STF.dir; else { _STF.key=v; _STF.dir = (v==='name'?1:-1); } }
+  renderStaffTbl();
+}
+function renderStaffTbl() {
+  const box = document.getElementById('dash-staff'); if (!box) return;
+  const cnt = {};
+  TM_CFG.forEach(t => t.members.forEach(m => { cnt[m] = {sang:0, wan:0, cod:0, mi:0, mt:0, ma:0, maAmt:0, paid:0}; }));
+  if (!window._bizIsFuture) {
+    Object.entries(CONSULT).forEach(([date, day]) => {
+      const dIn = date >= BIZ_PERIOD.s && date <= BIZ_PERIOD.e;
+      Object.values(day||{}).forEach(r => {
+        const c = cnt[r.mentor]; if (!c) return;
+        const pIn = _payIn(date, r);
+        if (!dIn && !pIn) return;
+        if (r.kind==='관리면담' || r.kind==='추가면담') {
+          if (dIn && (r.result==='면담완료' || r.result==='완납' || r.result==='미납')) c.mt++;
+          if (pIn && r.kind==='추가면담' && r.result==='완납') { c.ma++; c.maAmt += N(r.paid); }
+          return;
+        }
+        if (dIn && _isSang(date, r)) c.sang++;
+        if (pIn && (r.result === '완납' || r.result === '미등록회수')) { c.wan++; c.paid += N(r.paid); }
+        if (pIn && r.result === 'COD') { c.cod++; c.paid += N(r.paid); }
+        if (dIn && r.result === '미납') c.mi++;
+      });
+    });
+  }
+  let rows = [];
+  TM_CFG.forEach(t => t.members.forEach(m => {
+    let bd = (BIZ[t.name]||{})[m];
+    if (!bd) { for (const k of Object.keys(BIZ)) { if (BIZ[k] && BIZ[k][m]) { bd = BIZ[k][m]; break; } } }
+    bd = bd || {};
+    const c = cnt[m], net = (bd.totalSales||0) - (bd.refund||0), goal = bd.goal||0, inq = bd.inquiry||0, reg = c.wan + c.cod;
+    rows.push({name:m, team:t.name, color:t.color, inq:inq, sang:c.sang, wan:c.wan, cod:c.cod, mi:c.mi, mt:c.mt, ma:c.ma, maAmt:c.maAmt, net:net, goal:goal,
+      rate: goal>0 ? net/goal*100 : -1,
+      sangRate: inq>0 ? c.sang/inq*100 : null, regRate: c.sang>0 ? reg/c.sang*100 : null, unit: reg>0 ? c.paid/reg/10000 : null});
+  }));
+  const st = _STF;
+  if (st.team !== '전체') rows = rows.filter(r => r.team === st.team);
+  rows.sort((a,b) => {
+    if (st.key === 'name') return st.dir * a.name.localeCompare(b.name, 'ko');
+    const av = (a[st.key]===null||a[st.key]===undefined) ? -1 : a[st.key], bv = (b[st.key]===null||b[st.key]===undefined) ? -1 : b[st.key];
+    return st.dir * (av - bv);
+  });
+  const byNet = rows.slice().sort((a,b)=>b.net-a.net);
+  const rankOf = {}; byNet.forEach((r,i)=>{ rankOf[r.name] = (i>0 && r.net===byNet[i-1].net) ? rankOf[byNet[i-1].name] : i+1; });
+  const chip = (on, label, fn) => '<button onclick="' + fn + '" style="padding:3px 11px;border-radius:14px;border:1px solid ' + (on?'#2563EB':'var(--border)') + ';background:' + (on?'#2563EB':'var(--bg)') + ';color:' + (on?'#fff':'var(--text2)') + ';font-size:12px;cursor:pointer;font-family:inherit">' + label + '</button>';
+  let h = '<div style="display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 8px;align-items:center">';
+  ['전체'].concat(TM_CFG.map(t=>t.name)).forEach(n => { h += chip(st.team===n, n, 'W._stfSet(\'team\',\'' + n + '\')'); });
+  h += '<span style="flex:1"></span>' + chip(st.view==='rank','순위','W._stfSet(\'view\',\'rank\')') + chip(st.view==='ratio','비율','W._stfSet(\'view\',\'ratio\')') + '</div>';
+  const cols = st.view==='rank'
+    ? [['name','직원'],['inq','문의'],['sang','상담'],['wan','완납'],['cod','COD'],['mi','미납'],['mt','면담'],['sangRate','상담률'],['regRate','등록률'],['net','순매출'],['rate','달성률']]
+    : [['name','직원'],['sangRate','상담률'],['regRate','등록률'],['unit','등록단가'],['net','순매출'],['rate','달성률']];
+  const pd = 'padding:7px 5px';
+  h += '<div style="overflow-x:auto;background:var(--bg);border:1px solid var(--border);border-radius:10px"><table style="width:100%;border-collapse:collapse;font-size:12.5px;min-width:' + (st.view==='rank'?'700':'420') + 'px"><thead><tr style="background:var(--bg2)">';
+  h += '<th style="' + pd + ';text-align:center;width:34px;color:var(--text3);font-weight:600">#</th>';
+  cols.forEach(c => {
+    const arrow = st.key === c[0] ? (st.dir<0?' ▼':' ▲') : '';
+    h += '<th onclick="W._stfSet(\'sort\',\'' + c[0] + '\')" style="' + pd + ';text-align:' + (c[0]==='name'?'left':'right') + ';cursor:pointer;font-weight:600;color:' + (st.key===c[0]?'#2563EB':'var(--text2)') + ';white-space:nowrap">' + c[1] + arrow + '</th>';
+  });
+  h += '</tr></thead><tbody>';
+  const T = {inq:0,sang:0,wan:0,cod:0,mi:0,mt:0,ma:0,maAmt:0,net:0,goal:0};
+  const G = (typeof BIZGOAL !== 'undefined') ? BIZGOAL : {sangRate:60, reg:60, unit:250};
+  rows.forEach(r => {
+    Object.keys(T).forEach(k => T[k] += r[k]||0);
+    const warn = r.sang >= 5 && r.wan === 0 && r.cod === 0;
+    const rk = rankOf[r.name];
+    const medal = rk<=3 ? '<span style="display:inline-block;width:20px;height:20px;border-radius:50%;background:' + ['#1E3A5F','#475569','#94A3B8'][rk-1] + ';color:#fff;font-size:11px;line-height:20px;text-align:center">' + rk + '</span>' : rk;
+    const rate = r.rate >= 0 ? r.rate.toFixed(1) + '%' : '—';
+    const rc = r.rate<0 ? 'var(--text3)' : r.rate>=100 ? '#16A34A' : r.rate>=60 ? '#2563EB' : '#DC2626';
+    h += '<tr style="border-top:1px solid var(--border);' + '' + '">';
+    h += '<td style="' + pd + ';text-align:center;color:var(--text3)">' + medal + '</td>';
+    h += '<td style="' + pd + ';font-weight:600;white-space:nowrap"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:' + r.color + ';margin-right:6px"></span>' + MRT(r.name) + (warn?' <span title="상담 5건 이상인데 완납 0건" style="font-size:11px;color:#B45309;background:#FEF3C7;border-radius:8px;padding:0 6px;font-weight:400">상담↑ 완납 확인</span>':'') + '</td>';
+    if (st.view==='rank') {
+      h += '<td style="' + pd + ';text-align:right">' + r.inq + '</td><td style="' + pd + ';text-align:right">' + r.sang + '</td>'
+        + '<td style="' + pd + ';text-align:right;color:#15803D;font-weight:600">' + r.wan + '</td><td style="' + pd + ';text-align:right">' + r.cod + '</td>'
+        + '<td style="' + pd + ';text-align:right;color:' + (r.mi>0?'#991B1B':'var(--text3)') + '">' + r.mi + '</td>'
+        + '<td style="' + pd + ';text-align:right">' + r.mt + '</td>'
+        + '<td style="' + pd + ';text-align:right">' + _pfChip(r.sangRate, G.sangRate, r.sangRate===null?'':r.sangRate.toFixed(0)+'%') + '</td>'
+        + '<td style="' + pd + ';text-align:right">' + _pfChip(r.regRate, G.reg, r.regRate===null?'':r.regRate.toFixed(0)+'%') + '</td>';
+    } else {
+      h += '<td style="' + pd + ';text-align:right">' + _pfChip(r.sangRate, G.sangRate, r.sangRate===null?'':r.sangRate.toFixed(0)+'%') + '</td>'
+        + '<td style="' + pd + ';text-align:right">' + _pfChip(r.regRate, G.reg, r.regRate===null?'':r.regRate.toFixed(0)+'%') + '</td>'
+        + '<td style="' + pd + ';text-align:right">' + _pfChip(r.unit, G.unit, r.unit===null?'':Math.round(r.unit)+'만') + '</td>';
+    }
+    h += '<td style="' + pd + ';text-align:right;font-weight:700">' + F(Math.round(r.net/10000)) + '만</td>';
+    h += '<td style="' + pd + ';text-align:right;font-weight:600;color:' + rc + '">' + rate + '</td></tr>';
+  });
+  const tr = T.goal>0 ? (T.net/T.goal*100).toFixed(1)+'%' : '—';
+  const sum = 'padding:7px 5px;text-align:right';
+  h += '<tr style="border-top:2px solid var(--border);background:var(--bg2);font-weight:700"><td></td><td style="padding:7px 5px">합계</td>';
+  if (st.view==='rank') {
+    h += '<td style="'+sum+'">'+T.inq+'</td><td style="'+sum+'">'+T.sang+'</td><td style="'+sum+'">'+T.wan+'</td><td style="'+sum+'">'+T.cod+'</td><td style="'+sum+'">'+T.mi+'</td><td style="'+sum+'">'+T.mt+'</td><td style="'+sum+'">'+(T.inq>0?(T.sang/T.inq*100).toFixed(0)+'%':'—')+'</td><td style="'+sum+'">'+(T.sang>0?((T.wan+T.cod)/T.sang*100).toFixed(0)+'%':'—')+'</td>';
+  } else {
+    const sr = T.inq>0 ? (T.sang/T.inq*100).toFixed(0)+'%' : '—', rr = T.sang>0 ? ((T.wan+T.cod)/T.sang*100).toFixed(0)+'%' : '—';
+    h += '<td style="'+sum+'">'+sr+'</td><td style="'+sum+'">'+rr+'</td><td style="'+sum+'">—</td>';
+  }
+  h += '<td style="'+sum+'">'+F(Math.round(T.net/10000))+'만</td><td style="'+sum+'">'+tr+'</td></tr>';
+  h += '</tbody></table></div>';
+  h += '<div style="font-size:11px;color:var(--text3);margin-top:6px">' + (st.view==='rank' ? '순위는 순매출(영업총매출−환불) 기준 · 완납/COD/미납은 건수 · 면담은 관리면담+추가면담 합산(상담·등록률에서 제외) · 상담↑ 완납 확인 = 상담 5건 이상인데 완납 0건 · 헤더를 누르면 정렬' : '색은 영업 데이터의 지점 목표 대비 · 초록 달성 / 노랑 근접(80%↑) / 빨강 미달 · 상담은 신규 상담 기준') + '</div>';
+  window.W = window.W || {}; W._stfSet = _stfSet;
+  box.innerHTML = h;
+}
+
+// ── 게시판 (인트라넷 방식: 분류 / 목록 / 상세) + 대시보드 카드 ──
+let BPOST = {};
+const BCATS = [['공지사항','#1E3A5F'],['수강생 일정','#7C4DDB'],['모집','#C2410C'],['세미나','#BE185D'],['국비','#6D40C9'],['취업','#1D6FA5']];
+const _catColor = c => (BCATS.find(x => x[0] === c) || ['', '#64748B'])[1];
+const _BBS = {cat:'', q:'', f:'live', sel:null};
+const BRANCH_PW_HINT = '수정 권한 비밀번호를 입력하세요 (팀장/부장 전용)';
+onValue(ref(db,'bpost2025'), snap => { BPOST = snap.val() || {}; renderBoards(); if (document.getElementById('bb-body')) renderBoardPage(); });
+const _bdEsc = v => String(v==null?'':v).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const _wd = ['일','월','화','수','목','금','토'];
+function _fmtD(d) { if (!d) return ''; const x = new Date(d + 'T00:00:00'); return (x.getMonth()+1) + '/' + x.getDate() + '(' + _wd[x.getDay()] + ')'; }
+function _isLive(p) { return !p.until || p.until >= todayStr(); }
+function _allMembers() { return TM_CFG.flatMap(t => t.members); }
+function _bdAuth() {
+  if (window._branchAuthed) return true;
+  const pw = prompt(BRANCH_PW_HINT);
+  if (pw === null) return false;
+  if (pw === BRANCH_EDIT_PW) { window._branchAuthed = true; return true; }
+  alert('비밀번호가 올바르지 않습니다.');
+  return false;
+}
+function _postSub(p) {
+  const a = [];
+  if (p.start) a.push((p.cat==='모집' ? '개강 ' : '') + _fmtD(p.start) + (p.time ? ' ' + p.time : ''));
+  if (p.place) a.push(p.place);
+  if (p.until) a.push((p.cat==='모집' ? '모집 ~ ' : '~ ') + _fmtD(p.until));
+  return a.join(' · ');
+}
+function _sortedPosts() {
+  return Object.entries(BPOST).sort((a,b) => ((b[1].pinned?1:0)-(a[1].pinned?1:0)) || ((b[1].ts||0)-(a[1].ts||0)));
+}
+function _catTag(c) { return '<span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;padding:1px 9px;border:1px solid var(--border);border-radius:11px;background:var(--bg);white-space:nowrap"><i style="width:6px;height:6px;border-radius:50%;background:' + _catColor(c) + '"></i>' + _bdEsc(c) + '</span>'; }
+
+function _bbBar() { return ''; }
+function renderBoardPage() {
+  const sc = document.getElementById('sc'); if (!sc) return;
+  const today = todayStr(), total = _allMembers().length;
+  const all = _sortedPosts();
+  const live = all.filter(([,p]) => _isLive(p));
+  const cnt = c => live.filter(([,p]) => p.cat === c).length;
+  let list = all;
+  if (_BBS.f === 'live') list = list.filter(([,p]) => _isLive(p));
+  else if (_BBS.f === 'end') list = list.filter(([,p]) => !_isLive(p));
+  if (_BBS.cat) list = list.filter(([,p]) => p.cat === _BBS.cat);
+  const q = _BBS.q.trim().toLowerCase();
+  if (q) list = list.filter(([,p]) => [p.title,p.body,p.place,p.cat].join(' ').toLowerCase().includes(q));
+  if (!_BBS.sel || !BPOST[_BBS.sel]) _BBS.sel = list.length ? list[0][0] : null;
+  const rail = (on, label, n, color) => '<div onclick="window.bbCat(\'' + label.replace(/'/g,'') + '\')" style="display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:8px;cursor:pointer;font-size:13px;' + (on?'background:#E8F0FB;font-weight:700;color:#1E3A5F':'color:var(--text)') + '">' + (color?'<i style="width:7px;height:7px;border-radius:50%;background:' + color + '"></i>':'') + '<span style="flex:1">' + label + '</span><span style="font-size:11px;color:var(--text3)">' + n + '</span></div>';
+  let railH = '<div style="background:#fff;border:1px solid var(--border);border-radius:12px;overflow:hidden;flex:0 0 200px;align-self:flex-start">'
+    + '<div style="background:#1E3A5F;padding:10px"><button onclick="window.bdOpen(\'\')" style="width:100%;padding:8px;border:none;border-radius:8px;background:#fff;color:#1E3A5F;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit">+ 쓰기</button></div>'
+    + '<div style="padding:8px">' + rail(!_BBS.cat, '전체 공지', live.length, '')
+    + '<div style="font-size:11px;color:var(--text3);padding:10px 12px 4px">분류</div>'
+    + BCATS.map(([c,col]) => rail(_BBS.cat===c, c, cnt(c), col)).join('') + '</div></div>';
+  const item = ([id,p]) => '<div onclick="window.bbSel(\'' + id + '\')" style="padding:12px 14px;border-bottom:1px solid var(--border);cursor:pointer;display:flex;gap:10px;align-items:flex-start;' + (id===_BBS.sel?'background:#EEF4FC;box-shadow:inset 3px 0 0 #1E3A5F':(p.pinned?'background:#FFFBEB':'')) + '">'
+    + '<span style="color:#D97706;font-size:13px;width:12px">' + (p.pinned?'★':'') + '</span><div style="min-width:0;flex:1"><div style="display:flex;gap:8px;align-items:center">' + _catTag(p.cat) + '<b style="font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + _bdEsc(p.title) + '</b></div>'
+    + '<div style="font-size:11px;color:var(--text3);margin-top:4px">' + (_postSub(p) || _bdEsc(p.date||'')) + '</div></div></div>';
+  const midH = '<div style="background:#fff;border:1px solid var(--border);border-radius:12px;overflow:hidden;flex:0 0 360px;align-self:flex-start">'
+    + '<div style="display:flex;gap:8px;padding:10px;border-bottom:1px solid var(--border)"><input id="bb-q" value="' + _bdEsc(_BBS.q) + '" oninput="window.bbQ(this.value)" placeholder="제목 · 내용 · 장소 검색" style="flex:1;min-width:0;padding:7px 10px;border:1px solid var(--border);border-radius:8px;font-size:12px;background:var(--bg2);color:var(--text);font-family:inherit">'
+    + '<select onchange="window.bbF(this.value)" style="padding:6px;border:1px solid var(--border);border-radius:8px;font-size:12px;background:var(--bg2);color:var(--text)"><option value="live"' + (_BBS.f==='live'?' selected':'') + '>게시 중</option><option value="end"' + (_BBS.f==='end'?' selected':'') + '>종료</option><option value="all"' + (_BBS.f==='all'?' selected':'') + '>전체</option></select></div>'
+    + (list.length ? list.map(item).join('') : '<div style="padding:30px;text-align:center;color:var(--text3);font-size:13px">글이 없어요.</div>') + '</div>';
+  // 상세
+  let det = '<div style="padding:60px;text-align:center;color:var(--text3);font-size:13px">글을 선택해 주세요.</div>';
+  const p = _BBS.sel ? BPOST[_BBS.sel] : null;
+  if (p) {
+    const mem = _allMembers(), checks = p.checks || {};
+    const done = mem.filter(m => checks[m]), todo = mem.filter(m => !checks[m]);
+    let me = ''; try { me = localStorage.getItem('bdMe') || ''; } catch(e) {}
+    const sel = '<select id="bd-me" style="padding:6px 8px;border:1px solid var(--border);border-radius:7px;font-size:12px;background:var(--bg2);color:var(--text)"><option value="">내 이름 선택</option>' + TM_CFG.map(t => '<optgroup label="' + t.name + '">' + t.members.map(m => '<option value="' + m + '"' + (m===me?' selected':'') + '>' + m + '</option>').join('') + '</optgroup>').join('') + '</select>';
+    const sub = _postSub(p);
+    det = '<div style="border-top:4px solid #1E3A5F">'
+      + '<div style="padding:16px 20px 12px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">' + _catTag(p.cat)
+      + '<div style="display:flex;gap:6px"><button onclick="window.bdOpen(\'' + _BBS.sel + '\')" style="padding:4px 12px;border:1px solid var(--border);border-radius:7px;background:#fff;font-size:12px;cursor:pointer;font-family:inherit">수정</button><button id="bd-del" onclick="window.bdDel(\'' + _BBS.sel + '\')" style="padding:4px 12px;border:1px solid #FCA5A5;border-radius:7px;background:#fff;color:#DC2626;font-size:12px;cursor:pointer;font-family:inherit">삭제</button></div></div>'
+      + '<div style="font-size:19px;font-weight:700;color:var(--text)">' + (p.pinned?'<span style="color:#D97706">★ </span>':'') + _bdEsc(p.title) + '</div></div>'
+      + (sub ? '<div style="background:#EEF4FC;padding:9px 20px;font-size:13px;font-weight:600;color:#1E3A5F"><span style="background:#1E3A5F;color:#fff;font-size:11px;padding:1px 7px;border-radius:5px;margin-right:8px">일정</span>' + sub + '</div>' : '')
+      + '<div style="padding:12px 20px;font-size:11px;color:var(--text3);line-height:1.7;border-bottom:1px solid var(--border)"><b style="color:var(--text2)">작성</b> ' + _bdEsc(p.date||'') + (p.until?' &nbsp; <b style="color:var(--text2)">게시 기간</b> ' + _bdEsc(p.from||p.date||'') + ' ~ ' + _bdEsc(p.until):'') + '</div>'
+      + '<div style="padding:16px 20px;font-size:14px;line-height:1.9;white-space:pre-wrap;color:var(--text)">' + _bdEsc(p.body||'') + '</div>'
+      + '<div style="margin:0 20px 20px;background:#F5F7FB;border-radius:10px;padding:12px 14px"><div style="font-size:12px;font-weight:700;margin-bottom:6px">확인 ' + done.length + ' / ' + mem.length + '명</div>'
+      + '<div style="font-size:12px;color:var(--text2);line-height:1.7">확인 ' + (done.join(' · ')||'—') + '</div>'
+      + (todo.length ? '<div style="font-size:12px;color:#B45309;line-height:1.7">미확인 ' + todo.join(' · ') + '</div>' : '<div style="font-size:12px;font-weight:700;margin-top:4px">모두 확인했어요! 감사합니다</div>')
+      + '<div style="display:flex;gap:8px;align-items:center;margin-top:10px">' + sel + '<button onclick="window.bdCheck(\'' + _BBS.sel + '\')" style="padding:6px 14px;border-radius:7px;border:none;background:#1E3A5F;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">확인했어요</button><span id="bd-msg" style="font-size:12px;color:var(--text3)"></span></div></div></div>';
+  }
+  const detH = '<div style="background:#fff;border:1px solid var(--border);border-radius:12px;overflow:hidden;flex:1;min-width:0;align-self:flex-start">' + det + '</div>';
+  sc.innerHTML = '<div id="bb-body" style="display:flex;gap:14px;padding:4px 0 40px;align-items:flex-start">' + railH + midH + detH + '</div>';
+}
+window.bbCat = function(c) { _BBS.cat = (c === '전체 공지') ? '' : c; _BBS.sel = null; renderBoardPage(); };
+window.bbSel = function(id) { _BBS.sel = id; renderBoardPage(); };
+window.bbF = function(v) { _BBS.f = v; _BBS.sel = null; renderBoardPage(); };
+window.bbQ = function(v) { _BBS.q = v; _BBS.sel = null; renderBoardPage(); const e = document.getElementById('bb-q'); if (e) { e.focus(); e.setSelectionRange(v.length, v.length); } };
+window.bdGo = function(id) { _BBS.cat = ''; _BBS.q = ''; _BBS.f = 'all'; _BBS.sel = id; W._swClass(); };
+window.bdCheck = function(id) {
+  const me = document.getElementById('bd-me').value, msg = document.getElementById('bd-msg');
+  if (!me) { msg.textContent = '이름을 먼저 선택해 주세요'; msg.style.color = '#DC2626'; return; }
+  try { localStorage.setItem('bdMe', me); } catch(e) {}
+  const p = BPOST[id]; if (!p) return;
+  if (p.checks && p.checks[me]) { msg.textContent = me + ' 님은 이미 확인했어요'; return; }
+  p.checks = p.checks || {}; p.checks[me] = Date.now();
+  update(ref(db, 'bpost2025/' + id + '/checks'), {[me]: p.checks[me]});
+  renderBoardPage(); renderBoards();
+};
+function _bdModal(inner, w) {
+  window.bdClose();
+  const m = document.createElement('div');
+  m.id = 'bd-modal';
+  m.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:9999;display:flex;align-items:center;justify-content:center';
+  m.innerHTML = '<div style="background:var(--bg);border-radius:14px;padding:18px;width:' + (w||400) + 'px;max-width:92vw;max-height:90vh;overflow:auto;box-shadow:0 10px 40px rgba(0,0,0,.25)">' + inner + '</div>';
+  m.addEventListener('mousedown', e => { if (e.target === m) window.bdClose(); });
+  document.body.appendChild(m);
+}
+window.bdClose = function(){ const m = document.getElementById('bd-modal'); if (m) m.remove(); };
+window.bdOpen = function(id, presetCat) {
+  if (!_bdAuth()) return;
+  const x = id ? (BPOST[id] || null) : null;
+  if (id && !x) return;
+  const inp = 'width:100%;padding:7px 9px;border:1px solid var(--border);border-radius:7px;font-size:13px;background:var(--bg2);color:var(--text);box-sizing:border-box;font-family:inherit';
+  const lb = 'font-size:11px;color:var(--text3);display:block;margin:10px 0 3px';
+  const v = k => _bdEsc(x && x[k]);
+  const cat = x ? x.cat : (presetCat || _BBS.cat || '공지사항');
+  const h = '<div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:15px">' + (x?'글 수정':'글 쓰기') + '</b><span onclick="window.bdClose()" style="cursor:pointer;font-size:18px;color:var(--text3)">✕</span></div>'
+    + '<label style="' + lb + '">분류</label><select id="bd-cat" style="' + inp + '">' + BCATS.map(([c]) => '<option' + (c===cat?' selected':'') + '>' + c + '</option>').join('') + '</select>'
+    + '<label style="' + lb + '">제목</label><input id="bd-title" style="' + inp + '" value="' + v('title') + '">'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><div><label style="' + lb + '">일정 날짜 (개강일·행사일, 선택)</label><input id="bd-start" type="date" style="' + inp + '" value="' + v('start') + '"></div>'
+    + '<div><label style="' + lb + '">시간 (직접 입력)</label><input id="bd-time" style="' + inp + '" placeholder="예: 14:00" value="' + v('time') + '"></div></div>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><div><label style="' + lb + '">장소 (선택)</label><input id="bd-place" style="' + inp + '" value="' + v('place') + '"></div>'
+    + '<div><label style="' + lb + '">게시 종료일 (선택)</label><input id="bd-until" type="date" style="' + inp + '" value="' + v('until') + '"></div></div>'
+    + '<label style="' + lb + '">내용</label><textarea id="bd-body" rows="7" style="' + inp + ';resize:vertical">' + v('body') + '</textarea>'
+    + '<label style="display:flex;align-items:center;gap:6px;font-size:12px;margin-top:10px"><input id="bd-pin" type="checkbox"' + (x && x.pinned ? ' checked' : '') + '> 중요 글로 맨 위에 고정</label>'
+    + '<div id="bd-hint" style="font-size:11px;color:#DC2626;margin-top:6px;min-height:14px"></div>'
+    + '<div style="display:flex;justify-content:flex-end;gap:8px;margin-top:6px"><button onclick="window.bdClose()" style="padding:6px 14px;border-radius:7px;border:1px solid var(--border);background:var(--bg);font-size:12px;cursor:pointer;font-family:inherit">취소</button>'
+    + '<button onclick="window.bdSave(\'' + (id||'') + '\')" style="padding:6px 16px;border-radius:7px;border:none;background:#1E3A5F;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">저장</button></div>';
+  _bdModal(h, 460);
+};
+window.bdSave = function(id) {
+  const g = k => { const e = document.getElementById(k); return e ? (e.type === 'checkbox' ? e.checked : e.value.trim()) : ''; };
+  const hint = document.getElementById('bd-hint');
+  if (!g('bd-title')) { hint.textContent = '제목을 입력해 주세요'; return; }
+  let t = (g('bd-time') || '').replace(/[^0-9]/g, '');
+  if (t) { if (t.length <= 2) t = t.padStart(2,'0') + ':00'; else { t = t.padStart(4,'0'); t = t.slice(0,2) + ':' + t.slice(2,4); } }
+  const obj = {cat:g('bd-cat'), title:g('bd-title'), body:g('bd-body'), start:g('bd-start'), time:t, place:g('bd-place'), until:g('bd-until'), pinned:g('bd-pin')};
+  if (id) { Object.assign(BPOST[id], obj); update(ref(db, 'bpost2025/' + id), obj); _BBS.sel = id; }
+  else {
+    const nid = Math.random().toString(36).slice(2,10);
+    obj.ts = Date.now(); obj.date = todayStr(); obj.from = obj.date;
+    BPOST[nid] = obj; update(ref(db, 'bpost2025'), {[nid]: obj}); _BBS.sel = nid;
+  }
+  window.bdClose();
+  renderBoards(); if (document.getElementById('bb-body')) renderBoardPage();
+};
+window.bdDel = function(id) {
+  const b = document.getElementById('bd-del'); if (!b) return;
+  if (b.dataset.ok !== '1') { if (!_bdAuth()) return; b.dataset.ok = '1'; b.textContent = '정말 삭제'; b.style.background = '#DC2626'; b.style.color = '#fff'; return; }
+  delete BPOST[id]; remove(ref(db, 'bpost2025/' + id)); _BBS.sel = null;
+  renderBoards(); renderBoardPage();
+};
+function renderBoards() {
+  const box = document.getElementById('dash-bn'); if (!box) return;
+  const card = 'background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:14px;min-width:0';
+  const hd = (t, cat) => '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><b style="font-size:13px">' + t + '</b><span onclick="window.bbCat(\'' + cat + '\');W._swClass()" style="font-size:11px;color:var(--text3);cursor:pointer">전체 보기 ▸</span></div>';
+  const total = _allMembers().length, today = todayStr();
+  const live = _sortedPosts().filter(([,p]) => _isLive(p));
+  const ns = live.filter(([,p]) => p.cat === '공지사항').slice(0,5);
+  const rs = live.filter(([,p]) => p.cat === '모집' || p.cat === '국비');
+  const ss = live.filter(([,p]) => p.cat === '세미나' && (p.start||'') >= today).sort((a,b) => (a[1].start||'').localeCompare(b[1].start||'')).slice(0,5);
+  let h = '<div style="display:grid;grid-template-columns:minmax(0,1fr);gap:12px;margin-top:0">';
+  h += '<div style="' + card + ';grid-column:1/-1">' + hd('지점 공지사항', '공지사항');
+  if (!ns.length) h += '<div style="font-size:12px;color:var(--text3);padding:6px 0">등록된 공지가 없어요.</div>';
+  ns.forEach(([id,p]) => {
+    h += '<div onclick="window.bdGo(\'' + id + '\')" style="display:flex;align-items:center;gap:8px;padding:8px 2px;border-top:1px solid var(--border);cursor:pointer;font-size:13px">'
+      + '<span style="font-size:11px;padding:1px 8px;border-radius:9px;white-space:nowrap;background:' + (p.pinned?'#FEE2E2':'var(--bg2)') + ';color:' + (p.pinned?'#B91C1C':'var(--text2)') + '">' + (p.pinned?'중요':'공지') + '</span>'
+      + '<span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;' + (p.pinned?'font-weight:600':'') + '">' + _bdEsc(p.title) + '</span>'
+      + '<span style="font-size:11px;color:var(--text3);white-space:nowrap">확인 ' + Object.keys(p.checks||{}).length + '/' + total + '</span>'
+      + '<span style="font-size:11px;color:var(--text3);white-space:nowrap">' + _bdEsc((p.date||'').slice(5).replace('-','/')) + '</span></div>';
+  });
+  h += '</div>';
+  h += '</div>';
+  box.innerHTML = h;
+}
+
 function renderAllDashboard() {
   const mc = document.getElementById('mc');
   const today = new Date();
@@ -1019,7 +1357,7 @@ function renderAllDashboard() {
   });
 
   const diff = DAILY.thisYear - DAILY.prevYear;
-  let h = `${renderNoticeBar()}
+  let h = `<div class="dash-top"><div class="dash-left">
     <div class="stitle">오늘의 매출 현황</div>
     <div class="dw">
       <div class="dg">
@@ -1050,6 +1388,7 @@ function renderAllDashboard() {
         <div class="ksub">원</div>
       </div>
     </div>`;
+  h += '</div></div><div class="dash-right"><div id="dash-bn"></div><div id="dash-tp"></div></div></div><div class="kg-highlight-label">직원 현황 <span style="font-weight:400;font-size:11px;color:var(--text3)">· ' + _bizLabel() + '</span></div><div id="dash-staff" style="margin-bottom:18px"></div>';
 
 
   // ── 팀별 성과 (영업현황 BIZ 데이터 기준) ──
@@ -1065,7 +1404,8 @@ function renderAllDashboard() {
     }
     return {sales:0,inquiry:0,totalSales:0,refund:0,goal:0};
   };
-  h += `<div class="kg-highlight-label" style="margin-top:8px">팀별 성과 (당월 누계)</div>
+  const _tpStart = h.length;
+  h += `<div class="kg-highlight-label" style="margin-top:14px">팀별 성과 (당월 누계)</div>
     <div class="tp-grid">`;
 
   TM_CFG.forEach(t => {
@@ -1150,8 +1490,12 @@ function renderAllDashboard() {
   });
 
   h += `</div>`;
+  const _tpHtml = h.slice(_tpStart); h = h.slice(0, _tpStart);
+  h = h.replace('<div id="dash-tp"></div>', () => '<div id="dash-tp">' + _tpHtml + '</div>');
   h += `<div class="rtn">🟢 실시간 공유 중 — 누구든 입력하면 모든 접속자 화면에 즉시 반영됩니다</div>`;
   mc.innerHTML = h;
+  renderStaffTbl();
+  renderBoards();
 
   const fields = [['dp','prevYear'],['dt','thisYear'],['drf','refundAmt']];
   fields.forEach(([id,key]) => {
@@ -1387,6 +1731,7 @@ function updRvInp() {
 
 // ── 원장공지사항 ─────────────────────────────────────
 function renderNoticeBar() {
+  return '';
   const txt = NOTICE.text || '';
   return `<div class="notice-bar" id="notice-bar">
     <div class="notice-icon">📢</div>
@@ -1401,6 +1746,61 @@ function renderNoticeBar() {
 }
 
 // ── 미납 리스트 ───────────────────────────────────────
+// ── 미납 리스트: 필터 / 완납 처리 ──
+const _UNP = {team:'', mem:''};
+// 미납 건을 나중에 완납 처리한 경우(paidDate), 입금일이 속한 영업월 매출로 집계
+function _payIn(date, r) {
+  const d = (r.result === '완납' && r.paidDate) ? r.paidDate : date;
+  return d >= BIZ_PERIOD.s && d <= BIZ_PERIOD.e;
+}
+function _unpFilterBar(byTeam) {
+  const chip = (on, label, fn) => '<button onclick="' + fn + '" style="padding:4px 12px;border-radius:14px;border:1px solid ' + (on?'#1E3A5F':'var(--border)') + ';background:' + (on?'#1E3A5F':'var(--bg)') + ';color:' + (on?'#fff':'var(--text2)') + ';font-size:12px;cursor:pointer;font-family:inherit">' + label + '</button>';
+  const cntT = t => t.members.reduce((a,m) => a + ((byTeam[t.name]||{})[m]||[]).length, 0);
+  let h = '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:0 0 12px">'
+    + chip(!_UNP.team && !_UNP.mem, '전체', "window.unpF('','')")
+    + TM_CFG.map(t => chip(_UNP.team===t.name && !_UNP.mem, t.name + ' ' + cntT(t), "window.unpF('" + t.name + "','')")).join('');
+  const tm = _UNP.team ? TM_CFG.find(t => t.name === _UNP.team) : null;
+  const mems = tm ? tm.members : TM_CFG.flatMap(t => t.members);
+  h += '<span style="flex:1"></span><select onchange="window.unpM(this.value)" style="padding:5px 8px;border:1px solid var(--border);border-radius:8px;font-size:12px;background:var(--bg);color:var(--text)"><option value="">직원 선택</option>'
+    + mems.map(m => { const n = ((byTeam[(getTeam(m)||{}).name]||{})[m]||[]).length; return '<option value="' + m + '"' + (_UNP.mem===m?' selected':'') + '>' + m + ' (' + n + ')</option>'; }).join('') + '</select></div>';
+  return h;
+}
+window.unpF = function(team, mem) { _UNP.team = team; _UNP.mem = mem; showBiz(); };
+window.unpM = function(m) { _UNP.mem = m; const t = m ? getTeam(m) : null; _UNP.team = t ? t.name : _UNP.team; if (!m) _UNP.team = _UNP.team; showBiz(); };
+window.unpClose = function() { const m = document.getElementById('unp-modal'); if (m) m.remove(); };
+window.unpPay = function(date, rid) {
+  const r = (CONSULT[date]||{})[rid]; if (!r) return;
+  const def = r.expected ? Math.round(N(r.expected)/10000) : '';
+  const today = todayStr();
+  const m = document.createElement('div');
+  m.id = 'unp-modal';
+  m.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:9999;display:flex;align-items:center;justify-content:center';
+  m.innerHTML = '<div style="background:var(--bg);border-radius:14px;padding:18px;width:360px;max-width:92vw;box-shadow:0 10px 40px rgba(0,0,0,.25)">'
+    + '<div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:15px">완납 처리</b><span onclick="window.unpClose()" style="cursor:pointer;font-size:18px;color:var(--text3)">✕</span></div>'
+    + '<div style="font-size:13px;margin:10px 0 4px"><b>' + _bdEsc(r.student||'-') + '</b> · ' + _bdEsc(r.subject||'-') + ' · ' + _bdEsc(r.mentor||'') + '</div>'
+    + '<div style="font-size:11px;color:var(--text3)">상담일 ' + date + (r.expected ? ' · 미납 예정액 ' + F(N(r.expected)) + '원' : '') + '</div>'
+    + '<label style="font-size:11px;color:var(--text3);display:block;margin:12px 0 3px">입금액 (만원)</label>'
+    + '<input id="unp-amt" value="' + def + '" inputmode="decimal" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:14px;background:var(--bg2);color:var(--text);box-sizing:border-box;font-family:inherit">'
+    + '<label style="font-size:11px;color:var(--text3);display:block;margin:10px 0 3px">입금일</label>'
+    + '<input id="unp-date" type="date" value="' + today + '" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;background:var(--bg2);color:var(--text);box-sizing:border-box;font-family:inherit">'
+    + '<div style="font-size:11px;color:var(--text3);margin-top:10px;line-height:1.6">저장하면 상담 내역 결과가 "완납"으로 바뀌고, 입금일이 속한 영업월의 매출·등록으로 잡혀요. 이 건은 미납 리스트에서 빠져요.</div>'
+    + '<div id="unp-hint" style="font-size:11px;color:#DC2626;min-height:14px;margin-top:4px"></div>'
+    + '<div style="display:flex;justify-content:flex-end;gap:8px"><button onclick="window.unpClose()" style="padding:6px 14px;border-radius:7px;border:1px solid var(--border);background:var(--bg);font-size:12px;cursor:pointer;font-family:inherit">취소</button>'
+    + '<button onclick="window.unpSave(\'' + date + '\',\'' + rid + '\')" style="padding:6px 16px;border-radius:7px;border:none;background:#1E3A5F;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">완납 처리</button></div></div>';
+  m.addEventListener('mousedown', e => { if (e.target === m) window.unpClose(); });
+  document.body.appendChild(m);
+};
+window.unpSave = function(date, rid) {
+  const r = (CONSULT[date]||{})[rid]; if (!r) return;
+  const v = parseFloat((document.getElementById('unp-amt').value||'').replace(/[^0-9.]/g,''));
+  if (!v || v <= 0) { document.getElementById('unp-hint').textContent = '입금액을 입력해 주세요'; return; }
+  const upd = {result:'완납', paid:String(Math.round(v*10000)), paidDate:document.getElementById('unp-date').value || todayStr()};
+  Object.assign(r, upd);
+  update(ref(db, 'consult2025/' + date + '/' + rid), upd);
+  window.unpClose();
+  showBiz();
+};
+
 function renderUnpaidList() {
   const unpaidByTeam = {};
   TM_CFG.forEach(t => { unpaidByTeam[t.name] = {}; t.members.forEach(m => { unpaidByTeam[t.name][m] = []; }); });
@@ -1430,6 +1830,7 @@ function renderUnpaidList() {
 
   let h = `<div class="addlist-wrap">
     <div class="stitle" style="margin-bottom:10px">💰 미납 리스트 <span style="font-size:11px;font-weight:400;color:var(--text3)">(상담내역 결과 '미납' 자동집계)</span></div>`;
+  h += _unpFilterBar(unpaidByTeam);
 
   const fmtDate = d => {
     const dt = new Date(d);
@@ -1438,7 +1839,8 @@ function renderUnpaidList() {
 
   let hasAny = false;
   TM_CFG.forEach(t => {
-    const teamItems = t.members.flatMap(m => unpaidByTeam[t.name][m]||[]);
+    if (_UNP.team && _UNP.team !== t.name) return;
+    const teamItems = t.members.filter(m => !_UNP.mem || _UNP.mem === m).flatMap(m => unpaidByTeam[t.name][m]||[]);
     if (!teamItems.length) return;
     hasAny = true;
     h += `<div class="unpaid-team-block"><div class="unpaid-team-hdr" style="background:${t.color}">
@@ -1451,13 +1853,15 @@ function renderUnpaidList() {
         <th style="width:72px">과목</th>
         <th style="width:56px">날짜</th>
         <th style="width:84px">예정금액</th>
-        <th style="width:180px">비고</th>
+        <th style="width:340px">비고</th>
         <th>📝 피드백</th>
+        <th style="width:74px;text-align:center">처리</th>
       </tr></thead><tbody>`;
     t.members.forEach(m => {
+      if (_UNP.mem && _UNP.mem !== m) return;
       const items = unpaidByTeam[t.name][m]||[];
       if (!items.length) return;
-      h += `<tr class="member-row"><td colspan="7">${m} (${items.length}건)</td></tr>`;
+      h += `<tr class="member-row"><td colspan="8">${m} (${items.length}건)</td></tr>`;
       items.forEach(({date, rid, r}) => {
         const fbKey = `${date}_${rid}`;
         const fb = FEEDBACK[fbKey] || '';
@@ -1467,7 +1871,7 @@ function renderUnpaidList() {
           <td>${r.subject||'-'}</td>
           <td style="font-family:'Roboto',monospace;font-size:11px">${fmtDate(date)}</td>
           <td style="text-align:right;font-family:'Roboto',monospace;color:var(--gold);font-weight:700">${r.expected?F(N(r.expected)):'-'}</td>
-          <td style="color:var(--text2);font-size:11px;line-height:1.5;word-break:keep-all;overflow-wrap:break-word">${r.note||''}</td>
+          <td title="${(r.note||'').replace(/"/g,'&quot;')}" style="color:var(--text2);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.note||''}</td>
           <td>
             <input class="unpaid-fb-inp" value="${fb.replace(/"/g,'&quot;')}" placeholder="피드백 입력..."
               data-key="${fbKey}"
@@ -1475,20 +1879,60 @@ function renderUnpaidList() {
               onblur="W._saveFb('${fbKey}',this.value)"
               style="width:100%;padding:4px 7px;border:1px solid transparent;border-radius:5px;font-size:12px;font-family:'Noto Sans KR',sans-serif;background:${fb?'#FFFDE7':'transparent'};color:var(--text);min-width:120px">
           </td>
+          <td style="text-align:center">${isPast ? '' : `<button onclick="window.unpPay('${date}','${rid}')" style="padding:4px 10px;border-radius:6px;border:1px solid #1E3A5F;background:#fff;color:#1E3A5F;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">완납 처리</button>`}</td>
         </tr>`;
       });
     });
     h += `</tbody></table></div>`;
   });
 
-  if (!hasAny) h += `<div style="text-align:center;padding:32px;color:var(--text3);font-size:13px">미납 항목이 없습니다 ✅</div>`;
+  if (!hasAny) h += `<div style="text-align:center;padding:32px;color:var(--text3);font-size:13px">${(_UNP.team||_UNP.mem) ? '선택한 조건에 맞는 미납 항목이 없어요' : '미납 항목이 없습니다 ✅'}</div>`;
   h += `</div>`;
   return h;
 }
 
 // ── 추가 리스트 ───────────────────────────────────────
+// ── 추가 리스트 ↔ 상담 내역(추가면담) 연동 ──
+function _alSync(date, cid, r) {
+  const aid = 'c_' + date + '_' + cid;
+  if (!r || r.kind !== '추가면담' || r.result === '취소') {
+    if (ADDLIST[aid]) { delete ADDLIST[aid]; remove(ref(db, 'addlist2025/' + aid)); }
+    return;
+  }
+  const t = getTeam(r.mentor);
+  const amt = r.result === '완납' ? r.paid : r.expected;
+  const f = {team: t ? t.name : '', mentor: r.mentor || '', student: r.student || '', subject: r.subject || '', interviewDate: date,
+    expectedAmount: amt || '', status: r.result === '완납' ? '완납' : (r.result === '미납' ? '미납' : '진행중'), consultKey: date + '/' + cid};
+  if (!ADDLIST[aid]) { f.createdDate = date; f.note = ''; }
+  ADDLIST[aid] = Object.assign(ADDLIST[aid] || {}, f);
+  update(ref(db, 'addlist2025/' + aid), f);
+  if (cw === 99 && bst === '추가리스트' && !window._alEditing) showBiz();
+}
+function _alToConsult(id, field) {
+  const a = ADDLIST[id]; if (!a || !a.consultKey || (field !== 'status' && field !== 'expectedAmount')) return;
+  const [date, cid] = a.consultKey.split('/');
+  const r = (CONSULT[date] || {})[cid]; if (!r) return;
+  const amt = String(N(a.expectedAmount) || '');
+  const st = a.status || '진행중';
+  const upd = {};
+  if (st === '완납') { upd.result = '완납'; upd.paid = amt; if (!r.paidDate) upd.paidDate = todayStr(); }
+  else if (st === '미납') { upd.result = '미납'; upd.expected = amt; }
+  else { upd.result = ''; upd.expected = amt; }
+  Object.assign(r, upd);
+  update(ref(db, 'consult2025/' + date + '/' + cid), upd);
+}
+
+function _alDate(r) { return r.createdDate || r.interviewDate || ''; }
 function renderAddListTab() {
-  const allRows = Object.entries(ADDLIST).sort(([a],[b])=>a.localeCompare(b));
+  const _today = todayStr();
+  const _isCur = BIZ_PERIOD.s <= _today && _today <= BIZ_PERIOD.e;
+  const allRows = Object.entries(ADDLIST).filter(([,r]) => {
+    const d = _alDate(r);
+    if (d >= BIZ_PERIOD.s && d <= BIZ_PERIOD.e) return true;
+    if (!_isCur) return false;
+    if (!d) return true;                                   // 날짜 없는 예전 항목은 현재 영업월에 표시
+    return d < BIZ_PERIOD.s && (r.status || '진행중') === '진행중';   // 이전 영업월의 진행중 건은 이월
+  }).sort(([a],[b])=>a.localeCompare(b));
 
   const renderRow = (id, row) => {
     const st = row.status || '진행중';
@@ -1636,6 +2080,12 @@ function renderAddListTab() {
 }
 
 // ── 상담 집계 ─────────────────────────────────────────
+// 상담 건수 기준: 취소 제외, 결과가 없는(대기) 건은 지난 날짜면 제외
+function _isSang(date, r) {
+  if (r.status !== '상담' || r.result === '취소') return false;
+  if (!r.result && date < todayStr()) return false;
+  return true;
+}
 function calcMS() {
   const ms = {};
   TM_CFG.forEach(t => t.members.forEach(m => {
@@ -1645,21 +2095,30 @@ function calcMS() {
   if (window._bizIsFuture) return ms;
   // BIZ_PERIOD 범위 안의 날짜만 집계
   Object.entries(CONSULT).forEach(([date, day]) => {
-    if (date < BIZ_PERIOD.s || date > BIZ_PERIOD.e) return;
+    const dIn = date >= BIZ_PERIOD.s && date <= BIZ_PERIOD.e;
     Object.values(day||{}).forEach(r => {
       const m = r.mentor; if (!ms[m]) return;
-      if (r.status === '상담') ms[m].상담++;
-      if (r.result === '완납') { ms[m].완납 += N(r.paid); ms[m].등록++; }
-      if (r.result === '미납') { ms[m].미납 += N(r.expected); ms[m].미등록++; }
-      if (r.result === '미등록회수') { ms[m].완납 += N(r.paid); ms[m].등록++; }
-      if (r.result === '취소') ms[m].취소++;
-      if (r.result === 'COD') { ms[m].완납 += N(r.paid); ms[m].등록++; ms[m].COD++; }
+      const pIn = _payIn(date, r);
+      if (!dIn && !pIn) return;
+      const _isM = r.kind==='관리면담' || r.kind==='추가면담';
+      if (dIn && !_isM && _isSang(date, r)) ms[m].상담++;
+      if (pIn && r.result === '완납') { ms[m].완납 += N(r.paid); if (!_isM) ms[m].등록++; }
+      if (dIn && r.result === '미납') { ms[m].미납 += N(r.expected); if (!_isM) ms[m].미등록++; }
+      if (pIn && r.result === '미등록회수') { ms[m].완납 += N(r.paid); ms[m].등록++; }
+      if (dIn && r.result === '취소' && !_isM) ms[m].취소++;
+      if (pIn && r.result === 'COD') { ms[m].완납 += N(r.paid); ms[m].등록++; ms[m].COD++; }
     });
   });
   return ms;
 }
 
 // ── 영업 탭 ──────────────────────────────────────────
+
+function _bizLabel() {
+  const sc = (BIZ_SCHEDULE_ALL || []).find(x => x.start === BIZ_PERIOD.s);
+  const lbl = (sc && sc.label) || ((new Date(BIZ_PERIOD.s + 'T00:00:00')).getMonth() + 1) + '월';
+  return lbl + ' 영업 · ' + BIZ_PERIOD.s + ' ~ ' + BIZ_PERIOD.e;
+}
 
 function makeBizMonthNav() {
   const bizStart = new Date(BIZ_PERIOD.s+'T00:00:00');
@@ -1749,16 +2208,20 @@ function showBiz() {
   document.getElementById('dc').style.display = 'none';
   const nav = `<div class="bsn">
     <button class="bst${bst==='요약'?' on':''}" onclick="W._bst('요약')">영업 데이터</button>
-    <button class="bst${bst==='상담내역'?' on':''}" onclick="W._bst('상담내역')">상담 내역</button>
+    <button class="bst${(bst==='상담캘린더'||bst==='상담내역')?' on':''}" onclick="W._bst('상담캘린더')">상담 내역</button>
     <button class="bst${bst==='미납리스트'?' on':''}" onclick="W._bst('미납리스트')">미납 리스트</button>
     <button class="bst${bst==='추가리스트'?' on':''}" onclick="W._bst('추가리스트')">추가 리스트</button>
   </div>`;
 
   const monthNav = makeBizMonthNav();
 
+  if (bst === '상담캘린더') {
+    document.getElementById('bc').innerHTML = nav + renderCalTab();
+    return;
+  }
   if (bst === '상담내역') {
     const prevKw = document.getElementById('consult-search')?.value || '';
-    document.getElementById('bc').innerHTML = nav + monthNav + renderConsult(prevKw);
+    document.getElementById('bc').innerHTML = nav + monthNav + cvViewBar('상담내역') + renderConsult(prevKw);
     return;
   }
   if (bst === '미납리스트') {
@@ -1766,7 +2229,7 @@ function showBiz() {
     return;
   }
   if (bst === '추가리스트') {
-    document.getElementById('bc').innerHTML = nav + renderAddListTab();
+    document.getElementById('bc').innerHTML = nav + makeBizMonthNav() + renderAddListTab();
     return;
   }
 
@@ -1881,6 +2344,7 @@ function showBiz() {
     h += `<div class="rtn">🟢 영업 실적 실시간 저장 · 상담/등록/미등록은 상담내역에서 자동 집계</div>`;
   }
   document.getElementById('bc').innerHTML = h;
+  renderPerfBox();
   } catch(e) {
     document.getElementById('bc').style.display='';
     document.getElementById('bc').innerHTML = `<div style="color:red;padding:20px;font-weight:700;background:#FEF2F2;border-radius:8px;margin:20px">영업현황 오류: ${e.message}<br><pre style="font-size:11px;font-weight:400;white-space:pre-wrap">${e.stack}</pre></div>`;
@@ -1928,6 +2392,359 @@ function updBizKPI() {
 }
 
 // ── 상담 내역 탭 ─────────────────────────────────────
+// ── 상담 캘린더 (팀별 줄 × 날짜 칸, 직접 입력) ──
+const _CV = {ws:null, open:{}, closed:{}};
+function _cvFmt(dt){ return dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0'); }
+function _cvAddDays(d,n){ const dt=new Date(d+'T00:00:00'); dt.setDate(dt.getDate()+n); return _cvFmt(dt); }
+function _cvMonday(d){ const dt=new Date(d+'T00:00:00'); dt.setDate(dt.getDate()-((dt.getDay()+6)%7)); return _cvFmt(dt); }
+function _cvMan(v){ const n=N(v); return n? (Math.round(n/10000*10)/10)+'만' : ''; }
+function _cvBizOf(m){
+  let bd = null;
+  const t = getTeam(m);
+  if (t && BIZ[t.name] && BIZ[t.name][m]) bd = BIZ[t.name][m];
+  if (!bd) { for (const k of Object.keys(BIZ)) { if (BIZ[k] && BIZ[k][m]) { bd = BIZ[k][m]; break; } } }
+  return bd || {};
+}
+function cvViewBar(cur){
+  const b = (k,l) => '<button class="bst' + (cur===k?' on':'') + '" onclick="W._bst(\'' + k + '\')">' + l + '</button>';
+  return '<div style="display:flex;gap:6px;align-items:center;margin-bottom:10px;flex-wrap:wrap"><span style="font-size:12px;color:var(--text3)">보기</span>' + b('상담캘린더','달력') + b('상담내역','표 (검색·합계)')
+    + '<div style="margin-left:auto;display:flex;gap:14px;align-items:center;flex-wrap:wrap;font-size:11.5px;color:var(--text2);background:#F5F7FB;border-radius:8px;padding:6px 12px">'
+    + '<span style="display:inline-flex;align-items:center;gap:5px"><i style="font-style:normal;width:16px;height:16px;border-radius:50%;background:#1E3A5F;color:#fff;font-size:10px;line-height:16px;text-align:center">1</i>날짜 칸의 + 추가로 상담 예정 입력</span>'
+    + '<span style="display:inline-flex;align-items:center;gap:5px"><i style="font-style:normal;width:16px;height:16px;border-radius:50%;background:#1E3A5F;color:#fff;font-size:10px;line-height:16px;text-align:center">2</i>상담 후 카드를 눌러 결과 선택</span>'
+    + '<span style="display:inline-flex;align-items:center;gap:5px"><i style="font-style:normal;width:16px;height:16px;border-radius:50%;background:#1E3A5F;color:#fff;font-size:10px;line-height:16px;text-align:center">3</i>면담은 구분에서 관리면담 · 추가면담 선택</span>'
+    + '<span style="color:#B45309">결과를 넣어야 건수·매출에 반영돼요</span></div></div>';
+}
+function renderCalTab() {
+  if (!_CV.ws) _CV.ws = _cvMonday(todayStr());
+  const today = todayStr();
+  const days = []; for (let i=0;i<7;i++) days.push(_cvAddDays(_CV.ws,i));
+  const wd = ['월','화','수','목','금','토','일'];
+  let h = cvViewBar('상담캘린더') + '<div style="display:flex;gap:6px;align-items:center;margin-bottom:10px;flex-wrap:wrap">'
+    + '<button class="bst" onclick="window.cvNav(-7)">◀</button>'
+    + '<button class="bst" onclick="window.cvNav(0)">오늘</button>'
+    + '<button class="bst" onclick="window.cvNav(7)">▶</button>'
+    + '<span style="font-size:12px;color:var(--text3);margin-left:6px">' + days[0].slice(5).replace('-','/') + ' ~ ' + days[6].slice(5).replace('-','/') + ' · 칸의 + 로 상담예정을 추가하고, 카드를 눌러 결과를 처리해요</span></div>';
+  h += '<div style="overflow-x:auto"><div style="min-width:900px;display:grid;grid-template-columns:150px repeat(7,minmax(0,1fr));gap:6px;font-size:12px">';
+  h += '<div></div>';
+  days.forEach((d,i) => {
+    const isT = d === today;
+    const bg = isT ? 'background:#1E3A5F;color:#fff' : (i===5?'background:#EFF6FF;color:#1D4ED8':(i===6?'background:#FEF2F2;color:#DC2626':'background:var(--bg2);color:var(--text2)'));
+    h += '<div style="padding:6px 8px;border-radius:8px;font-weight:700;' + bg + '">' + d.slice(5).replace('-','/') + ' (' + wd[i] + ')' + (isT?' · 오늘':'') + '</div>';
+  });
+  TM_CFG.forEach(t => {
+    const mem = t.members;
+    const leader = mem.find(m => /팀장|부장/.test((window._MR||{})[m]||'')) || mem[0];
+    let net = 0; mem.forEach(m => { const bd=_cvBizOf(m); net += (bd.totalSales||0)-(bd.refund||0); });
+    let wk = 0;
+    days.forEach(d => Object.values(CONSULT[d]||{}).forEach(r => { if (mem.includes(r.mentor) && !r.result) wk++; }));
+    h += '<div style="border:1px solid var(--border);border-radius:10px;padding:8px;background:var(--bg)">'
+      + '<span style="display:inline-block;padding:1px 9px;border-radius:10px;color:#fff;font-weight:700;font-size:11px;background:' + t.color + '">' + t.name + '</span>'
+      + '<div style="margin:6px 0 4px;font-weight:700;line-height:1.6">' + mem.map(m => '<div>' + MRT(m) + '</div>').join('') + '</div>'
+      + '<div style="font-size:11px;color:var(--text3)">팀 순매출 ' + F(Math.round(net/10000)) + '만</div>'
+      + '<div style="font-size:11px;color:var(--text3)">이번 주 결과 대기 ' + wk + '건</div></div>';
+    days.forEach((d,i) => {
+      const rows = Object.entries(CONSULT[d]||{}).filter(([,r]) => mem.includes(r.mentor))
+        .sort((a,b) => (a[1].time||'99:99').localeCompare(b[1].time||'99:99'));
+      const isPast = d < today;
+      const key = t.name + '|' + d;
+      const open = !!_CV.open[key];
+      const closed = !!_CV.closed[key];
+      let wan=0, cod=0, mi=0, cancel=0, wait=0, sales=0, exp=0, mt=0, sg=0;
+      rows.forEach(([,r]) => {
+        const isM = r.kind==='관리면담' || r.kind==='추가면담';
+        if (isM) {
+          if (r.result==='면담완료'||r.result==='완납'||r.result==='미납') mt++;
+          if (r.result==='취소') cancel++;
+          else if (!r.result) { wait++; exp += N(r.expected); }
+        } else {
+          sg++;
+          if (r.result==='완납'||r.result==='추가'||r.result==='미등록회수') wan++;
+          else if (r.result==='COD') cod++;
+          else if (r.result==='미납') mi++;
+          else if (r.result==='취소') cancel++;
+          else { wait++; exp += N(r.expected); }
+        }
+        if (r.result && r.result!=='미납' && r.result!=='취소' && r.result!=='면담완료') sales += N(r.paid);
+      });
+      const bgc = i===5 ? 'background:#F5F9FF' : (i===6 ? 'background:#FFF7F7' : 'background:var(--bg)');
+      const isT = d === today;
+      let c = '<div style="border:' + (isT?'2px solid #1E3A5F':'1px solid var(--border)') + ';border-radius:10px;padding:5px;min-height:96px;' + (isPast?'background:var(--bg2)':bgc) + '">';
+      const addBtn = '<button onclick="window.cvEdit(\'' + d + '\',\'' + t.name + '\',\'\')" style="width:100%;border:1px dashed var(--border);border-radius:6px;background:none;color:var(--text3);font-size:11px;padding:2px;cursor:pointer;margin-top:3px">+ 추가</button>';
+      const card = ([rid,r]) => {
+        let bg='var(--bg)', bd='var(--border)', col='var(--text)', deco='';
+        if (r.result==='완납'||r.result==='추가'||r.result==='미등록회수') { bg='#FEF9C3'; bd='#FDE047'; }
+        else if (r.result==='COD') { bg='#EFF6FF'; bd='#93C5FD'; }
+        else if (r.result==='미납') { bg='#FEE2E2'; bd='#FCA5A5'; }
+        else if (r.result==='취소') { bg='#E5E7EB'; bd='#D1D5DB'; col='#6B7280'; deco='text-decoration:line-through;'; }
+        else if (r.result==='면담완료') { bg='#F5F3FF'; bd='#C4B5FD'; }
+        const isAdd = r.kind==='추가면담', isMng = r.kind==='관리면담';
+        const amt = isMng ? '' : ((r.result==='미납') ? _cvMan(r.expected) : (r.result ? _cvMan(r.paid) : _cvMan(r.expected)));
+        let tag = r.result==='미납' ? '미등록' : (r.result==='면담완료' ? '완료' : (r.result==='완납' && isAdd ? '추가등록' : (r.result || '')));
+        const kt = isMng ? '<span style="font-size:10px;padding:0 5px;border-radius:8px;background:#EDE9FE;color:#6D28D9;margin-right:3px">면담</span>' : (isAdd ? '<span style="font-size:10px;padding:0 5px;border-radius:8px;background:#CCFBF1;color:#0F766E;margin-right:3px">추가면담</span>' : '');
+        return '<div onclick="window.cvEdit(\'' + d + '\',\'' + t.name + '\',\'' + rid + '\')" style="border:1px solid ' + bd + ';background:' + bg + ';color:' + col + ';' + deco + 'border-radius:6px;padding:3px 6px;margin-bottom:3px;cursor:pointer;line-height:1.4;font-size:11px">'
+          + '<div>' + kt + '<b>' + (r.time?r.time+' ':'') + (r.subject||'') + '</b>' + (tag?' <span style="font-size:10px;opacity:.8">' + tag + '</span>':'') + '</div>'
+          + '<div>' + (r.mentor||'') + ' · <b>' + (r.student||'(이름없음)') + '</b>' + (amt?' ' + amt:'') + '</div></div>';
+      };
+      if (isPast && closed) {
+        if (rows.length) {
+          c += '<div onclick="window.cvToggle(\'' + key + '\')" style="cursor:pointer"><div style="font-size:15px;font-weight:700;color:' + (sales?'#15803D':'var(--text3)') + '">' + (sales?F(Math.round(sales/10000))+'만':'—') + '</div>'
+            + '<div style="font-size:11px;color:var(--text2)">상담 ' + sg + (mt?' · 면담 '+mt:'') + (wan+cod?' · 등록 '+(wan+cod):'') + (mi?' · 미등록 '+mi:'') + (wait?' · <span style="color:#B45309">대기 '+wait+'</span>':'') + '</div>'
+            + (cancel?'<div style="font-size:11px;color:var(--text3)">취소 ' + cancel + '건</div>':'')
+            + '<div style="font-size:11px;color:var(--text3);margin-top:3px">펼치기 ▸</div></div>';
+        }
+        c += addBtn;
+      } else {
+        const LIM = isPast ? 999 : 4;
+        const show = (open || rows.length <= LIM) ? rows : rows.slice(0,LIM);
+        c += show.map(card).join('');
+        if (!open && rows.length > LIM) c += '<div onclick="window.cvToggle(\'' + key + '\')" style="font-size:11px;color:var(--text3);cursor:pointer;text-align:center;padding:2px">+' + (rows.length-LIM) + '건 더보기</div>';
+        if (isPast && rows.length > 0) c += '<div onclick="window.cvToggle(\'' + key + '\')" style="font-size:11px;color:var(--text3);cursor:pointer;text-align:center;padding:2px">접기 ▴</div>';
+        else if (open && rows.length > 0) c += '<div onclick="window.cvToggle(\'' + key + '\')" style="font-size:11px;color:var(--text3);cursor:pointer;text-align:center;padding:2px">접기 ▴</div>';
+        if (!isPast && exp>0) c += '<div style="font-size:11px;color:var(--text3);text-align:right;margin-top:2px">예정 ' + F(Math.round(exp/10000)) + '만</div>';
+        c += addBtn;
+      }
+      c += '</div>';
+      h += c;
+    });
+  });
+  h += '</div></div>';
+  h += '<div style="font-size:11px;color:var(--text3);margin-top:8px">상담내역과 같은 데이터예요 · 미등록으로 처리하면 미납 리스트에 자동으로 들어가요 · 금액은 만원 단위로 입력해요</div>';
+  return h;
+}
+window.cvNav = function(n){ _CV.ws = n===0 ? _cvMonday(todayStr()) : _cvAddDays(_CV.ws,n); showBiz(); };
+window.cvToggle = function(k){ const d = k.split('|')[1]; if (d < todayStr()) _CV.closed[k] = !_CV.closed[k]; else _CV.open[k] = !_CV.open[k]; showBiz(); };
+window.cvClose = function(){ const m=document.getElementById('cv-modal'); if(m) m.remove(); };
+window.cvEdit = function(date, team, rid){
+  window.cvClose();
+  const t = TM_CFG.find(x=>x.name===team); if(!t) return;
+  const r = rid ? ((CONSULT[date]||{})[rid]||null) : null;
+  if (rid && !r) return;
+  const kind0 = r ? (r.kind||'') : '';
+  let cur = '';
+  if (r && r.result) {
+    if (r.result==='면담완료') cur='면담완료';
+    else if (r.result==='미납') cur='미납';
+    else if (r.result==='COD') cur='COD';
+    else if (r.result==='취소') cur='취소';
+    else cur='완납';
+  }
+  const amt0 = r ? (cur==='미납' ? N(r.expected) : (cur && cur!=='면담완료' ? (N(r.paid)||N(r.expected)) : N(r.expected))) : 0;
+  const q = v => String(v||'').replace(/"/g,'&quot;');
+  const inp = 'width:100%;padding:7px 9px;border:1px solid var(--border);border-radius:7px;font-size:13px;background:var(--bg2);color:var(--text);box-sizing:border-box';
+  const lb = 'font-size:11px;color:var(--text3);display:block;margin:8px 0 3px';
+  let h = '<div style="background:var(--bg);border-radius:14px;padding:18px;width:360px;max-width:92vw;max-height:90vh;overflow:auto;box-shadow:0 10px 40px rgba(0,0,0,.25)">'
+    + '<div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:15px">' + (r?'상담 결과 · 수정':'상담 추가') + '</b><span onclick="window.cvClose()" style="cursor:pointer;font-size:18px;color:var(--text3)">✕</span></div>'
+    + '<div style="font-size:12px;color:var(--text3);margin-top:2px">' + team + ' · ' + date.slice(5).replace('-','/') + '</div>'
+    + '<label style="' + lb + '">구분</label><div id="cv-kd" data-v="' + kind0 + '" style="display:flex;gap:6px;flex-wrap:wrap"></div>'
+    + '<label style="' + lb + '">담당 직원</label><select id="cv-mentor" style="' + inp + '">' + t.members.map(m=>'<option value="' + m + '"' + (r&&r.mentor===m?' selected':'') + '>' + m + '</option>').join('') + '</select>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><div><label style="' + lb + '">학생 이름</label><input id="cv-student" style="' + inp + '" value="' + q(r&&r.student) + '"></div>'
+    + '<div><label style="' + lb + '">과정</label><input id="cv-subject" style="' + inp + '" value="' + q(r&&r.subject) + '"></div></div>'
+    + '<label style="' + lb + '">시간 (선택, 직접 입력)</label><input id="cv-time" type="text" inputmode="numeric" maxlength="5" placeholder="예: 14:00 또는 1400" style="' + inp + '" value="' + q(r&&r.time) + '">'
+    + '<label style="' + lb + '">결과</label><div id="cv-res" style="display:flex;gap:6px;flex-wrap:wrap" data-v="' + cur + '"></div>'
+    + '<div id="cv-amtbox"><label id="cv-amtlb" style="' + lb + '">예정금액 (만원)</label><input id="cv-amt" type="text" inputmode="numeric" style="' + inp + '" value="' + (amt0?Math.round(amt0/10000*10)/10:'') + '"></div>'
+    + '<label style="' + lb + '">메모 (선택)</label><textarea id="cv-note" rows="2" style="' + inp + ';resize:vertical" placeholder="면담 내용, 특이사항 등">' + String((r&&r.note)||'').replace(/</g,'&lt;') + '</textarea>'
+    + '<div id="cv-hint" style="font-size:11px;color:var(--text3);margin-top:6px"></div>'
+    + '<div style="display:flex;gap:8px;justify-content:space-between;margin-top:14px">'
+    + (r ? '<button id="cv-del" onclick="window.cvDel(\'' + date + '\',\'' + rid + '\')" style="padding:7px 12px;border-radius:7px;border:1px solid #FCA5A5;background:#fff;color:#DC2626;font-size:12px;cursor:pointer">삭제</button>' : '<span></span>')
+    + '<div style="display:flex;gap:8px"><button onclick="window.cvClose()" style="padding:7px 14px;border-radius:7px;border:1px solid var(--border);background:var(--bg);font-size:12px;cursor:pointer">취소</button>'
+    + '<button onclick="window.cvSave(\'' + date + '\',\'' + rid + '\')" style="padding:7px 16px;border-radius:7px;border:none;background:#1E3A5F;color:#fff;font-size:12px;font-weight:700;cursor:pointer">저장</button></div></div></div>';
+  const m = document.createElement('div');
+  m.id = 'cv-modal';
+  m.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:9999;display:flex;align-items:center;justify-content:center';
+  m.innerHTML = h;
+  m.addEventListener('mousedown', e => { if (e.target === m) window.cvClose(); });
+  document.body.appendChild(m);
+  window.cvKind(kind0, true);
+};
+window.cvKind = function(k, keep){
+  const kd = document.getElementById('cv-kd'); if(!kd) return;
+  kd.dataset.v = k;
+  const opts = [['','신규 상담'],['관리면담','관리 면담'],['추가면담','추가등록 면담']];
+  kd.innerHTML = opts.map(o => {
+    const on = o[0]===k;
+    return '<button onclick="window.cvKind(\'' + o[0] + '\')" style="padding:5px 12px;border-radius:16px;font-size:12px;cursor:pointer;border:1px solid ' + (on?'#1E3A5F':'var(--border)') + ';background:' + (on?'#1E3A5F':'var(--bg)') + ';color:' + (on?'#fff':'var(--text2)') + '">' + o[1] + '</button>';
+  }).join('');
+  const rs = document.getElementById('cv-res');
+  window.cvPick(keep ? (rs.dataset.v||'') : '');
+};
+window.cvPick = function(v){
+  const box = document.getElementById('cv-res'); if(!box) return;
+  const k = document.getElementById('cv-kd').dataset.v || '';
+  const sets = {
+    '': [['','대기'],['완납','완납'],['COD','COD'],['미납','미등록'],['취소','취소']],
+    '관리면담': [['','대기'],['면담완료','면담 완료']],
+    '추가면담': [['','대기'],['완납','추가등록'],['미납','미등록'],['취소','취소']]
+  };
+  const opts = sets[k] || sets[''];
+  if (!opts.some(o => o[0]===v)) v = '';
+  box.dataset.v = v;
+  box.innerHTML = opts.map(o => {
+    const on = o[0]===v;
+    return '<button onclick="window.cvPick(\'' + o[0] + '\')" style="padding:5px 12px;border-radius:16px;font-size:12px;cursor:pointer;border:1px solid ' + (on?'#1E3A5F':'var(--border)') + ';background:' + (on?'#1E3A5F':'var(--bg)') + ';color:' + (on?'#fff':'var(--text2)') + '">' + o[1] + '</button>';
+  }).join('');
+  const lb = document.getElementById('cv-amtlb'), ab = document.getElementById('cv-amtbox'), hint = document.getElementById('cv-hint');
+  hint.style.color = 'var(--text3)';
+  if (k==='관리면담') { ab.style.display='none'; hint.style.color = v ? 'var(--text3)' : '#B45309'; hint.textContent = v ? '면담 건수에 1건 들어가요 · 매출에는 들어가지 않아요' : '대기는 면담 예정이에요. 면담을 하고 나면 "면담 완료"로 바꿔야 면담 건수에 들어가요'; return; }
+  if (v==='완납'||v==='COD') { lb.textContent = k==='추가면담' ? '추가등록 입금액 (만원)' : '입금액 (만원)'; ab.style.display=''; hint.textContent = k==='추가면담' ? '면담 건수와 추가등록 금액(매출)에 들어가요' : '입력한 금액이 실적(완납)에 들어가요'; }
+  else if (v==='미납') { lb.textContent='미납 예정액 (만원)'; ab.style.display=''; hint.textContent='저장하면 미납 리스트에 자동으로 들어가요'; }
+  else if (v==='취소') { ab.style.display='none'; hint.textContent=''; }
+  else { lb.textContent = k==='추가면담' ? '추가등록 예정금액 (만원)' : '예정금액 (만원)'; ab.style.display=''; hint.style.color = k==='추가면담' ? '#B45309' : 'var(--text3)'; hint.textContent = k==='추가면담' ? '대기는 면담 예정이에요. 면담 후 결과를 "추가등록"이나 "미등록"으로 바꿔야 건수와 매출에 들어가요' : ''; }
+};
+window.cvSave = function(date, rid){
+  const g = id => document.getElementById(id);
+  const mentor = g('cv-mentor').value, student = g('cv-student').value.trim(), subject = g('cv-subject').value.trim();
+  const kind = g('cv-kd').dataset.v || '';
+  let time = (g('cv-time').value || '').replace(/[^0-9]/g,'');
+  if (time) {
+    if (time.length <= 2) time = time.padStart(2,'0') + ':00';
+    else { time = time.padStart(4,'0'); time = time.slice(0,2) + ':' + time.slice(2,4); }
+    const hh = parseInt(time.slice(0,2)), mm = parseInt(time.slice(3,5));
+    if (hh > 23 || mm > 59) { g('cv-hint').textContent = '시간을 24시간 형식으로 입력해 주세요 (예: 14:00)'; g('cv-hint').style.color='#DC2626'; return; }
+  }
+  const res = g('cv-res').dataset.v || '';
+  if (!student) { g('cv-hint').textContent = '학생 이름을 입력해 주세요'; g('cv-hint').style.color='#DC2626'; return; }
+  const won = String(Math.round((parseFloat((g('cv-amt').value||'').replace(/[^0-9.]/g,''))||0) * 10000));
+  const amt = won==='0' ? '' : won;
+  const old = rid ? ((CONSULT[date]||{})[rid]||{}) : {};
+  const upd = {mentor, student, subject, time, result: res, kind, note: g('cv-note').value.trim(), status: kind ? '면담' : (old.status && old.status!=='면담' ? old.status : '상담')};
+  if (kind !== '관리면담') {
+    if (res==='완납' || res==='COD') upd.paid = amt;
+    else if (res==='미납') upd.expected = amt;
+    else if (!res) upd.expected = amt;
+  }
+  if (!CONSULT[date]) CONSULT[date] = {};
+  let _cid = rid;
+  if (rid) {
+    Object.assign(CONSULT[date][rid], upd);
+    update(ref(db, 'consult2025/' + date + '/' + rid), upd);
+  } else {
+    const id = Math.random().toString(36).slice(2,10);
+    const row = Object.assign({paid:'', expected:''}, upd);
+    CONSULT[date][id] = row;
+    update(ref(db, 'consult2025/' + date), {[id]: row});
+    _cid = id;
+  }
+  _alSync(date, _cid, CONSULT[date][_cid]);
+  window.cvClose();
+  showBiz();
+};
+window.cvDel = function(date, rid){
+  const b = document.getElementById('cv-del'); if(!b) return;
+  if (b.dataset.ok !== '1') { b.dataset.ok = '1'; b.textContent = '정말 삭제'; b.style.background = '#DC2626'; b.style.color = '#fff'; return; }
+  if (CONSULT[date]) { delete CONSULT[date][rid]; if (!Object.keys(CONSULT[date]).length) delete CONSULT[date]; }
+  remove(ref(db, 'consult2025/' + date + '/' + rid));
+  _alSync(date, rid, {kind:''});
+  window.cvClose();
+  showBiz();
+};
+
+function _cvResOpts(r) {
+  const sel = v => r.result===v ? ' selected' : '';
+  if (r.kind==='관리면담') return '<option value="면담완료"' + sel('면담완료') + '>면담 완료</option><option value="취소"' + sel('취소') + '>취소</option>';
+  if (r.kind==='추가면담') return '<option value="완납"' + sel('완납') + '>추가등록</option><option value="미납"' + sel('미납') + '>미등록</option><option value="취소"' + sel('취소') + '>취소</option>';
+  return RES.filter(x => x!=='면담완료').map(x => '<option value="' + x + '"' + sel(x) + '>' + x + '</option>').join('');
+}
+// ── 영업 데이터: 팀 비교 / 인원별 지표 (상담률·등록률·등록단가) ──
+let BIZGOAL = {sang:3.5, sangRate:60, reg:60, unit:250};
+onValue(ref(db,'bizGoal2025'), snap => {
+  BIZGOAL = Object.assign({sang:3.5, sangRate:60, reg:60, unit:250}, snap.val() || {});
+  const ae = document.activeElement;
+  if (cw === 99 && bst === '요약' && !(ae && String(ae.id).startsWith('bg-'))) renderPerfBox();
+});
+const _PF = {team:'전체', key:'net', dir:-1};
+function _pfBiz(m) {
+  if (window._bizIsFuture) return {};
+  const t = getTeam(m);
+  if (t && BIZ[t.name] && BIZ[t.name][m]) return BIZ[t.name][m];
+  for (const k of Object.keys(BIZ)) { if (BIZ[k] && BIZ[k][m]) return BIZ[k][m]; }
+  if (BIZ_PERIOD.e < todayStr()) {
+    const arc = Object.values((ARCHIVE.biz)||{}).find(v => v.period && v.period.s===BIZ_PERIOD.s && v.period.e===BIZ_PERIOD.e);
+    if (arc && arc.biz) { for (const k of Object.keys(arc.biz)) { if (arc.biz[k] && arc.biz[k][m]) return arc.biz[k][m]; } }
+  }
+  return {};
+}
+function _pfAgg() {
+  const per = {};
+  TM_CFG.forEach(t => t.members.forEach(m => { per[m] = {sang:0, reg:0, paid:0}; }));
+  if (window._bizIsFuture) return per;
+  let src = CONSULT;
+  if (BIZ_PERIOD.e < todayStr()) {
+    const arc = Object.values((ARCHIVE.biz)||{}).find(v => v.period && v.period.s===BIZ_PERIOD.s && v.period.e===BIZ_PERIOD.e);
+    if (arc && arc.consult) src = arc.consult;
+  }
+  Object.entries(src).forEach(([d, day]) => {
+    if (d < BIZ_PERIOD.s || d > BIZ_PERIOD.e) return;
+    Object.values(day||{}).forEach(r => {
+      const p = per[r.mentor]; if (!p) return;
+      if (r.kind==='관리면담' || r.kind==='추가면담') return;
+      if (_isSang(d, r)) p.sang++;
+      if (r.result==='완납' || r.result==='COD' || r.result==='미등록회수') { p.reg++; p.paid += N(r.paid); }
+    });
+  });
+  return per;
+}
+function _pfChip(v, goal, txt) {
+  if (v === null || v === undefined || isNaN(v)) return '<span style="color:var(--text3)">—</span>';
+  let bg='#FEE2E2', col='#B91C1C';
+  if (!(goal>0)) { bg='var(--bg2)'; col='var(--text2)'; }
+  else if (v >= goal) { bg='#DCFCE7'; col='#15803D'; }
+  else if (v >= goal*0.8) { bg='#FEF9C3'; col='#854D0E'; }
+  return '<span style="display:inline-block;padding:2px 9px;border-radius:10px;font-size:12px;font-weight:700;background:' + bg + ';color:' + col + '">' + txt + '</span>';
+}
+function renderPerfBox() {
+  const box = document.getElementById('perf-box'); if (!box) return;
+  const per = _pfAgg();
+  const todayS = todayStr();
+  const endS = todayS < BIZ_PERIOD.e ? todayS : BIZ_PERIOD.e;
+  const days = Math.max(1, Math.round((new Date(endS+'T00:00:00') - new Date(BIZ_PERIOD.s+'T00:00:00'))/86400000) + 1);
+  const weeks = Math.max(days/7, 1);
+  const G = BIZGOAL;
+  const rows = [];
+  TM_CFG.forEach(t => t.members.forEach(m => {
+    const bd = _pfBiz(m), p = per[m];
+    const inq = bd.inquiry||0;
+    rows.push({name:m, team:t.name, color:t.color, inq:inq, sang:p.sang, reg:p.reg,
+      sangRate: inq>0 ? p.sang/inq*100 : null, regRate: p.sang>0 ? p.reg/p.sang*100 : null,
+      unit: p.reg>0 ? p.paid/p.reg/10000 : null, net: (bd.totalSales||0)-(bd.refund||0)});
+  }));
+  const th = 'padding:8px;font-weight:600;color:var(--text2);background:var(--bg2);white-space:nowrap';
+  const td = 'padding:8px;border-top:1px solid var(--border)';
+  const ttl = 'font-weight:700;font-size:14px;margin:0 0 8px';
+  let h = '<div style="margin-top:22px"><div style="' + ttl + '">팀 비교 <span style="font-weight:400;font-size:11px;color:var(--text3)">색은 지점 목표 대비 · 초록 달성 / 노랑 근접(80%↑) / 빨강 미달</span></div>';
+  h += '<div style="overflow-x:auto;border:1px solid var(--border);border-radius:10px;background:var(--bg)"><table style="width:100%;border-collapse:collapse;font-size:13px;min-width:560px"><thead><tr>'
+    + '<th style="' + th + ';text-align:left">팀</th><th style="' + th + ';text-align:right">상담 (1인 주평균)</th><th style="' + th + ';text-align:right">상담률</th><th style="' + th + ';text-align:right">등록률</th><th style="' + th + ';text-align:right">등록단가</th></tr></thead><tbody>';
+  TM_CFG.forEach(t => {
+    const rs = rows.filter(r => r.team === t.name);
+    const inq = rs.reduce((a,r)=>a+r.inq,0), sang = rs.reduce((a,r)=>a+r.sang,0), reg = rs.reduce((a,r)=>a+r.reg,0);
+    const paid = t.members.reduce((a,m)=>a+per[m].paid,0);
+    const wk = rs.length ? sang/rs.length/weeks : null;
+    const sr = inq>0 ? sang/inq*100 : null, rr = sang>0 ? reg/sang*100 : null, un = reg>0 ? paid/reg/10000 : null;
+    h += '<tr><td style="' + td + ';font-weight:700"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:' + t.color + ';margin-right:6px"></span>' + t.name + '</td>'
+      + '<td style="' + td + ';text-align:right">' + _pfChip(wk, G.sang, wk===null?'':wk.toFixed(1)) + '</td>'
+      + '<td style="' + td + ';text-align:right">' + _pfChip(sr, G.sangRate, sr===null?'':sr.toFixed(1)+'%') + '</td>'
+      + '<td style="' + td + ';text-align:right">' + _pfChip(rr, G.reg, rr===null?'':rr.toFixed(1)+'%') + '</td>'
+      + '<td style="' + td + ';text-align:right">' + _pfChip(un, G.unit, un===null?'':Math.round(un)+'만') + '</td></tr>';
+  });
+  const gi = (id, key, w) => '<input id="bg-' + id + '" type="text" inputmode="decimal" value="' + G[key] + '" onchange="window.pfGoal(\'' + key + '\',this.value)" style="width:' + w + 'px;padding:3px 6px;border:1px solid var(--border);border-radius:6px;text-align:right;font-size:12px;background:var(--bg);color:var(--text)">';
+  h += '<tr style="background:var(--bg2)"><td style="' + td + ';color:var(--text2)">지점 목표 <span style="font-size:11px;color:var(--text3)">(수정 가능)</span></td>'
+    + '<td style="' + td + ';text-align:right">' + gi('sang','sang',52) + '</td>'
+    + '<td style="' + td + ';text-align:right">' + gi('sr','sangRate',52) + ' %</td>'
+    + '<td style="' + td + ';text-align:right">' + gi('reg','reg',52) + ' %</td>'
+    + '<td style="' + td + ';text-align:right">' + gi('unit','unit',60) + ' 만</td></tr>';
+  h += '</tbody></table></div>';
+
+  h += '<div style="font-size:11px;color:var(--text3);margin-top:6px">상담·등록·단가는 상담 내역(달력)에서 자동 계산돼요 · 문의 수는 위 영업 데이터에 입력한 값을 써요 · 직원별 비율은 대시보드의 직원 현황(비율)에서 봐요</div></div>';
+  box.innerHTML = h;
+}
+window.pfGoal = function(k, v) {
+  const n = parseFloat(String(v).replace(/[^0-9.]/g,'')); if (isNaN(n)) { renderPerfBox(); return; }
+  BIZGOAL[k] = n;
+  update(ref(db,'bizGoal2025'), {[k]: n});
+  renderPerfBox();
+};
+window.pfTeam = function(n) { _PF.team = n; renderPerfBox(); };
+window.pfSort = function(k) { if (_PF.key === k) _PF.dir = -_PF.dir; else { _PF.key = k; _PF.dir = (k==='name'?1:-1); } renderPerfBox(); };
+
 function renderConsult(searchKw='') {
   // 예정 영업월이면 빈 화면
   if (window._bizIsFuture) {
@@ -1952,10 +2769,10 @@ function renderConsult(searchKw='') {
   dates.forEach(date => {
     Object.values(consultSrc[date]||{}).forEach(r => {
       tPaid+=N(r.paid); tExp+=N(r.expected); tRows++;
-      if(r.result==='완납'||r.result==='추가') cWan++;
-      if(r.status==='상담') cSang++;
+      if((r.result==='완납'||r.result==='추가') && r.kind!=='추가면담' && r.kind!=='관리면담') cWan++;
+      if(_isSang(date, r)) cSang++;
       const t=getTeam(r.mentor);
-      if(t){ts[t.name].paid+=N(r.paid);ts[t.name].exp+=N(r.expected);ts[t.name].cnt++;if(r.result==='완납'||r.result==='추가'||r.result==='미등록회수')ts[t.name].wan++;}
+      if(t){ts[t.name].paid+=N(r.paid);ts[t.name].exp+=N(r.expected);ts[t.name].cnt++;if((r.result==='완납'||r.result==='추가'||r.result==='미등록회수') && r.kind!=='추가면담' && r.kind!=='관리면담')ts[t.name].wan++;}
     });
   });
 
@@ -1984,8 +2801,9 @@ function renderConsult(searchKw='') {
   </div>`;
 
   const makeRow = (date, rid, r) => {
-    const rowBg = r.result==='완납' ? 'background:#FFFDE7' : r.result==='미납' ? 'background:#FEF2F2' : r.result==='취소' ? 'background:#E5E7EB;color:#6B7280' : r.result==='COD' ? 'background:#EFF4FF' : '';
-    const resSty = r.result==='완납' ? 'background:#FEF08A;color:#854D0E' : r.result==='미납' ? 'background:#FEE2E2;color:#DC2626' : r.result==='취소' ? 'background:#E5E7EB;color:#6B7280' : r.result==='COD' ? 'background:#EFF4FF;color:#2563EB' : r.result==='추가' ? 'background:#F0FDF4;color:#16A34A' : r.result==='미등록회수' ? 'background:#F5F3FF;color:#7C3AED' : 'background:#F1F5F9;color:#64748B';
+    const _isM = r.kind==='관리면담' || r.kind==='추가면담';
+    const rowBg = _isM ? (r.result==='취소' ? 'background:#E5E7EB;color:#6B7280' : r.result==='미납' ? 'background:#FEF2F2' : 'background:#FAF5FF') : r.result==='완납' ? 'background:#FFFDE7' : r.result==='미납' ? 'background:#FEF2F2' : r.result==='취소' ? 'background:#E5E7EB;color:#6B7280' : r.result==='COD' ? 'background:#EFF4FF' : '';
+    const resSty = (_isM && (r.result==='완납'||r.result==='면담완료')) ? 'background:#EDE9FE;color:#6D28D9' : r.result==='완납' ? 'background:#FEF08A;color:#854D0E' : r.result==='미납' ? 'background:#FEE2E2;color:#DC2626' : r.result==='취소' ? 'background:#E5E7EB;color:#6B7280' : r.result==='COD' ? 'background:#EFF4FF;color:#2563EB' : r.result==='추가' ? 'background:#F0FDF4;color:#16A34A' : r.result==='미등록회수' ? 'background:#F5F3FF;color:#7C3AED' : 'background:#F1F5F9;color:#64748B';
     return `<tr style="${rowBg}">
       <td><select class="cs" onchange="W._cu('${date}','${rid}','mentor',this.value)">
         <option value="">선택</option>
@@ -1998,7 +2816,7 @@ function renderConsult(searchKw='') {
       </select></td>
       <td><select class="cs" onchange="W._cu('${date}','${rid}','result',this.value)" style="${resSty};border-radius:20px;padding:2px 8px;font-size:11px;font-weight:700;appearance:none;-webkit-appearance:none;text-align:center">
         <option value="">대기</option>
-        ${RES.map(s=>`<option value="${s}"${r.result===s?' selected':''}>${s}</option>`).join('')}
+        ${_cvResOpts(r)}
       </select></td>
       <td><input class="cn" value="${r.paid?F(N(r.paid)):''}" placeholder="0" oninput="W._cu('${date}','${rid}','paid',this.value)"></td>
       <td><input class="cn" value="${r.expected?F(N(r.expected)):''}" placeholder="0" oninput="W._cu('${date}','${rid}','expected',this.value)"></td>
@@ -2946,7 +3764,7 @@ window.W = {
     window._bizIsFuture = sch ? sch.start > today : false;
 
     // 상담내역/미납리스트/추가리스트 탭은 탭 안에서만 전환 (페이지 이탈 없음)
-    if (bst === '상담내역' || bst === '미납리스트' || bst === '추가리스트') {
+    if (bst === '상담캘린더' || bst === '상담내역' || bst === '미납리스트' || bst === '추가리스트') {
       showBiz();
       return;
     }
@@ -3137,7 +3955,7 @@ window.W = {
   },
   _saveFb(key, val) {
     FEEDBACK[key] = val;
-    set(rFeedback, FEEDBACK);
+    update(rFeedback, {[key]: val});
     const inp = document.querySelector(`[data-key="${key}"]`);
     if (inp) inp.style.background = val ? '#FFFDE7' : 'transparent';
   },
@@ -3449,14 +4267,14 @@ window.W = {
     document.getElementById('nav-staff')?.classList.remove('on');
     ['nav-dash','nav-w0','nav-w1','nav-w2','nav-w3','nav-biz'].forEach(id=>document.getElementById(id)?.classList.remove('on'));
     document.getElementById('nav-biz')?.classList.add('on');
-    ['nav-biz-sum','nav-biz-con','nav-biz-unp','nav-biz-add'].forEach(id=>document.getElementById(id)?.classList.remove('on'));
+    ['nav-biz-sum','nav-biz-cal','nav-biz-con','nav-biz-unp','nav-biz-add'].forEach(id=>document.getElementById(id)?.classList.remove('on'));
     if(tab==='요약') document.getElementById('nav-biz-sum')?.classList.add('on');
-    else if(tab==='상담내역') document.getElementById('nav-biz-con')?.classList.add('on');
+    else if(tab==='상담캘린더'||tab==='상담내역') document.getElementById('nav-biz-cal')?.classList.add('on');
     else if(tab==='미납리스트') document.getElementById('nav-biz-unp')?.classList.add('on');
     else if(tab==='추가리스트') document.getElementById('nav-biz-add')?.classList.add('on');
     
     const pt=document.getElementById('page-title');
-    const titles = {요약:'영업 데이터',상담내역:'상담 내역',미납리스트:'미납 리스트',추가리스트:'추가 리스트',입금파악:'입금 파악'};
+    const titles = {요약:'영업 데이터',상담내역:'상담 내역',미납리스트:'미납 리스트',추가리스트:'추가 리스트',상담캘린더:'상담 내역',입금파악:'입금 파악'};
     if(pt) pt.textContent = titles[tab]||tab;
     const sc = document.getElementById('sc');
     if (sc) sc.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text3);font-size:13px">불러오는 중...</div>';
@@ -3503,14 +4321,14 @@ window.W = {
   _rv(team,field,val) { REVIEW[team][field]=val; set(rReview,REVIEW); },
   _bst(tab) {
     bst=tab;
-    ['nav-biz-sum','nav-biz-con','nav-biz-unp','nav-biz-add'].forEach(id=>document.getElementById(id)?.classList.remove('on'));
+    ['nav-biz-sum','nav-biz-cal','nav-biz-con','nav-biz-unp','nav-biz-add'].forEach(id=>document.getElementById(id)?.classList.remove('on'));
     if(tab==='요약') document.getElementById('nav-biz-sum')?.classList.add('on');
-    else if(tab==='상담내역') document.getElementById('nav-biz-con')?.classList.add('on');
+    else if(tab==='상담캘린더'||tab==='상담내역') document.getElementById('nav-biz-cal')?.classList.add('on');
     else if(tab==='미납리스트') document.getElementById('nav-biz-unp')?.classList.add('on');
     else if(tab==='추가리스트') document.getElementById('nav-biz-add')?.classList.add('on');
     
     const pt=document.getElementById('page-title');
-    const titles = {요약:'영업 데이터',상담내역:'상담 내역',미납리스트:'미납 리스트',추가리스트:'추가 리스트',입금파악:'입금 파악'};
+    const titles = {요약:'영업 데이터',상담내역:'상담 내역',미납리스트:'미납 리스트',추가리스트:'추가 리스트',상담캘린더:'상담 내역',입금파악:'입금 파악'};
     if(pt) pt.textContent = titles[tab]||tab;
     const sc3 = document.getElementById('sc');
     if (sc3) sc3.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text3);font-size:13px">불러오는 중...</div>';
@@ -3558,6 +4376,7 @@ window.W = {
     if(!CONSULT[date]||!CONSULT[date][rid]) return;
     CONSULT[date][rid][field] = val;
     update(ref(db, `consult2025/${date}/${rid}`), {[field]: val});
+    if (CONSULT[date][rid].kind === '추가면담') _alSync(date, rid, CONSULT[date][rid]);
     updBizKPI();
     // 결과 변경 시 배지 색상 즉시 반영
     if (field === 'result') {
@@ -3635,6 +4454,7 @@ window.W = {
     delete CONSULT[date][rid];
     if(CONSULT[date] && !Object.keys(CONSULT[date]).length) delete CONSULT[date];
     remove(ref(db,`consult2025/${date}/${rid}`));
+    _alSync(date, rid, {kind:''});
     // 다음 프레임에 KPI 헤더(합계)만 조용히 업데이트
     requestAnimationFrame(() => {
       const searchKw = document.getElementById('consult-search')?.value || '';
@@ -3642,11 +4462,11 @@ window.W = {
       if(bc && bst === '상담내역') {
         const newNav = `<div class="bsn">
           <button class="bst" onclick="W._bst('요약')">영업 데이터</button>
-          <button class="bst on" onclick="W._bst('상담내역')">상담 내역</button>
+          <button class="bst on" onclick="W._bst('상담캘린더')">상담 내역</button>
           <button class="bst" onclick="W._bst('미납리스트')">미납 리스트</button>
           <button class="bst" onclick="W._bst('추가리스트')">추가 리스트</button>
         </div>`;
-        bc.innerHTML = newNav + makeBizMonthNav() + renderConsult(searchKw);
+        bc.innerHTML = newNav + makeBizMonthNav() + cvViewBar('상담내역') + renderConsult(searchKw);
         const inp = document.getElementById('consult-search');
         if(inp && searchKw) { inp.focus(); inp.setSelectionRange(inp.value.length, inp.value.length); }
       }
@@ -3696,14 +4516,14 @@ window.W = {
   _noticeInput(val) { NOTICE.text = val; },
   _alAdd() {
     const id = Math.random().toString(36).slice(2,10);
-    ADDLIST[id] = {team:'',mentor:'',student:'',age:'',subject:'',remaining:'',interviewDate:'',availableDate:'',expectedAmount:'',status:'진행중',note:''};
-    set(rAddList, ADDLIST);
+    ADDLIST[id] = {team:'',mentor:'',student:'',age:'',subject:'',remaining:'',interviewDate:'',availableDate:'',expectedAmount:'',status:'진행중',note:'',createdDate:todayStr()};
+    update(rAddList, {[id]: ADDLIST[id]});
     if(cw===99 && bst==='추가리스트') showBiz();
   },
   _alAddTeam(teamName) {
     const id = Math.random().toString(36).slice(2,10);
-    ADDLIST[id] = {team:teamName,mentor:'',student:'',age:'',subject:'',remaining:'',interviewDate:'',availableDate:'',expectedAmount:'',status:'진행중',note:''};
-    set(rAddList, ADDLIST);
+    ADDLIST[id] = {team:teamName,mentor:'',student:'',age:'',subject:'',remaining:'',interviewDate:'',availableDate:'',expectedAmount:'',status:'진행중',note:'',createdDate:todayStr()};
+    update(rAddList, {[id]: ADDLIST[id]});
     if(cw===99 && bst==='추가리스트') showBiz();
   },
   _alResetTeam(teamName) {
@@ -3735,7 +4555,7 @@ window.W = {
     const btn = document.querySelector(`button.dbc[onclick="W._alDel('${id}')"]`);
     if(btn) btn.closest('tr')?.remove();
     delete ADDLIST[id];
-    set(rAddList, ADDLIST);
+    remove(ref(db, 'addlist2025/' + id));
     // 다음 프레임에 멘토 그룹 헤더/합계 조용히 갱신
     requestAnimationFrame(() => {
       if(cw===99 && bst==='추가리스트') showBiz();
@@ -3755,10 +4575,11 @@ window.W = {
     if(field==='mentor' && val) {
       const t = getTeam(val);
       if(t) ADDLIST[id].team = t.name;
-      set(rAddList, ADDLIST);
+      update(ref(db, 'addlist2025/' + id), {mentor: val, team: ADDLIST[id].team || ''});
       return;
     }
-    set(rAddList, ADDLIST);
+    update(ref(db, 'addlist2025/' + id), {[field]: val});
+    _alToConsult(id, field);
     // 상태 변경 시 재렌더 (멘토 그룹 재배치)
     if(field==='status' && cw===99 && bst==='추가리스트') {
       window._alEditing = false;
@@ -4006,7 +4827,7 @@ W._tuitionAdd = (type) => {
   _saveTuition().then(()=>showBranch());
 };
 
-// ── 클래스관리 ─────────────────────────────────────────────
+// ── 게시판 (공지사항/모집/세미나/국비/클래스관리) ──────────────
 W._swClass = () => {
   cw = 180; curMonth = 'current';
   ['nav-dash','nav-biz','nav-staff','nav-dep','nav-blog','nav-class','nav-links','nav-rvstat','nav-manual','nav-branch'].forEach(id=>document.getElementById(id)?.classList.remove('on'));
@@ -4014,7 +4835,7 @@ W._swClass = () => {
   const sc=document.getElementById('sc'); if(sc)sc.style.display='';
   document.getElementById('nav-class')?.classList.add('on');
   renderTabs();
-  renderClassMgmt();
+  renderBoardPage();
 };
 
 let _classMgmtData = null;
@@ -4139,7 +4960,7 @@ function _renderClassUI() {
     </div>
   </div>`;
 
-  sc.innerHTML = html;
+  sc.innerHTML = _bbBar() + html;
 }
 
 W._classOpenModal = (mode, cid, sid) => {
@@ -5607,6 +6428,12 @@ try {
     ⚠ 초기화 오류: ${e.message}<br><pre style="font-size:11px;font-weight:400;white-space:pre-wrap">${e.stack}</pre>
   </div>`;
 }
+</script>
+<script>
+(function(){
+  function sync(){var e=document.getElementById('nav-biz-sub');if(!e)return;document.body.classList.toggle('gsub-on',e.style.display!=='none');}
+  document.addEventListener('DOMContentLoaded',function(){var gb=document.getElementById('goal-badge'),sb=document.querySelector('.sidebar'),ar=document.querySelector('.sb-arc');if(gb&&sb&&ar)sb.insertBefore(gb,ar);var e=document.getElementById('nav-biz-sub');if(!e)return;new MutationObserver(sync).observe(e,{attributes:true,attributeFilter:['style']});sync();});
+})();
 </script>
 </body>
 </html>
