@@ -1114,7 +1114,8 @@ function _stfSet(k,v){
 function renderStaffTbl() {
   const box = document.getElementById('dash-staff'); if (!box) return;
   const cnt = {};
-  TM_CFG.forEach(t => t.members.forEach(m => { cnt[m] = {sang:0, wan:0, cod:0, mi:0, mt:0, ma:0, maAmt:0, paid:0}; }));
+  TM_CFG.forEach(t => t.members.forEach(m => { cnt[m] = {sang:0, wan:0, cod:0, mi:0, mt:0, ma:0, maAmt:0, paid:0, tdS:0, tdM:0}; }));
+  const _tdy = todayStr();
   if (!window._bizIsFuture) {
     Object.entries(CONSULT).forEach(([date, day]) => {
       const dIn = date >= BIZ_PERIOD.s && date <= BIZ_PERIOD.e;
@@ -1122,6 +1123,7 @@ function renderStaffTbl() {
         const c = cnt[r.mentor]; if (!c) return;
         const pIn = _payIn(date, r);
         if (!dIn && !pIn) return;
+        if (dIn && date === _tdy && r.result !== '취소') { if (r.kind==='관리면담' || r.kind==='추가면담') c.tdM++; else if (r.status==='상담') c.tdS++; }
         if (r.kind==='관리면담' || r.kind==='추가면담') {
           if (dIn && (r.result==='면담완료' || r.result==='완납' || r.result==='미납')) c.mt++;
           if (pIn && r.kind==='추가면담' && r.result==='완납') { c.ma++; c.maAmt += N(r.paid); }
@@ -1140,7 +1142,7 @@ function renderStaffTbl() {
     if (!bd) { for (const k of Object.keys(BIZ)) { if (BIZ[k] && BIZ[k][m]) { bd = BIZ[k][m]; break; } } }
     bd = bd || {};
     const c = cnt[m], net = (bd.totalSales||0) - (bd.refund||0), goal = bd.goal||0, inq = bd.inquiry||0, reg = c.wan + c.cod;
-    rows.push({name:m, team:t.name, color:t.color, inq:inq, sang:c.sang, wan:c.wan, cod:c.cod, mi:c.mi, mt:c.mt, ma:c.ma, maAmt:c.maAmt, net:net, goal:goal,
+    rows.push({name:m, team:t.name, color:t.color, inq:inq, sang:c.sang, wanC:c.wan + c.cod, tdS:c.tdS, tdM:c.tdM, today:c.tdS + c.tdM, wan:c.wan, cod:c.cod, mi:c.mi, mt:c.mt, ma:c.ma, maAmt:c.maAmt, net:net, goal:goal,
       rate: goal>0 ? net/goal*100 : -1,
       sangRate: inq>0 ? c.sang/inq*100 : null, regRate: c.sang>0 ? reg/c.sang*100 : null, unit: reg>0 ? c.paid/reg/10000 : null});
   }));
@@ -1158,55 +1160,62 @@ function renderStaffTbl() {
   ['전체'].concat(TM_CFG.map(t=>t.name)).forEach(n => { h += chip(st.team===n, n, 'W._stfSet(\'team\',\'' + n + '\')'); });
   h += '<span style="flex:1"></span>' + chip(st.view==='rank','순위','W._stfSet(\'view\',\'rank\')') + chip(st.view==='ratio','비율','W._stfSet(\'view\',\'ratio\')') + '</div>';
   const cols = st.view==='rank'
-    ? [['name','직원'],['inq','문의'],['sang','상담'],['wan','완납'],['cod','COD'],['mi','미납'],['mt','면담'],['sangRate','상담률'],['regRate','등록률'],['net','순매출'],['rate','달성률']]
+    ? [['name','직원'],['rate','목표 달성'],['net','순매출/목표'],['inq','문의'],['sang','상담'],['wanC','완납'],['mi','미납'],['mt','면담'],['sangRate','상담률'],['regRate','등록률'],['today','오늘 상담·면담']]
     : [['name','직원'],['sangRate','상담률'],['regRate','등록률'],['unit','등록단가'],['net','순매출'],['rate','달성률']];
   const pd = 'padding:7px 5px';
-  h += '<div style="overflow-x:auto;background:var(--bg);border:1px solid var(--border);border-radius:10px"><table style="width:100%;border-collapse:collapse;font-size:12.5px;min-width:' + (st.view==='rank'?'700':'420') + 'px"><thead><tr style="background:var(--bg2)">';
-  h += '<th style="' + pd + ';text-align:center;width:34px;color:var(--text3);font-weight:600">#</th>';
+  h += '<div style="overflow-x:auto;background:var(--bg);border:1px solid var(--border);border-radius:10px"><table style="width:100%;border-collapse:collapse;font-size:12.5px;' + (st.view==='rank'?'table-layout:fixed;min-width:900px':'min-width:420px') + '"><thead><tr style="background:var(--bg2)">';
+  h += '<th style="' + pd + ';text-align:center;width:3%;color:var(--text3);font-weight:600">#</th>';
+  const _cw = {name:'13%', rate:'17%', net:'12%', inq:'5%', sang:'5%', wanC:'5%', mi:'5%', mt:'5%', sangRate:'6%', regRate:'6%', today:'18%'};
   cols.forEach(c => {
     const arrow = st.key === c[0] ? (st.dir<0?' ▼':' ▲') : '';
-    h += '<th onclick="W._stfSet(\'sort\',\'' + c[0] + '\')" style="' + pd + ';text-align:' + (c[0]==='name'?'left':'right') + ';cursor:pointer;font-weight:600;color:' + (st.key===c[0]?'#2563EB':'var(--text2)') + ';white-space:nowrap">' + c[1] + arrow + '</th>';
+    h += '<th onclick="W._stfSet(\'sort\',\'' + c[0] + '\')" style="' + pd + ';' + (st.view==='rank' && _cw[c[0]] ? 'width:' + _cw[c[0]] + ';' : '') + (c[0]==='today' ? 'padding-left:36px;' : '') + 'text-align:' + ((c[0]==='name'||c[0]==='rate'||c[0]==='today')?'left':'right') + ';cursor:pointer;font-weight:600;color:' + (st.key===c[0]?'#2563EB':'var(--text2)') + ';white-space:nowrap">' + c[1] + arrow + '</th>';
   });
   h += '</tr></thead><tbody>';
-  const T = {inq:0,sang:0,wan:0,cod:0,mi:0,mt:0,ma:0,maAmt:0,net:0,goal:0};
+  const T = {inq:0,sang:0,wan:0,cod:0,mi:0,mt:0,ma:0,maAmt:0,net:0,goal:0,wanC:0,tdS:0,tdM:0};
   const G = (typeof BIZGOAL !== 'undefined') ? BIZGOAL : {sangRate:60, reg:60, unit:250};
   rows.forEach(r => {
     Object.keys(T).forEach(k => T[k] += r[k]||0);
     const warn = r.sang >= 5 && r.wan === 0 && r.cod === 0;
     const rk = rankOf[r.name];
-    const medal = rk<=3 ? '<span style="display:inline-block;width:20px;height:20px;border-radius:50%;background:' + ['#1E3A5F','#475569','#94A3B8'][rk-1] + ';color:#fff;font-size:11px;line-height:20px;text-align:center">' + rk + '</span>' : rk;
+    const medal = rk;
     const rate = r.rate >= 0 ? r.rate.toFixed(1) + '%' : '—';
     const rc = r.rate<0 ? 'var(--text3)' : r.rate>=100 ? '#16A34A' : r.rate>=60 ? '#2563EB' : '#DC2626';
     h += '<tr style="border-top:1px solid var(--border);' + '' + '">';
     h += '<td style="' + pd + ';text-align:center;color:var(--text3)">' + medal + '</td>';
     h += '<td style="' + pd + ';font-weight:600;white-space:nowrap"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:' + r.color + ';margin-right:6px"></span>' + MRT(r.name) + (warn?' <span title="상담 5건 이상인데 완납 0건" style="font-size:11px;color:#B45309;background:#FEF3C7;border-radius:8px;padding:0 6px;font-weight:400">상담↑ 완납 확인</span>':'') + '</td>';
     if (st.view==='rank') {
-      h += '<td style="' + pd + ';text-align:right">' + r.inq + '</td><td style="' + pd + ';text-align:right">' + r.sang + '</td>'
-        + '<td style="' + pd + ';text-align:right;color:#15803D;font-weight:600">' + r.wan + '</td><td style="' + pd + ';text-align:right">' + r.cod + '</td>'
+      const pc = r.rate<0 ? null : r.rate;
+      h += '<td style="' + pd + '">' + (pc===null ? '<span style="color:var(--text3)">—</span>' : '<div style="display:flex;align-items:center;gap:6px"><div style="flex:1;height:7px;background:var(--border);border-radius:4px;overflow:hidden"><div style="width:' + Math.min(pc,100) + '%;height:100%;background:' + rc + '"></div></div><b style="width:44px;text-align:right;color:' + rc + ';font-size:12px">' + pc.toFixed(1) + '%</b></div>') + '</td>'
+        + '<td style="' + pd + ';text-align:right;font-weight:700;white-space:nowrap">' + F(Math.round(r.net/10000)) + '만' + (r.goal>0 ? '<span style="color:var(--text3);font-weight:400;font-size:11px"> /' + F(Math.round(r.goal/10000)) + '</span>' : '') + '</td>'
+        + '<td style="' + pd + ';text-align:right">' + r.inq + '</td><td style="' + pd + ';text-align:right">' + r.sang + '</td>'
+        + '<td style="' + pd + ';text-align:right;color:#15803D;font-weight:600">' + r.wanC + '</td>'
         + '<td style="' + pd + ';text-align:right;color:' + (r.mi>0?'#991B1B':'var(--text3)') + '">' + r.mi + '</td>'
         + '<td style="' + pd + ';text-align:right">' + r.mt + '</td>'
-        + '<td style="' + pd + ';text-align:right">' + _pfChip(r.sangRate, G.sangRate, r.sangRate===null?'':r.sangRate.toFixed(0)+'%') + '</td>'
-        + '<td style="' + pd + ';text-align:right">' + _pfChip(r.regRate, G.reg, r.regRate===null?'':r.regRate.toFixed(0)+'%') + '</td>';
+        + '<td style="' + pd + ';text-align:right">' + (r.sangRate===null ? '<span style="color:var(--text3)">—</span>' : r.sangRate.toFixed(0) + '%') + '</td>'
+        + '<td style="' + pd + ';text-align:right">' + (r.regRate===null ? '<span style="color:var(--text3)">—</span>' : r.regRate.toFixed(0) + '%') + '</td>'
+        + '<td style="' + pd + ';padding-left:36px;white-space:nowrap;font-size:12px;color:var(--text2)">' + (r.today>0 ? '상담 <b>' + r.tdS + '</b> · 면담 <b>' + r.tdM + '</b>' : '<span style="color:var(--text3)">—</span>') + '</td></tr>';
     } else {
       h += '<td style="' + pd + ';text-align:right">' + _pfChip(r.sangRate, G.sangRate, r.sangRate===null?'':r.sangRate.toFixed(0)+'%') + '</td>'
         + '<td style="' + pd + ';text-align:right">' + _pfChip(r.regRate, G.reg, r.regRate===null?'':r.regRate.toFixed(0)+'%') + '</td>'
         + '<td style="' + pd + ';text-align:right">' + _pfChip(r.unit, G.unit, r.unit===null?'':Math.round(r.unit)+'만') + '</td>';
     }
-    h += '<td style="' + pd + ';text-align:right;font-weight:700">' + F(Math.round(r.net/10000)) + '만</td>';
-    h += '<td style="' + pd + ';text-align:right;font-weight:600;color:' + rc + '">' + rate + '</td></tr>';
+    if (st.view!=='rank') {
+      h += '<td style="' + pd + ';text-align:right;font-weight:700">' + F(Math.round(r.net/10000)) + '만</td>';
+      h += '<td style="' + pd + ';text-align:right;font-weight:600;color:' + rc + '">' + rate + '</td></tr>';
+    }
   });
   const tr = T.goal>0 ? (T.net/T.goal*100).toFixed(1)+'%' : '—';
   const sum = 'padding:7px 5px;text-align:right';
   h += '<tr style="border-top:2px solid var(--border);background:var(--bg2);font-weight:700"><td></td><td style="padding:7px 5px">합계</td>';
   if (st.view==='rank') {
-    h += '<td style="'+sum+'">'+T.inq+'</td><td style="'+sum+'">'+T.sang+'</td><td style="'+sum+'">'+T.wan+'</td><td style="'+sum+'">'+T.cod+'</td><td style="'+sum+'">'+T.mi+'</td><td style="'+sum+'">'+T.mt+'</td><td style="'+sum+'">'+(T.inq>0?(T.sang/T.inq*100).toFixed(0)+'%':'—')+'</td><td style="'+sum+'">'+(T.sang>0?((T.wan+T.cod)/T.sang*100).toFixed(0)+'%':'—')+'</td>';
+    h += '<td style="'+sum+';text-align:left">'+tr+'</td><td style="'+sum+'">'+F(Math.round(T.net/10000))+'만'+(T.goal>0?'<span style="color:var(--text3);font-weight:400;font-size:11px"> /'+F(Math.round(T.goal/10000))+'</span>':'')+'</td><td style="'+sum+'">'+T.inq+'</td><td style="'+sum+'">'+T.sang+'</td><td style="'+sum+'">'+(T.wan+T.cod)+'</td><td style="'+sum+'">'+T.mi+'</td><td style="'+sum+'">'+T.mt+'</td><td style="'+sum+'">'+(T.inq>0?(T.sang/T.inq*100).toFixed(0)+'%':'—')+'</td><td style="'+sum+'">'+(T.sang>0?((T.wan+T.cod)/T.sang*100).toFixed(0)+'%':'—')+'</td><td style="'+sum+';text-align:left;padding-left:36px;white-space:nowrap">상담 '+T.tdS+' · 면담 '+T.tdM+'</td></tr>';
   } else {
     const sr = T.inq>0 ? (T.sang/T.inq*100).toFixed(0)+'%' : '—', rr = T.sang>0 ? ((T.wan+T.cod)/T.sang*100).toFixed(0)+'%' : '—';
     h += '<td style="'+sum+'">'+sr+'</td><td style="'+sum+'">'+rr+'</td><td style="'+sum+'">—</td>';
   }
-  h += '<td style="'+sum+'">'+F(Math.round(T.net/10000))+'만</td><td style="'+sum+'">'+tr+'</td></tr>';
+  if (st.view!=='rank') h += '<td style="'+sum+'">'+F(Math.round(T.net/10000))+'만</td><td style="'+sum+'">'+tr+'</td></tr>';
   h += '</tbody></table></div>';
-  h += '<div style="font-size:11px;color:var(--text3);margin-top:6px">' + (st.view==='rank' ? '순위는 순매출(영업총매출−환불) 기준 · 완납/COD/미납은 건수 · 면담은 관리면담+추가면담 합산(상담·등록률에서 제외) · 상담↑ 완납 확인 = 상담 5건 이상인데 완납 0건 · 헤더를 누르면 정렬' : '색은 영업 데이터의 지점 목표 대비 · 초록 달성 / 노랑 근접(80%↑) / 빨강 미달 · 상담은 신규 상담 기준') + '</div>';
+  h += '<div style="font-size:11px;color:var(--text3);margin-top:6px">' + (st.view==='rank' ? '순위는 순매출(영업총매출−환불) 기준 · 완납은 완납+COD 합산 건수 · 미납은 건수 · 오늘 상담·면담은 오늘 날짜로 잡힌 건수 · 면담은 관리면담+추가면담 합산(상담·등록률에서 제외) · 상담↑ 완납 확인 = 상담 5건 이상인데 완납 0건 · 헤더를 누르면 정렬' : '색은 영업 데이터의 지점 목표 대비 · 초록 달성 / 노랑 근접(80%↑) / 빨강 미달 · 상담은 신규 상담 기준') + '</div>';
   window.W = window.W || {}; W._stfSet = _stfSet;
   box.innerHTML = h;
 }
