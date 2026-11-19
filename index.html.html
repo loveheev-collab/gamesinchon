@@ -1416,7 +1416,7 @@ function renderAllDashboard() {
     <div class="dw">
       <div class="dg">
         <div class="dc"><label>전년 누계 매출 (원)</label><input class="dinp" id="dp" type="text" inputmode="numeric"></div>
-        <div class="dc"><label>올해 누계 매출 (원)</label><input class="dinp" id="dt" type="text" inputmode="numeric"></div>
+        <div class="dc"><label>결산 총매출 (원)</label><input class="dinp" id="dt" type="text" inputmode="numeric"></div>
         <div class="dc"><label>환불 (원)</label><input class="dinp" id="drf" type="text" inputmode="numeric" oninput="W._di('refundAmt',this.value);formatBizInp(this)"></div>
         <div class="dc" style="background:#fff;border:2px solid #2563EB;border-radius:8px;padding:4px 8px"><label style="color:#2563EB;font-weight:700">결산 순매출 (원)</label><input class="dinp" id="dnet" type="text" readonly style="background:#fff;color:var(--text);cursor:default;border-color:#2563EB"></div>
         <div class="dc"><label>일 필요매출 (원)</label><input class="dinp" id="ddaily" type="text" readonly style="background:var(--bg2);color:var(--text2);cursor:default"></div>
@@ -1434,8 +1434,8 @@ function renderAllDashboard() {
   h += `<div class="kg-highlight-label">결산 누계 현황</div>
     <div class="kg-highlight">
       <div class="kc-hl hl-go"><div class="klbl">월 목표</div><div class="kval" style="color:var(--text)">${F(TG)}</div><div class="ksub">원</div></div>
-      <div class="kc-hl hl-g" style="background:#fff;border:2px solid #16A34A;border-radius:10px"><div class="klbl">누계 실적</div><div class="kval" style="color:#16A34A" id="dash-kpi-sales">${F(DAILY.thisYear||0)}</div><div class="ksub">원</div></div>
-      <div class="kc-hl hl-a"><div class="klbl">달성률</div><div class="kval" style="color:#2563EB" id="dash-kpi-rate">${TG>0?((DAILY.thisYear||0)/TG*100).toFixed(1)+'%':'0.0%'}</div><div class="ksub">누계 기준</div></div>
+      <div class="kc-hl hl-g" style="background:#fff;border:2px solid #16A34A;border-radius:10px"><div class="klbl">결산 총매출</div><div class="kval" style="color:#16A34A" id="dash-kpi-sales">${F(DAILY.thisYear||0)}</div><div class="ksub">원</div></div>
+      <div class="kc-hl hl-a"><div class="klbl">달성률</div><div class="kval" style="color:${(TG>0?((DAILY.thisYear||0)/TG*100):0)>=100?'#16A34A':(TG>0?((DAILY.thisYear||0)/TG*100):0)>=60?'#2563EB':'#DC2626'}" id="dash-kpi-rate">${TG>0?((DAILY.thisYear||0)/TG*100).toFixed(1)+'%':'0.0%'}</div><div class="ksub"><div style="height:7px;background:#E8ECF0;border-radius:4px;overflow:hidden;margin:3px 0 4px"><div id="dash-kpi-bar" style="width:${Math.min(100,(TG>0?((DAILY.thisYear||0)/TG*100):0)).toFixed(1)}%;height:100%;background:${(TG>0?((DAILY.thisYear||0)/TG*100):0)>=100?'#16A34A':(TG>0?((DAILY.thisYear||0)/TG*100):0)>=60?'#2563EB':'#DC2626'}"></div></div>총매출 기준</div></div>
       <div class="kc-hl hl-diff" id="dash-kpi-diff-card">
         <div class="klbl">잔여 목표</div>
         <div class="kval" style="color:${TG-(DAILY.thisYear||0)>0?'#DC2626':'#16A34A'}" id="dash-kpi-diff">${F(Math.max(0,TG-(DAILY.thisYear||0)))}</div>
@@ -1575,7 +1575,7 @@ function renderMain() {
     <div class="dw">
       <div class="dg">
         <div class="dc"><label>전년 누계 매출 (원)</label><input class="dinp" id="dp" type="text" inputmode="numeric" oninput="W._di('prevYear',this.value);formatBizInp(this)"></div>
-        <div class="dc"><label>올해 누계 매출 (원)</label><input class="dinp" id="dt" type="text" inputmode="numeric" oninput="W._di('thisYear',this.value);formatBizInp(this)"></div>
+        <div class="dc"><label>결산 총매출 (원)</label><input class="dinp" id="dt" type="text" inputmode="numeric" oninput="W._di('thisYear',this.value);formatBizInp(this)"></div>
         <div class="dc"><label>환불 (원)</label><input class="dinp" id="drf" type="text" inputmode="numeric" oninput="W._di('refundAmt',this.value);formatBizInp(this)"></div>
         <div class="dc" style="background:#fff;border:2px solid #2563EB;border-radius:8px;padding:4px 8px"><label style="color:#2563EB;font-weight:700">결산 순매출 (원)</label><input class="dinp" id="dnet" type="text" readonly style="background:#fff;color:var(--text);cursor:default;border-color:#2563EB"></div>
         <div class="dc"><label>일 필요매출 (원)</label><input class="dinp" id="ddaily" type="text" inputmode="numeric" readonly style="background:var(--bg2);color:var(--text2);cursor:default"></div>
@@ -1632,13 +1632,38 @@ function updDailyCalc() {
   const dailyNeed = remainDays > 0 ? Math.ceil(remainAmt / remainDays) : 0;
   const elDaily = document.getElementById('ddaily');
   if (elDaily) { elDaily.value = F(dailyNeed); elDaily.style.color = dailyNeed > 0 ? '#DC2626' : '#15803D'; }
+  // 환불율 표시 (환불 ÷ 결산 총매출)
+  try {
+    const drf = document.getElementById('drf');
+    const card = drf && drf.closest('.dc');
+    if (card) {
+      let rateEl = document.getElementById('drf-rate');
+      if (!rateEl) { rateEl = document.createElement('div'); rateEl.id = 'drf-rate'; card.appendChild(rateEl); }
+      const ty = DAILY.thisYear || 0, rf = DAILY.refundAmt || 0;
+      const rr = ty > 0 ? rf / ty * 100 : 0;
+      const lvl = rr >= 20 ? 2 : rr >= 10 ? 1 : 0;
+      const col = ['#64748B', '#B45309', '#B91C1C'][lvl];
+      if (rf > 0 && ty > 0) {
+        rateEl.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-top:5px;font-size:11px;color:' + col;
+        rateEl.innerHTML = '<span style="font-weight:700">환불율</span><span style="font-weight:800;padding:1px 8px;border-radius:10px;' + (lvl===2 ? 'background:#DC2626;color:#fff' : lvl===1 ? 'background:#FEF3C7;color:#92400E' : 'background:#E8ECF0;color:#475569') + '">' + rr.toFixed(1) + '%</span>';
+      } else { rateEl.style.display = 'none'; }
+      card.style.background = lvl===2 ? '#FEF2F2' : '';
+      card.style.borderColor = lvl===2 ? '#DC2626' : (lvl===1 ? '#F59E0B' : '');
+    }
+  } catch (e) {}
   // 결산 누계 현황 KPI 실시간 갱신
   const ks = document.getElementById('dash-kpi-sales');
   const kr = document.getElementById('dash-kpi-rate');
   const kd = document.getElementById('dash-kpi-diff');
   const kc = document.getElementById('dash-kpi-diff-card');
   if (ks) ks.textContent = F(DAILY.thisYear||0);
-  if (kr) kr.textContent = TG>0 ? ((DAILY.thisYear||0)/TG*100).toFixed(1)+'%' : '0.0%';
+  if (kr) {
+    const rt = TG>0 ? (DAILY.thisYear||0)/TG*100 : 0;
+    const rcol = rt>=100 ? '#16A34A' : rt>=60 ? '#2563EB' : '#DC2626';
+    kr.textContent = rt.toFixed(1)+'%'; kr.style.color = rcol;
+    const kb = document.getElementById('dash-kpi-bar');
+    if (kb) { kb.style.width = Math.min(100, rt).toFixed(1)+'%'; kb.style.background = rcol; }
+  }
   if (kd) {
     const remain = Math.max(0, TG - (DAILY.thisYear||0));
     kd.textContent = F(remain);
