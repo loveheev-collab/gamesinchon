@@ -1154,7 +1154,9 @@ function renderStaffTbl() {
     const av = (a[st.key]===null||a[st.key]===undefined) ? -1 : a[st.key], bv = (b[st.key]===null||b[st.key]===undefined) ? -1 : b[st.key];
     return st.dir * (av - bv);
   });
-  const byNet = rows.slice().sort((a,b)=>b.net-a.net);
+  rows.forEach(r => { r.noRank = _isNewbie(r.name) && !(r.net > 0); });
+  rows.sort((a,b) => (a.noRank?1:0) - (b.noRank?1:0));
+  const byNet = rows.filter(r => !r.noRank).sort((a,b)=>b.net-a.net);
   const rankOf = {}; byNet.forEach((r,i)=>{ rankOf[r.name] = (i>0 && r.net===byNet[i-1].net) ? rankOf[byNet[i-1].name] : i+1; });
   const chip = (on, label, fn) => '<button onclick="' + fn + '" style="padding:3px 11px;border-radius:14px;border:1px solid ' + (on?'#2563EB':'var(--border)') + ';background:' + (on?'#2563EB':'var(--bg)') + ';color:' + (on?'#fff':'var(--text2)') + ';font-size:12px;cursor:pointer;font-family:inherit">' + label + '</button>';
   let h = '<div style="display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 8px;align-items:center">';
@@ -1178,7 +1180,7 @@ function renderStaffTbl() {
     Object.keys(T).forEach(k => T[k] += r[k]||0);
     const warn = r.sang >= 5 && r.wan === 0 && r.cod === 0;
     const rk = rankOf[r.name];
-    const medal = rk;
+    const medal = r.noRank ? '<span style="font-size:10px">신입</span>' : rk;
     const rate = r.rate >= 0 ? r.rate.toFixed(1) + '%' : '—';
     const rc = r.rate<0 ? 'var(--text3)' : r.rate>=100 ? '#16A34A' : r.rate>=60 ? '#2563EB' : '#DC2626';
     h += '<tr style="border-top:1px solid var(--border);' + '' + '">';
