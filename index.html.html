@@ -1436,6 +1436,35 @@ function _ctTotals(c) {
   arr.forEach(x => { x.rank = top > 0 ? 1 + arr.filter(y => y.total > x.total).length : 0; x.gap = top - x.total; });
   return {arr, top, sum: arr.reduce((s,x) => s + x.total, 0)};
 }
+
+function _ctPers(c) {
+  const rows = c.rows || {};
+  const role = m => String((window._MR && window._MR[m]) || '');
+  const list = [];
+  TM_CFG.forEach(t => t.members.forEach(m => {
+    const r = rows[m] || {}, goal = N(r.goal), sales = N(r.sales), kuk = N(r.kuk), net = sales - kuk;
+    const rl = role(m), grp = /팀장|부장|책임/.test(rl) ? 0 : 1;
+    list.push({name:m, role:rl, grp:grp, goal:goal, sales:sales, kuk:kuk, net:net, pct: goal > 0 ? Math.round(net / goal * 100) : null});
+  }));
+  list.sort((a,b) => a.grp - b.grp);
+  const tg = list.reduce((x,y) => x + y.goal, 0), tn = list.reduce((x,y) => x + (y.goal > 0 ? y.net : 0), 0);
+  const top = list.filter(x => x.pct !== null && x.pct > 0).sort((a,b) => b.pct - a.pct).slice(0, 3);
+  return {list, tg, tn, top};
+}
+function _ctPersonalCard(c) {
+  const P = _ctPers(c);
+  let h = '<div style="display:flex;gap:8px;align-items:stretch"><div style="display:flex;align-items:center;font-size:11px;font-weight:800;color:#B45309;white-space:nowrap">🔥 TOP 3</div>';
+  if (!P.top.length) h += '<div style="flex:1;border:1px solid var(--border);background:#fff;border-radius:10px;padding:7px 10px;font-size:12px;color:var(--text3)">입력 전</div>';
+  P.top.forEach((x, i) => {
+    h += '<div style="flex:1;min-width:0;border:' + (i===0?'2px solid #F59E0B;background:#FFFBEB':'1px solid var(--border);background:#fff') + ';border-radius:10px;padding:6px 10px;font-size:12.5px;white-space:nowrap;overflow:hidden"><span style="display:inline-block;width:18px;height:18px;border-radius:50%;text-align:center;line-height:18px;font-size:10.5px;font-weight:900;margin-right:6px;background:' + (i===0?'#F59E0B;color:#fff':'#E8ECF0;color:#475569') + '">' + (i+1) + '</span><b>' + _bdEsc(x.name) + '</b> <b style="color:#B45309">' + x.pct + '%</b></div>';
+  });
+  h += '</div>';
+  if (P.tg > 0) {
+    const pc = Math.round(P.tn / P.tg * 100);
+    h += '<div style="display:flex;align-items:center;gap:10px;margin-top:8px;font-size:11px;color:var(--text2);font-weight:700"><span style="white-space:nowrap">전체 달성</span><div style="flex:1;height:8px;background:#E8ECF0;border-radius:4px"><i style="display:block;height:100%;width:' + Math.min(100,pc) + '%;background:#2563EB;border-radius:4px"></i></div><span style="white-space:nowrap">' + F(P.tn) + ' / ' + F(P.tg) + ' (' + pc + '%)</span></div>';
+  }
+  return h;
+}
 function _ctCardHTML() {
   const act = _ctActive(); if (!act.length) return '';
   let sel = act.find(([id]) => id === _CTS.dash) || act[0];
@@ -1448,6 +1477,7 @@ function _ctCardHTML() {
   if (act.length > 1) {
     h += '<div style="display:flex;gap:4px;margin-left:auto;flex-wrap:wrap">' + act.map(([id,x]) => '<span onclick="window.ctDashSel(\'' + id + '\')" style="padding:2px 10px;border-radius:10px;font-size:11px;font-weight:700;cursor:pointer;background:' + (id===sid?'#F59E0B':'#F1F5F9') + ';color:' + (id===sid?'#fff':'#64748B') + '">' + _bdEsc((x.title||'컨테스트').slice(0,12)) + '</span>').join('') + '</div>';
   }
+  if (c.type === 'personal') return h + '</div>' + _ctPersonalCard(c) + '</div>';
   h += '</div><div style="display:grid;grid-template-columns:repeat(' + Math.max(1, order.length) + ',minmax(0,1fr));gap:8px">';
   order.forEach(x => {
     const first = x.rank === 1;
@@ -1480,9 +1510,9 @@ function renderContestPage() {
   const dis = lock ? ' disabled' : '';
   let h = '<div id="ct-body" style="padding:4px 0 40px">'
     + '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px"><div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"><b style="font-size:15px;margin-right:6px">🏆 컨테스트</b>'
-    + list.map(([id,c]) => '<span onclick="window.ctSel(\'' + id + '\')" style="padding:4px 12px;border-radius:14px;font-size:12px;font-weight:700;cursor:pointer;border:1px solid ' + (id===_CTS.sel?'#1E3A5F':'var(--border)') + ';background:' + (id===_CTS.sel?'#1E3A5F':'#fff') + ';color:' + (id===_CTS.sel?'#fff':'var(--text2)') + '">' + _bdEsc(c.title||'컨테스트') + ((c.end||'9999') < today ? ' <small style="opacity:.7">종료</small>' : '') + '</span>').join('')
+    + list.map(([id,c]) => '<span onclick="window.ctSel(\'' + id + '\')" style="padding:4px 12px;border-radius:14px;font-size:12px;font-weight:700;cursor:pointer;border:1px solid ' + (id===_CTS.sel?'#1E3A5F':'var(--border)') + ';background:' + (id===_CTS.sel?'#1E3A5F':'#fff') + ';color:' + (id===_CTS.sel?'#fff':'var(--text2)') + '">' + _bdEsc(c.title||'컨테스트') + ((c.end||'9999') < today ? ' <small style="opacity:.7">종료</small>' : '') + ' <small style="opacity:.75">' + (c.type==='personal'?'개인':'팀') + '</small></span>').join('')
     + '</div><div style="display:flex;gap:6px">'
-    + '<button onclick="window.ctNew()" style="padding:5px 12px;border-radius:14px;border:none;background:#1E3A5F;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">+ 새 컨테스트</button>'
+    + '<button onclick="window.ctNew(\'team\')" style="padding:5px 12px;border-radius:14px;border:none;background:#1E3A5F;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">+ 팀 합산형</button><button onclick="window.ctNew(\'personal\')" style="padding:5px 12px;border-radius:14px;border:none;background:#2563EB;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">+ 개인 달성형</button>'
     + (_CTS.sel ? '<button onclick="window.ctLock()" style="padding:5px 12px;border-radius:14px;border:1px solid var(--border);background:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">' + (lock ? '🔒 수정하기' : '🔓 수정 완료') + '</button>'
       + '<button onclick="window.ctDel()" style="padding:5px 12px;border-radius:14px;border:1px solid #FECACA;background:#fff;color:#B91C1C;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">삭제</button>' : '')
     + '</div></div>';
@@ -1495,7 +1525,25 @@ function renderContestPage() {
   const meta = (lbl, f, v, type, span) => '<div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:8px 10px;' + (span?'grid-column:span ' + span:'') + '"><div style="font-size:10.5px;color:var(--text2);font-weight:700;margin-bottom:3px">' + lbl + '</div><input class="ct-in" style="' + inp + (type==='num'?';text-align:right':'') + '" ' + (type==='date'?'type="date"':'type="text"') + ' value="' + _bdEsc(type==='num' ? _ctFmt(v) : (v||'')) + '"' + dis + ' onchange="window.ctMeta(\'' + f + '\',this.value,\'' + type + '\')"></div>';
   h += '<div style="display:grid;grid-template-columns:2fr 1fr 1fr 2fr;gap:8px;margin-bottom:8px">'
     + meta('제목', 'title', c.title, 't') + meta('시작일', 'start', c.start, 'date') + meta('종료일', 'end', c.end, 'date') + meta('포상', 'prize', c.prize, 't')
-    + '</div><div style="display:grid;grid-template-columns:1fr 1fr 3fr;gap:8px;margin-bottom:12px">'
+    + '</div>';
+  if (c.type === 'personal') {
+    const P = _ctPers(c);
+    const th2 = 'background:#DBE4F5;padding:7px;border:1px solid #fff;font-size:12px;font-weight:700';
+    const cl = (m, f, v, bg) => '<td style="background:' + bg + ';border:1px solid #fff;padding:3px 5px"><input class="ct-in" style="' + inp + ';text-align:right" inputmode="numeric" value="' + _ctFmt(v) + '"' + dis + ' oninput="formatBizInp(this)" onchange="window.ctSet(\'' + m.replace(/'/g,"\\'") + '\',\'' + f + '\',this.value)"></td>';
+    h += '<div style="background:#fff;border:1px solid var(--border);border-radius:12px;padding:10px"><div style="display:flex;justify-content:flex-end;margin-bottom:6px">' + (lock ? '' : '<button onclick="window.ctFillGoal()" style="padding:4px 12px;border-radius:12px;border:1px solid var(--border);background:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">목표매출 일괄 채우기</button>') + '</div><table style="width:100%;border-collapse:collapse"><tr><th style="' + th2 + ';width:70px">직급</th><th style="' + th2 + ';width:110px">이름</th><th style="' + th2 + '">목표매출</th><th style="' + th2 + '">총매출</th><th style="' + th2 + '">국비매출</th><th style="' + th2 + '">국비제외 매출</th><th style="' + th2 + ';width:120px">개인 달성률</th></tr>';
+    P.list.forEach((x, i) => {
+      const bg = x.grp === 0 ? '#FDE9DD' : '#DCE9F5';
+      h += '<tr><td style="background:' + bg + ';border:1px solid #fff;text-align:center;font-size:12px">' + _bdEsc(x.role) + '</td><td style="background:' + bg + ';border:1px solid #fff;padding:4px 8px;font-weight:700">' + _bdEsc(x.name) + '</td>'
+        + cl(x.name, 'goal', x.goal, bg) + cl(x.name, 'sales', x.sales, bg) + cl(x.name, 'kuk', x.kuk, bg)
+        + '<td id="ctp-net-' + i + '" style="background:' + bg + ';border:1px solid #fff;text-align:right;padding:4px 10px;font-weight:700"></td><td id="ctp-pct-' + i + '" style="background:' + (x.grp===0?'#F4B183':'#9DC3E6') + ';border:1px solid #fff;text-align:center;font-weight:900"></td></tr>';
+    });
+    h += '<tr><td colspan="2" style="background:#DBE4F5;border:1px solid #fff;padding:6px;font-weight:800;text-align:center">합계</td><td id="ctp-tg" style="border:1px solid #fff;text-align:right;padding:4px 10px;font-weight:800;color:#DC2626"></td><td colspan="2" style="border:1px solid #fff"></td><td id="ctp-tn" style="border:1px solid #fff;text-align:right;padding:4px 10px;font-weight:800"></td><td id="ctp-tp" style="border:1px solid #fff;text-align:center;font-weight:900"></td></tr></table>'
+      + '<div style="margin-top:8px;font-size:12px;color:var(--text2)">※ 국비제외 매출 = 총매출 − 국비매출 · 달성률 = 국비제외 매출 ÷ 목표매출 · 목표를 비워두면 달성률·합계에서 빠져요.</div></div></div>';
+    sc.innerHTML = h;
+    _ctPatch();
+    return;
+  }
+  h += '<div style="display:grid;grid-template-columns:1fr 1fr 3fr;gap:8px;margin-bottom:12px">'
     + meta('결산 조건 금액 ① (원)', 'goal1', c.goal1, 'num') + meta('결산 조건 금액 ② (원)', 'goal2', c.goal2, 'num') + meta('조건 문구', 'cond', c.cond, 't')
     + '</div>';
   const th = 'background:#DBE4F5;padding:7px;border:1px solid #fff;font-size:12px;font-weight:700';
@@ -1522,6 +1570,17 @@ function renderContestPage() {
 }
 function _ctPatch() {
   const c = CONTEST[_CTS.sel]; if (!c) return;
+  if (c.type === 'personal') {
+    const P = _ctPers(c);
+    P.list.forEach((x, i) => {
+      const a = document.getElementById('ctp-net-' + i), b = document.getElementById('ctp-pct-' + i);
+      if (a) a.textContent = (x.sales || x.kuk) ? F(x.net) : '';
+      if (b) b.textContent = x.pct === null ? '' : x.pct + '%';
+    });
+    const g = document.getElementById('ctp-tg'), n = document.getElementById('ctp-tn'), t = document.getElementById('ctp-tp');
+    if (g) g.textContent = F(P.tg); if (n) n.textContent = F(P.tn); if (t) t.textContent = P.tg > 0 ? Math.round(P.tn / P.tg * 100) + '%' : '';
+    return;
+  }
   const T = _ctTotals(c);
   T.arr.forEach((x, i) => {
     const e = document.getElementById('ct-tot-' + i); if (!e) return;
@@ -1537,13 +1596,25 @@ window.ctLock = function() {
   if (!_bdAuth()) return;
   _CTS.unlocked = true; renderContestPage();
 };
-window.ctNew = function() {
+window.ctFillGoal = function() {
+  if (!_CTS.unlocked) return;
+  const c = CONTEST[_CTS.sel]; if (!c) return;
+  const a = prompt('팀장·책임 목표매출 (원)', '15000000'); if (a === null) return;
+  const b = prompt('그 외(경력 등) 목표매출 (원)', '10000000'); if (b === null) return;
+  if (!confirm('비어 있는 목표매출만 채울게요. 계속할까요?')) return;
+  const upd = {};
+  _ctPers(c).list.forEach(x => { if (!x.goal) { const v = N(x.grp === 0 ? a : b); upd[x.name + '/goal'] = v; if (!c.rows) c.rows = {}; if (!c.rows[x.name]) c.rows[x.name] = {}; c.rows[x.name].goal = v; } });
+  if (Object.keys(upd).length) update(ref(db, 'contest2025/' + _CTS.sel + '/rows'), upd).catch(err => alert('저장 실패: ' + err.message));
+  renderContestPage(); renderBoards();
+};
+window.ctNew = function(type) {
   if (!_bdAuth()) return;
   const base = CONTEST[_CTS.sel] || {};
   const d = new Date(Date.now() + 9*3600e3), ym = d.toISOString().slice(0,7);
   const last = new Date(d.getUTCFullYear(), d.getUTCMonth()+1, 0).getDate();
   const id = 'c' + Date.now();
-  const data = {title: base.title || ((d.getUTCMonth()+1) + '월 팀매출 컨테스트'), start: todayStr(), end: ym + '-' + String(last).padStart(2,'0'), prize: base.prize || '', cond: base.cond || '', goal1: N(base.goal1), goal2: N(base.goal2), ts: Date.now()};
+  const ptype = type === 'personal' ? 'personal' : 'team';
+  const data = {type: ptype, title: (base.type === ptype && base.title) ? base.title : ((d.getUTCMonth()+1) + (ptype === 'personal' ? '월 개인매출 달성률 컨테스트' : '월 팀매출 컨테스트')), start: todayStr(), end: ym + '-' + String(last).padStart(2,'0'), prize: base.prize || '', cond: base.cond || '', goal1: ptype === 'team' ? N(base.goal1) : 0, goal2: ptype === 'team' ? N(base.goal2) : 0, ts: Date.now()};
   CONTEST[id] = data; _CTS.sel = id; _CTS.unlocked = true;
   set(ref(db, 'contest2025/' + id), data).catch(err => alert('저장 실패: ' + err.message));
   renderContestPage();
