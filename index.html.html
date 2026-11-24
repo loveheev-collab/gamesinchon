@@ -1435,6 +1435,7 @@ function _ctTotals(c) {
     let total = 0;
     t.members.forEach(m => { total += _ctNet(rows[m], c.calc); });
     total += _ctNet(rows['__etc_' + t.name], c.calc);
+    Object.entries(c.extra || {}).forEach(([id, e]) => { if (e && e.team === t.name) total += _ctNet(rows['x_' + id], c.calc); });
     return {team:t.name, color:t.color, total:total, leader:_ctLeader(t.name)};
   });
   const top = Math.max(0, ...arr.map(x => x.total));
@@ -1447,10 +1448,16 @@ function _ctPers(c) {
   const role = m => String((window._MR && window._MR[m]) || '');
   const list = [];
   TM_CFG.forEach(t => t.members.forEach(m => {
+    if (_isNewbie(m)) return;
     const r = rows[m] || {}, goal = N(r.goal), sales = N(r.sales), kuk = N(r.kuk), net = sales - kuk;
     const rl = role(m), grp = /팀장|부장|책임/.test(rl) ? 0 : 1;
-    list.push({name:m, role:rl, grp:grp, goal:goal, sales:sales, kuk:kuk, net:net, pct: goal > 0 ? Math.round(net / goal * 100) : null});
+    list.push({key:m, name:m, role:rl, grp:grp, goal:goal, sales:sales, kuk:kuk, net:net, pct: goal > 0 ? Math.round(net / goal * 100) : null});
   }));
+  Object.entries(c.extra || {}).forEach(([id, e]) => {
+    if (!e || e.team) return;
+    const r = rows['x_' + id] || {}, goal = N(r.goal), sales = N(r.sales), kuk = N(r.kuk), net = sales - kuk, rl = String(e.role || '');
+    list.push({key:'x_' + id, xid:id, name:String(e.name || ''), role:rl, grp: /팀장|부장|책임/.test(rl) ? 0 : 1, goal:goal, sales:sales, kuk:kuk, net:net, pct: goal > 0 ? Math.round(net / goal * 100) : null});
+  });
   list.sort((a,b) => a.grp - b.grp);
   const tg = list.reduce((x,y) => x + y.goal, 0), tn = list.reduce((x,y) => x + (y.goal > 0 ? y.net : 0), 0);
   const top = list.filter(x => x.pct !== null && x.pct > 0).sort((a,b) => b.pct - a.pct).slice(0, 3);
@@ -1470,6 +1477,60 @@ function _ctPersonalCard(c) {
   }
   return h;
 }
+function _ctPosterHTML(c) {
+  const f = v => v ? F(N(v)) : '';
+  const per = c.start && c.end ? (c.start.slice(5).replace('-','/') + ' ~ ' + c.end.slice(5).replace('-','/')) : '';
+  const css = '<style>.ctp{width:1000px;max-width:100%;border:3px solid #1E3A5F;background:#fff;font-family:inherit;margin:0 auto}.ctp table{width:100%;border-collapse:collapse;font-size:17px}.ctp th{background:#DBE4F5;padding:9px;border:1px solid #fff;font-size:15px}.ctp td{padding:8px 10px;border:1px solid #fff;text-align:center}.ctp td.r{text-align:right}.ctp .tm{font-weight:900;font-size:19px}.ctp .tm small{display:block;font-size:13px;color:#475569;font-weight:700;margin-top:3px}.ctp .sep td{background:#4B5563;height:4px;padding:0}</style>';
+  let h = css + '<div class="ctp"><div style="background:linear-gradient(90deg,#1E3A5F,#2F5597);color:#fff;text-align:center;padding:16px 10px 12px"><b style="font-size:28px">🏆 ' + _bdEsc(c.title||'컨테스트') + '</b>' + (per ? '<div style="font-size:15px;margin-top:5px;opacity:.9">기간 ' + per + '</div>' : '') + '</div>';
+  if (c.type === 'personal') {
+    const P = _ctPers(c);
+    h += '<table><tr><th style="width:80px">직급</th><th style="width:140px">이름</th><th>목표매출</th><th>총매출</th><th>국비매출</th><th>국비제외 매출</th><th style="width:120px">개인 달성률</th></tr>';
+    P.list.forEach(x => {
+      const bg = x.grp === 0 ? '#FDE9DD' : '#DCE9F5', bg2 = x.grp === 0 ? '#F4B183' : '#9DC3E6';
+      h += '<tr style="background:' + bg + '"><td>' + _bdEsc(x.role) + '</td><td><b>' + _bdEsc(x.name) + '</b></td><td class="r">' + f(x.goal) + '</td><td class="r">' + f(x.sales) + '</td><td class="r">' + f(x.kuk) + '</td><td class="r"><b>' + ((x.sales||x.kuk) ? F(x.net) : '') + '</b></td><td style="background:' + bg2 + ';font-weight:900;font-size:19px">' + (x.pct === null ? '' : x.pct + '%') + '</td></tr>';
+    });
+    h += '<tr><td colspan="2" style="background:#DBE4F5;font-weight:900">합계</td><td class="r" style="color:#DC2626;font-weight:900">' + F(P.tg) + '</td><td colspan="2"></td><td class="r"><b>' + F(P.tn) + '</b></td><td style="font-weight:900;font-size:19px">' + (P.tg > 0 ? Math.round(P.tn / P.tg * 100) + '%' : '') + '</td></tr></table></div>';
+    return h;
+  }
+  const g1 = N(c.goal1), g2 = N(c.goal2);
+  const box = (l, v) => '<div style="flex:1;padding:9px 14px;text-align:center;border-right:1px solid #F5D78A;font-size:15px;font-weight:700"><small style="display:block;font-size:11px;color:#92400E">' + l + '</small>' + _bdEsc(v) + '</div>';
+  let info = '';
+  if (c.prize) info += box('포상', c.prize);
+  if (g1 || g2) info += box('결산 조건', [g1 ? _eok(g1) : '', g2 ? _eok(g2) : ''].filter(Boolean).join(' · '));
+  if (c.cond) info += box('조건', c.cond);
+  if (info) h += '<div style="display:flex;background:#FFF7E0;border-bottom:2px solid #F59E0B">' + info + '</div>';
+  const T = _ctTotals(c), rows = c.rows || {};
+  const top = T.top;
+  const cls = {1:'#FEF3C7', 2:'#F1F5F9', 3:'#FBE7D5'}, col = {1:'#B45309', 2:'#64748B', 3:'#9A5B2E'};
+  h += '<table><tr><th style="width:130px">팀</th><th style="width:80px">직급</th><th style="width:120px">이름</th><th>총매출</th><th>국비매출</th><th>당월환불</th><th style="width:200px">팀 합계 · 순위</th></tr>';
+  TM_CFG.forEach((t, ti) => {
+    const x = T.arr[ti];
+    const bg = (x.rank >= 1 && x.rank <= 3) ? cls[x.rank] : '#EAF3E3', bgt = (x.rank >= 1 && x.rank <= 3) ? cls[x.rank] : '#DCEBD2';
+    const mem = t.members.map(m => ({role:String((window._MR && window._MR[m]) || ''), name:m, r:rows[m]||{}}));
+    Object.entries(c.extra || {}).forEach(([id, e]) => { if (e && e.team === t.name) mem.push({role:String(e.role||''), name:String(e.name||''), r:rows['x_' + id]||{}}); });
+    mem.push({role:'기타', name:'직원 외', r:rows['__etc_' + t.name]||{}});
+    mem.forEach((m, i) => {
+      h += '<tr>';
+      if (i === 0) h += '<td class="tm" rowspan="' + mem.length + '" style="background:' + bgt + '">' + _bdEsc(t.name) + '<small>' + _bdEsc(x.leader) + '</small></td>';
+      h += '<td style="background:' + bg + '">' + _bdEsc(m.role) + '</td><td style="background:' + bg + '"><b>' + _bdEsc(m.name) + '</b></td><td class="r" style="background:' + bg + '">' + f(m.r.sales) + '</td><td class="r" style="background:' + bg + '">' + f(m.r.kuk) + '</td><td class="r" style="background:' + bg + '">' + f(m.r.refund) + '</td>';
+      if (i === 0) h += '<td class="tm" rowspan="' + mem.length + '" style="background:' + bgt + (x.rank === 1 ? ';box-shadow:inset 0 0 0 3px #F59E0B' : '') + '"><div style="font-size:40px;font-weight:900;line-height:1;color:' + (col[x.rank] || '#94A3B8') + '">' + (x.rank || '-') + '<span style="font-size:18px">' + (x.rank ? '위' : '') + '</span></div><div style="font-size:21px;font-weight:900;margin-top:4px">' + F(x.total) + '</div>'
+        + (T.top > 0 ? '<div style="height:6px;background:#E5E7EB;border-radius:3px;margin:6px 10px 0"><i style="display:block;height:100%;width:' + Math.round(x.total / T.top * 100) + '%;border-radius:3px;background:' + (x.rank === 1 ? '#F59E0B' : '#94A3B8') + '"></i></div><small style="margin-top:6px">' + (x.rank === 1 ? '현재 1등' : '1등과 -' + F(x.gap)) + '</small>' : '') + '</td>';
+      h += '</tr>';
+    });
+    h += '<tr class="sep"><td colspan="7"></td></tr>';
+  });
+  const cm = c.calc || 'net_all';
+  h += '</table><div style="display:flex;justify-content:space-between;padding:10px 16px;background:#F8FAFC;font-size:14px;color:#475569;font-weight:700"><span>팀 합계 = ' + ({net_all:'총매출 − 국비매출 − 당월환불', net_kuk:'총매출 − 국비매출', gross:'총매출'})[cm] + '</span>' + (g2 > 0 ? '<span>결산 총매출 ' + F(N(DAILY.thisYear)) + ' / ' + (g1 ? _eok(g1) + ' · ' : '') + _eok(g2) + '</span>' : '') + '</div></div>';
+  return h;
+}
+window.ctPoster = function() {
+  const c = CONTEST[_CTS.sel]; if (!c) return;
+  let o = document.getElementById('ct-poster'); if (o) o.remove();
+  o = document.createElement('div'); o.id = 'ct-poster';
+  o.style.cssText = 'position:fixed;inset:0;z-index:9999;background:#fff;overflow:auto;padding:24px 16px';
+  o.innerHTML = '<button onclick="document.getElementById(\'ct-poster\').remove()" style="position:fixed;top:12px;right:16px;padding:6px 14px;border-radius:14px;border:1px solid #ccc;background:#fff;font-weight:700;cursor:pointer;font-family:inherit;z-index:2">✕ 닫기</button><div style="text-align:center;color:#94A3B8;font-size:12px;margin-bottom:8px">이 화면을 캡처해서 공지하세요</div>' + _ctPosterHTML(c);
+  document.body.appendChild(o);
+};
 function _ctCardHTML() {
   const act = _ctActive(); if (!act.length) return '';
   return act.map(([id, c], i) => _ctOneCard(c, i < act.length - 1)).join('');
@@ -1517,7 +1578,7 @@ function renderContestPage() {
     + list.map(([id,c]) => '<span onclick="window.ctSel(\'' + id + '\')" style="padding:4px 12px;border-radius:14px;font-size:12px;font-weight:700;cursor:pointer;border:1px solid ' + (id===_CTS.sel?'#1E3A5F':'var(--border)') + ';background:' + (id===_CTS.sel?'#1E3A5F':'#fff') + ';color:' + (id===_CTS.sel?'#fff':'var(--text2)') + '">' + _bdEsc(c.title||'컨테스트') + ((c.end||'9999') < today ? ' <small style="opacity:.7">종료</small>' : '') + ' <small style="opacity:.75">' + (c.type==='personal'?'개인':'팀') + '</small></span>').join('')
     + '</div><div style="display:flex;gap:6px">'
     + '<button onclick="window.ctNew(\'team\')" style="padding:5px 12px;border-radius:14px;border:none;background:#1E3A5F;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">+ 팀 합산형</button><button onclick="window.ctNew(\'personal\')" style="padding:5px 12px;border-radius:14px;border:none;background:#2563EB;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">+ 개인 달성형</button>'
-    + (_CTS.sel ? '<button onclick="window.ctLock()" style="padding:5px 12px;border-radius:14px;border:1px solid var(--border);background:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">' + (lock ? '🔒 수정하기' : '🔓 수정 완료') + '</button>'
+    + (_CTS.sel ? '<button onclick="window.ctPoster()" style="padding:5px 12px;border-radius:14px;border:1px solid var(--border);background:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">📷 공지용 보기</button><button onclick="window.ctLock()" style="padding:5px 12px;border-radius:14px;border:1px solid var(--border);background:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">' + (lock ? '🔒 수정하기' : '🔓 수정 완료') + '</button>'
       + '<button onclick="window.ctDel()" style="padding:5px 12px;border-radius:14px;border:1px solid #FECACA;background:#fff;color:#B91C1C;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">삭제</button>' : '')
     + '</div></div>';
   if (!_CTS.sel) {
@@ -1534,11 +1595,11 @@ function renderContestPage() {
     const P = _ctPers(c);
     const th2 = 'background:#DBE4F5;padding:7px;border:1px solid #fff;font-size:12px;font-weight:700';
     const cl = (m, f, v, bg) => '<td style="background:' + bg + ';border:1px solid #fff;padding:3px 5px"><input class="ct-in" style="' + inp + ';text-align:right" inputmode="numeric" value="' + _ctFmt(v) + '"' + dis + ' oninput="formatBizInp(this)" onchange="window.ctSet(\'' + m.replace(/'/g,"\\'") + '\',\'' + f + '\',this.value)"></td>';
-    h += '<div style="background:#fff;border:1px solid var(--border);border-radius:12px;padding:10px"><div style="display:flex;justify-content:flex-end;margin-bottom:6px">' + (lock ? '' : '<button onclick="window.ctFillGoal()" style="padding:4px 12px;border-radius:12px;border:1px solid var(--border);background:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">목표매출 일괄 채우기</button>') + '</div><table style="width:100%;border-collapse:collapse"><tr><th style="' + th2 + ';width:70px">직급</th><th style="' + th2 + ';width:110px">이름</th><th style="' + th2 + '">목표매출</th><th style="' + th2 + '">총매출</th><th style="' + th2 + '">국비매출</th><th style="' + th2 + '">국비제외 매출</th><th style="' + th2 + ';width:120px">개인 달성률</th></tr>';
+    h += '<div style="background:#fff;border:1px solid var(--border);border-radius:12px;padding:10px"><div style="display:flex;justify-content:flex-end;margin-bottom:6px">' + (lock ? '' : '<button onclick="window.ctAddRow()" style="padding:4px 12px;border-radius:12px;border:1px solid var(--border);background:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;margin-right:6px">+ 행 추가</button><button onclick="window.ctFillGoal()" style="padding:4px 12px;border-radius:12px;border:1px solid var(--border);background:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">목표매출 일괄 채우기</button>') + '</div><table style="width:100%;border-collapse:collapse"><tr><th style="' + th2 + ';width:70px">직급</th><th style="' + th2 + ';width:110px">이름</th><th style="' + th2 + '">목표매출</th><th style="' + th2 + '">총매출</th><th style="' + th2 + '">국비매출</th><th style="' + th2 + '">국비제외 매출</th><th style="' + th2 + ';width:120px">개인 달성률</th></tr>';
     P.list.forEach((x, i) => {
       const bg = x.grp === 0 ? '#FDE9DD' : '#DCE9F5';
-      h += '<tr><td style="background:' + bg + ';border:1px solid #fff;text-align:center;font-size:12px">' + _bdEsc(x.role) + '</td><td style="background:' + bg + ';border:1px solid #fff;padding:4px 8px;font-weight:700">' + _bdEsc(x.name) + '</td>'
-        + cl(x.name, 'goal', x.goal, bg) + cl(x.name, 'sales', x.sales, bg) + cl(x.name, 'kuk', x.kuk, bg)
+      h += '<tr>' + _ctXCells(x.role, x.name, x.xid, bg, lock)
+        + cl(x.key, 'goal', x.goal, bg) + cl(x.key, 'sales', x.sales, bg) + cl(x.key, 'kuk', x.kuk, bg)
         + '<td id="ctp-net-' + i + '" style="background:' + bg + ';border:1px solid #fff;text-align:right;padding:4px 10px;font-weight:700"></td><td id="ctp-pct-' + i + '" style="background:' + (x.grp===0?'#F4B183':'#9DC3E6') + ';border:1px solid #fff;text-align:center;font-weight:900"></td></tr>';
     });
     h += '<tr><td colspan="2" style="background:#DBE4F5;border:1px solid #fff;padding:6px;font-weight:800;text-align:center">합계</td><td id="ctp-tg" style="border:1px solid #fff;text-align:right;padding:4px 10px;font-weight:800;color:#DC2626"></td><td colspan="2" style="border:1px solid #fff"></td><td id="ctp-tn" style="border:1px solid #fff;text-align:right;padding:4px 10px;font-weight:800"></td><td id="ctp-tp" style="border:1px solid #fff;text-align:center;font-weight:900"></td></tr></table>'
@@ -1558,12 +1619,13 @@ function renderContestPage() {
   const cell = (key, f, v) => '<td style="background:#EAF3E3;border:1px solid #fff;padding:3px 5px"><input class="ct-in" data-k="' + key + '|' + f + '" style="' + inp + ';text-align:right" inputmode="numeric" value="' + _ctFmt(v) + '"' + dis + ' oninput="formatBizInp(this)" onchange="window.ctSet(\'' + key.replace(/'/g,"\\'") + '\',\'' + f + '\',this.value)"></td>';
   TM_CFG.forEach((t, ti) => {
     const mem = t.members.map(m => ({key:m, role:String((window._MR && window._MR[m]) || ''), name:m}));
+    Object.entries(c.extra || {}).forEach(([id, e]) => { if (e && e.team === t.name) mem.push({key:'x_' + id, xid:id, role:String(e.role||''), name:String(e.name||'')}); });
     mem.push({key:'__etc_' + t.name, role:'기타', name:'직원 외 (AD 등)'});
     mem.forEach((m, i) => {
       h += '<tr>';
-      if (i === 0) h += '<td rowspan="' + mem.length + '" style="background:#DCEBD2;border:1px solid #fff;text-align:center;font-weight:900;padding:6px"><div style="font-size:13px">' + _bdEsc(t.name) + '</div><div style="font-size:11px;font-weight:700;color:#475569;margin-top:3px">' + _bdEsc(_ctLeader(t.name)) + '</div></td>';
+      if (i === 0) h += '<td rowspan="' + mem.length + '" style="background:#DCEBD2;border:1px solid #fff;text-align:center;font-weight:900;padding:6px"><div style="font-size:13px">' + _bdEsc(t.name) + '</div><div style="font-size:11px;font-weight:700;color:#475569;margin-top:3px">' + _bdEsc(_ctLeader(t.name)) + '</div>' + (lock ? '' : '<button onclick="window.ctAddRow(\'' + t.name.replace(/'/g,"\\'") + '\')" style="margin-top:6px;padding:2px 8px;border-radius:10px;border:1px solid var(--border);background:#fff;font-size:11px;cursor:pointer;font-family:inherit">+ 행 추가</button>') + '</td>';
       const r = rows[m.key] || {};
-      h += '<td style="background:#EAF3E3;border:1px solid #fff;padding:4px 8px;text-align:center;font-size:12px">' + _bdEsc(m.role) + '</td><td style="background:#EAF3E3;border:1px solid #fff;padding:4px 8px;font-size:12.5px;font-weight:600">' + _bdEsc(m.name) + '</td>'
+      h += _ctXCells(m.role, m.name, m.xid, '#EAF3E3', lock)
         + cell(m.key, 'sales', r.sales) + cell(m.key, 'kuk', r.kuk) + cell(m.key, 'refund', r.refund);
       if (i === 0) h += '<td id="ct-tot-' + ti + '" rowspan="' + mem.length + '" style="border:1px solid #fff;text-align:center;padding:6px"></td>';
       h += '</tr>';
@@ -1602,6 +1664,42 @@ window.ctLock = function() {
   if (!_bdAuth()) return;
   _CTS.unlocked = true; renderContestPage();
 };
+function _ctXCells(role, name, xid, bg, lock) {
+  const td = 'background:' + bg + ';border:1px solid #fff;';
+  if (!xid || lock) return '<td style="' + td + 'text-align:center;font-size:12px;padding:4px 8px">' + _bdEsc(role) + '</td><td style="' + td + 'padding:4px 8px;font-weight:700;font-size:12.5px">' + _bdEsc(name) + '</td>';
+  const ip = 'width:100%;box-sizing:border-box;border:1px solid var(--border);border-radius:6px;padding:4px 6px;font:inherit;font-size:12px;background:#fff';
+  return '<td style="' + td + 'padding:3px 5px"><input class="ct-in" style="' + ip + ';text-align:center" value="' + _bdEsc(role) + '" onchange="window.ctXSet(\'' + xid + '\',\'role\',this.value)"></td><td style="' + td + 'padding:3px 5px"><div style="display:flex;gap:4px;align-items:center"><input class="ct-in" style="' + ip + '" value="' + _bdEsc(name) + '" onchange="window.ctXSet(\'' + xid + '\',\'name\',this.value)"><button onclick="window.ctXDel(\'' + xid + '\')" title="행 삭제" style="border:none;background:none;color:#B91C1C;cursor:pointer;font-size:13px">✕</button></div></td>';
+}
+window.ctAddRow = function(team) {
+  if (!_CTS.unlocked) return;
+  const c = CONTEST[_CTS.sel]; if (!c) return;
+  const name = prompt('이름을 입력하세요'); if (!name || !name.trim()) return;
+  const role = prompt('직급을 입력하세요 (예: 팀장, 책임, 경력)', '경력'); if (role === null) return;
+  const id = 'x' + Date.now();
+  const data = {name: name.trim(), role: role.trim()};
+  if (team) data.team = team;
+  if (!c.extra) c.extra = {};
+  c.extra[id] = data;
+  set(ref(db, 'contest2025/' + _CTS.sel + '/extra/' + id), data).catch(err => alert('저장 실패: ' + err.message));
+  renderContestPage(); renderBoards();
+};
+window.ctXSet = function(id, f, v) {
+  if (!_CTS.unlocked) return;
+  const c = CONTEST[_CTS.sel]; if (!c || !c.extra || !c.extra[id]) return;
+  const val = String(v || '').trim();
+  c.extra[id][f] = val;
+  update(ref(db, 'contest2025/' + _CTS.sel + '/extra/' + id), {[f]: val}).catch(err => alert('저장 실패: ' + err.message));
+  _ctPatch(); renderBoards();
+};
+window.ctXDel = function(id) {
+  if (!_CTS.unlocked) return;
+  const c = CONTEST[_CTS.sel]; if (!c || !c.extra || !c.extra[id]) return;
+  if (!confirm('"' + (c.extra[id].name || '이 행') + '" 행을 삭제할까요?\n입력한 매출도 함께 삭제돼요.')) return;
+  delete c.extra[id]; if (c.rows) delete c.rows['x_' + id];
+  const upd = {}; upd['extra/' + id] = null; upd['rows/x_' + id] = null;
+  update(ref(db, 'contest2025/' + _CTS.sel), upd).catch(err => alert('저장 실패: ' + err.message));
+  renderContestPage(); renderBoards();
+};
 window.ctFillGoal = function() {
   if (!_CTS.unlocked) return;
   const c = CONTEST[_CTS.sel]; if (!c) return;
@@ -1609,7 +1707,7 @@ window.ctFillGoal = function() {
   const b = prompt('그 외(경력 등) 목표매출 (원)', '10000000'); if (b === null) return;
   if (!confirm('비어 있는 목표매출만 채울게요. 계속할까요?')) return;
   const upd = {};
-  _ctPers(c).list.forEach(x => { if (!x.goal) { const v = N(x.grp === 0 ? a : b); upd[x.name + '/goal'] = v; if (!c.rows) c.rows = {}; if (!c.rows[x.name]) c.rows[x.name] = {}; c.rows[x.name].goal = v; } });
+  _ctPers(c).list.forEach(x => { if (!x.goal) { const v = N(x.grp === 0 ? a : b); upd[x.key + '/goal'] = v; if (!c.rows) c.rows = {}; if (!c.rows[x.key]) c.rows[x.key] = {}; c.rows[x.key].goal = v; } });
   if (Object.keys(upd).length) update(ref(db, 'contest2025/' + _CTS.sel + '/rows'), upd).catch(err => alert('저장 실패: ' + err.message));
   renderContestPage(); renderBoards();
 };
