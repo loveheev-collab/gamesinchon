@@ -1406,7 +1406,7 @@ const _CTS = {sel:null, dash:null, unlocked:false};
 onValue(ref(db,'contest2025'), snap => {
   CONTEST = snap.val() || {};
   renderBoards();
-  if (document.getElementById('ct-body') && !(document.activeElement && document.activeElement.classList && document.activeElement.classList.contains('ct-in'))) renderContestPage();
+  if (document.getElementById('ct-body')) { if (_CTS.unlocked) _ctPatch(); else renderContestPage(); }
 });
 function _eok(v) { return String(+(N(v)/1e8).toFixed(2)) + '억'; }
 function _ctLeader(team) {
@@ -1424,12 +1424,17 @@ function _ctList() {
   });
 }
 function _ctActive() { const t = todayStr(); return _ctList().filter(([,c]) => (c.end||'9999') >= t); }
+function _ctNet(r, mode) {
+  r = r || {};
+  const m = mode || 'net_all';
+  return N(r.sales) - (m === 'gross' ? 0 : N(r.kuk)) - (m === 'net_all' ? N(r.refund) : 0);
+}
 function _ctTotals(c) {
   const rows = c.rows || {};
   const arr = TM_CFG.map(t => {
     let total = 0;
-    t.members.forEach(m => { total += N((rows[m]||{}).sales); });
-    total += N((rows['__etc_' + t.name]||{}).sales);
+    t.members.forEach(m => { total += _ctNet(rows[m], c.calc); });
+    total += _ctNet(rows['__etc_' + t.name], c.calc);
     return {team:t.name, color:t.color, total:total, leader:_ctLeader(t.name)};
   });
   const top = Math.max(0, ...arr.map(x => x.total));
@@ -1467,16 +1472,15 @@ function _ctPersonalCard(c) {
 }
 function _ctCardHTML() {
   const act = _ctActive(); if (!act.length) return '';
-  let sel = act.find(([id]) => id === _CTS.dash) || act[0];
-  const [sid, c] = sel;
+  return act.map(([id, c], i) => _ctOneCard(c, i < act.length - 1)).join('');
+}
+function _ctOneCard(c, gap) {
   const T = _ctTotals(c);
   const order = T.arr.slice().sort((a,b) => b.total - a.total);
-  let h = '<div style="border:2px solid #F59E0B;background:linear-gradient(#FFFBEB,#fff 70%);border-radius:12px;padding:10px 14px;min-width:0">';
+  let h = '<div style="border:2px solid #F59E0B;background:linear-gradient(#FFFBEB,#fff 70%);border-radius:12px;padding:10px 14px;min-width:0;' + (gap ? 'margin-bottom:10px' : '') + '">';
   h += '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px"><b style="font-size:13.5px;font-weight:900;cursor:pointer" onclick="W._swContest()">🏆 ' + _bdEsc(c.title||'컨테스트') + '</b>'
     + '<span style="font-size:11px;color:var(--text2)">' + _bdEsc(((c.start||'').slice(5).replace('-','/')) + (c.end ? ' ~ ' + c.end.slice(5).replace('-','/') : '')) + (c.prize ? ' · ' + _bdEsc(c.prize) : '') + '</span>';
-  if (act.length > 1) {
-    h += '<div style="display:flex;gap:4px;margin-left:auto;flex-wrap:wrap">' + act.map(([id,x]) => '<span onclick="window.ctDashSel(\'' + id + '\')" style="padding:2px 10px;border-radius:10px;font-size:11px;font-weight:700;cursor:pointer;background:' + (id===sid?'#F59E0B':'#F1F5F9') + ';color:' + (id===sid?'#fff':'#64748B') + '">' + _bdEsc((x.title||'컨테스트').slice(0,12)) + '</span>').join('') + '</div>';
-  }
+  h += '<span style="margin-left:auto;padding:1px 8px;border-radius:9px;background:#E0ECFF;color:#1D4ED8;font-size:10.5px;font-weight:800">' + (c.type==='personal'?'개인 달성형':'팀 합산형') + '</span>';
   if (c.type === 'personal') return h + '</div>' + _ctPersonalCard(c) + '</div>';
   h += '</div><div style="display:grid;grid-template-columns:repeat(' + Math.max(1, order.length) + ',minmax(0,1fr));gap:8px">';
   order.forEach(x => {
@@ -1543,8 +1547,10 @@ function renderContestPage() {
     _ctPatch();
     return;
   }
-  h += '<div style="display:grid;grid-template-columns:1fr 1fr 3fr;gap:8px;margin-bottom:12px">'
-    + meta('결산 조건 금액 ① (원)', 'goal1', c.goal1, 'num') + meta('결산 조건 금액 ② (원)', 'goal2', c.goal2, 'num') + meta('조건 문구', 'cond', c.cond, 't')
+  const cm = c.calc || 'net_all';
+  const calcSel = '<div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:8px 10px"><div style="font-size:10.5px;color:var(--text2);font-weight:700;margin-bottom:3px">팀 합계 계산 방식</div><select class="ct-in" style="' + inp + '"' + dis + ' onchange="window.ctMeta(\'calc\',this.value,\'t\')"><option value="net_all"' + (cm==='net_all'?' selected':'') + '>총매출 − 국비 − 당월환불</option><option value="net_kuk"' + (cm==='net_kuk'?' selected':'') + '>총매출 − 국비</option><option value="gross"' + (cm==='gross'?' selected':'') + '>총매출만</option></select></div>';
+  h += '<div style="display:grid;grid-template-columns:1fr 1fr 1.6fr 2fr;gap:8px;margin-bottom:12px">'
+    + meta('결산 조건 금액 ① (원)', 'goal1', c.goal1, 'num') + meta('결산 조건 금액 ② (원)', 'goal2', c.goal2, 'num') + calcSel + meta('조건 문구', 'cond', c.cond, 't')
     + '</div>';
   const th = 'background:#DBE4F5;padding:7px;border:1px solid #fff;font-size:12px;font-weight:700';
   h += '<div style="background:#fff;border:1px solid var(--border);border-radius:12px;padding:10px"><table style="width:100%;border-collapse:collapse"><tr>'
@@ -1564,7 +1570,7 @@ function renderContestPage() {
     });
     h += '<tr><td colspan="7" style="background:#4B5563;height:5px;padding:0"></td></tr>';
   });
-  h += '</table><div style="display:flex;justify-content:space-between;margin-top:10px;font-size:12px;color:var(--text2)"><span>※ 팀 합계는 총매출만 더해요 (국비매출·당월환불은 참고용). 칸을 비우면 0으로 계산해요.</span><b id="ct-sum"></b></div></div></div>';
+  h += '</table><div style="display:flex;justify-content:space-between;margin-top:10px;font-size:12px;color:var(--text2)"><span>※ 팀 합계 = ' + ({net_all:'총매출 − 국비매출 − 당월환불', net_kuk:'총매출 − 국비매출', gross:'총매출'})[cm] + ' (직원별 합산). 칸을 비우면 0으로 계산해요.</span><b id="ct-sum"></b></div></div></div>';
   sc.innerHTML = h;
   _ctPatch();
 }
@@ -1635,6 +1641,7 @@ window.ctMeta = function(f, v, type) {
   update(ref(db, 'contest2025/' + _CTS.sel), {[f]: val}).catch(err => alert('저장 실패: ' + err.message));
   renderBoards();
   if (f === 'title') renderContestPage();
+  if (f === 'calc') { _ctPatch(); renderBoards(); }
 };
 window.ctSet = function(key, f, v) {
   if (!_CTS.unlocked) return;
