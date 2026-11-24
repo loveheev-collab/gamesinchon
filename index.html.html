@@ -1465,10 +1465,10 @@ function _ctPers(c) {
 }
 function _ctPersonalCard(c) {
   const P = _ctPers(c);
-  let h = '<div style="display:flex;gap:8px;align-items:stretch"><div style="display:flex;align-items:center;font-size:11px;font-weight:800;color:#B45309;white-space:nowrap">🔥 TOP 3</div>';
+  let h = '<div style="display:flex;gap:8px;align-items:stretch"><div style="display:flex;align-items:center;font-size:11px;font-weight:800;color:#1D4ED8;white-space:nowrap">🔥 TOP 3</div>';
   if (!P.top.length) h += '<div style="flex:1;border:1px solid var(--border);background:#fff;border-radius:10px;padding:7px 10px;font-size:12px;color:var(--text3)">입력 전</div>';
   P.top.forEach((x, i) => {
-    h += '<div style="flex:1;min-width:0;border:' + (i===0?'2px solid #F59E0B;background:#FFFBEB':'1px solid var(--border);background:#fff') + ';border-radius:10px;padding:6px 10px;font-size:12.5px;white-space:nowrap;overflow:hidden"><span style="display:inline-block;width:18px;height:18px;border-radius:50%;text-align:center;line-height:18px;font-size:10.5px;font-weight:900;margin-right:6px;background:' + (i===0?'#F59E0B;color:#fff':'#E8ECF0;color:#475569') + '">' + (i+1) + '</span><b>' + _bdEsc(x.name) + '</b> <b style="color:#B45309">' + x.pct + '%</b></div>';
+    h += '<div style="flex:1;min-width:0;border:' + (i===0?'2px solid #3B82F6;background:#EFF6FF':'1px solid var(--border);background:#fff') + ';border-radius:10px;padding:6px 10px;font-size:12.5px;white-space:nowrap;overflow:hidden"><span style="display:inline-block;width:18px;height:18px;border-radius:50%;text-align:center;line-height:18px;font-size:10.5px;font-weight:900;margin-right:6px;background:' + (i===0?'#3B82F6;color:#fff':'#E8ECF0;color:#475569') + '">' + (i+1) + '</span><b>' + _bdEsc(x.name) + '</b> <b style="color:#B45309">' + x.pct + '%</b></div>';
   });
   h += '</div>';
   if (P.tg > 0) {
@@ -1538,7 +1538,7 @@ function _ctCardHTML() {
 function _ctOneCard(c, gap) {
   const T = _ctTotals(c);
   const order = T.arr.slice().sort((a,b) => b.total - a.total);
-  let h = '<div style="border:2px solid #F59E0B;background:linear-gradient(#FFFBEB,#fff 70%);border-radius:12px;padding:10px 14px;min-width:0;' + (gap ? 'margin-bottom:10px' : '') + '">';
+  let h = '<div style="' + (c.type === 'personal' ? 'border:2px solid #3B82F6;background:linear-gradient(#EFF6FF,#fff 70%)' : 'border:2px solid #F59E0B;background:linear-gradient(#FFFBEB,#fff 70%)') + ';border-radius:12px;padding:10px 14px;min-width:0;' + (gap ? 'margin-bottom:10px' : '') + '">';
   h += '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px"><b style="font-size:13.5px;font-weight:900;cursor:pointer" onclick="W._swContest()">🏆 ' + _bdEsc(c.title||'컨테스트') + '</b>'
     + '<span style="font-size:11px;color:var(--text2)">' + _bdEsc(((c.start||'').slice(5).replace('-','/')) + (c.end ? ' ~ ' + c.end.slice(5).replace('-','/') : '')) + (c.prize ? ' · ' + _bdEsc(c.prize) : '') + '</span>';
   h += '<span style="margin-left:auto;padding:1px 8px;border-radius:9px;background:#E0ECFF;color:#1D4ED8;font-size:10.5px;font-weight:800">' + (c.type==='personal'?'개인 달성형':'팀 합산형') + '</span>';
